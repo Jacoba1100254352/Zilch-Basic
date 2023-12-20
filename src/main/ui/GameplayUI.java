@@ -1,14 +1,17 @@
 package ui;
 
 import managers.GameCoordinator;
-import models.*;
+import models.Dice;
+import models.Player;
+import models.Score;
 import rules.RuleManager;
 
 import java.util.List;
 import java.util.Scanner;
 import java.util.StringJoiner;
 
-import static managers.GameCoordinator.printOptions.*;
+import static managers.GameCoordinator.printOptions.ENTER;
+import static managers.GameCoordinator.printOptions.NEXT;
 
 public class GameplayUI {
     private final GameCoordinator gameCoordinator;
@@ -19,33 +22,15 @@ public class GameplayUI {
         this.ruleManager = gameCoordinator.getRuleManager();
     }
 
-    // Display game information
     public void displayWelcomeMessage() {
         clear();
-        System.out.println("""
-                Welcome to Zilch!
-
-                Here are the basic rules:
-                1. You must score an initial 1000 points to start logging your points.
-                2. Sets (three sets of two) and straits (1, 2, 3, 4, 5, 6) give 1000 points.
-                3. A group of 3 identical dice give you 100 points times the value of that die. For example:
-                \t- A roll of 3 3 3 will give you 300 points.
-                \t- An exception is made for a roll of 1 1 1, which will give you 1000 points.
-                4. Each additional number added to this group of three doubles the points received from it. For example:
-                \t- A roll of 3 3 3 3 or a roll of 3 3 3 and a later roll of 3 in the same turn would give you 600 points.
-                \t- If in a group of 3 1's, 2 more 1's are rolled, the score would be 1000*2*2 = 4000.
-                5. Finally, only single 1's or 5's are worth points with a single 1 being 100 points and a 5 being 50.
-                """);
+        System.out.println(getWelcomeMessage());
     }
 
-    // Print instructions based on the game state
     public void printInstructions(GameCoordinator.printOptions options) {
         displayCurrentScore(gameCoordinator.getPlayerManager().getCurrentPlayer());
         displayDice();
-
-        String message = generateMessageBasedOnGameState();
-        message = modifyMessageBasedOnOptions(message, options);
-        System.out.print(generateInstructions() + message);
+        System.out.print(generateInstructions(options));
     }
 
     public void displayCurrentScore(Player currentPlayer) {
@@ -53,126 +38,41 @@ public class GameplayUI {
     }
 
     public void displayHighScoreInfo(Player currentPlayer, String highestScoringPlayerName) {
-        String currentPlayerName = currentPlayer.name();
-        Score score = currentPlayer.score();
-
-        ///   if: High permanent score is below the limit: Ask to end or keep playing   ///
-        int highestScore = score.getPermanentScore();
-        if (highestScore < score.getScoreLimit())
-            displayCurrentScore(currentPlayer);
-            ///   else if: Someone has surpassed the limit: try to beat them   ///
-        else if (highestScore > score.getRoundScore()) {
-            System.out.print("\n\nYour current score of " + score.getRoundScore() + " is " + (highestScore - score.getRoundScore()));
-            System.out.println(" less than " + currentPlayerName + "'s High Score of " + highestScore + " so keep going! :)");
-            ///   else if: Tied for the highest   ///
-        } else if (!highestScoringPlayerName.equals(currentPlayerName))
-            System.out.print("You are currently tied with the highest scoring player!");
-            ///   else: You are the highest! Ask to end or keep playing   ///
-        else System.out.print("You are currently the highest scoring player");
+        System.out.print(generateHighScoreMessage(currentPlayer, highestScoringPlayerName));
     }
 
-    private String generateInstructions() {
-        return "\tSingles -- s#, \n\tMultiples -- m#, \n\tSet -- se, \n\tStrait -- st;\n";
-    }
-
-    private String generateMessageBasedOnGameState() {
-        Player currentPlayer = gameCoordinator.getPlayerManager().getCurrentPlayer();
-        boolean optionSelected = gameCoordinator.getGameStateManager().getSelectedOptionStatus();
-        int roundScore = currentPlayer.score().getRoundScore();
-
-        String message = "Enter the option you wish to take";
-        if (optionSelected && roundScore >= 1000) {
-            message += ", or type 0 to end your turn: ";
-        } else if (optionSelected) {
-            message += ", or type 0 to roll again: ";
-        } else {
-            message += ": ";
-        }
-        return message;
-    }
-
-    private String modifyMessageBasedOnOptions(String message, GameCoordinator.printOptions options) {
-        return switch (options) {
-            case ENTER -> message;
-            case NEXT -> message.replaceFirst("Enter", "Please enter your next choice");
-            case REENTER -> message.replaceFirst("Enter", "Please re-enter the option you wish to take");
-        };
-    }
-
-    // Clear the console
-    public void clear() {
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
-    }
-
-    // Pause and wait for the user to continue
-    public void pauseAndContinue() {
-        System.out.print("\nPress enter to continue... ");
-        new Scanner(System.in).nextLine(); // Wait for the user to press Enter
-        clear();
-    }
-
-    // Handles '?' command
     public void displayPossibleOptions() {
         System.out.println("Possible options: ");
-        if (ruleManager.isStrait())
-            System.out.println("\tStrait");
-        if (ruleManager.isSet())
-            System.out.println("\tSets");
-        if (ruleManager.isMultiple()) {
-            for (int fst : gameCoordinator.getPlayerManager().getCurrentPlayer().dice().diceSetMap().keySet()) {
-                if (ruleManager.isDesiredMultipleAvailable(fst))
-                    System.out.println("\tMultiples, value: " + fst);
-            }
-        }
-        if (ruleManager.canAddMultiples())
-            System.out.println("\tAddons, value: " + gameCoordinator.getGameOptionManager().getCurrentGameOption().value());
-        if (ruleManager.isSingle(1) || ruleManager.isSingle(5))
-            System.out.println("\tSingles");
+        printOptionsList();
         pauseAndContinue();
     }
 
     public void displayUIElements() {
-        clear(); // Clear screen.
-        if (ruleManager.canProcessMultiple(gameCoordinator.getGameOptionManager().getCurrentGameOption().value())) {
-            printPossibleMultipleAddition();
-        }
-
-        if (!gameCoordinator.getGameStateManager().getSelectedOptionStatus()) {
-            printInstructions(ENTER);
-        } else if (ruleManager.isOptionAvailable()) {
-            printInstructions(NEXT);
-        }
+        clear();
+        printPossibleMultipleAddition();
+        printInstructions(determinePrintOption());
     }
 
     public void displayDice() {
         Dice dice = gameCoordinator.getPlayerManager().getCurrentPlayer().dice();
         System.out.println("\nYou have " + dice.getNumDiceInPlay() + " dice left.");
-
-        ///   Build and Print Dice List String   ///
-        StringBuilder diceList = new StringBuilder();
-        dice.diceSetMap().forEach((key, value) -> {
-            for (int i = 0; i < value; i++) {
-                diceList.append(key).append(", ");
-            }
-        });
-
-        // Remove the trailing comma and space
-        if (!diceList.isEmpty()) {
-            diceList.setLength(diceList.length() - 2);
-        }
-
-        System.out.println(diceList);
+        System.out.println(buildDiceListString(dice));
     }
 
     public void displayMessage(String message) {
         System.out.println(message);
     }
 
-    // Display the common impossible option message
     public void displayImpossibleOptionMessage() {
         clear();
         System.out.println("You have selected an impossible option");
+    }
+
+    public void displayLastRoundMessage(Player gameEndingPlayer) {
+        System.out.println(gameEndingPlayer.name() + " is over " + gameEndingPlayer.score().getScoreLimit());
+        System.out.println("Everyone else has one more chance to win");
+        pauseAndContinue();
+        System.out.println();
     }
 
     public void displayFailedMultipleMessage(int chosenMultiple) {
@@ -191,29 +91,132 @@ public class GameplayUI {
         }
     }
 
-    public void printPossibleMultipleAddition() {
-        if (ruleManager.canAddMultiples() && (gameCoordinator.getPlayerManager().getCurrentPlayer().score().getScoreFromMultiples() >= 200))
-            System.out.println("You can add to your multiple of " + gameCoordinator.getGameOptionManager().getCurrentGameOption().value() + "!");
-    }
-
-    public void displayLastRoundMessage(Player gameEndingPlayer) {
-        System.out.println(gameEndingPlayer.name() + " is over " + gameEndingPlayer.score().getScoreLimit());
-        System.out.println("Everyone else has one more chance to win");
-        pauseAndContinue();
-        System.out.println();
-    }
-
     public void displayLastTurnMessage(String playerName) {
         System.out.println("It is " + playerName + "'s last turn");
     }
 
     public void announceTie(List<Player> tiedPlayers, int score) {
-        StringJoiner joiner = new StringJoiner(", ", "", " have tied with " + score + " Points!");
-        tiedPlayers.forEach(player -> joiner.add(player.name()));
-        System.out.println(joiner);
+        System.out.println(buildTieAnnouncement(tiedPlayers, score));
     }
 
     public void announceWinner(Player winner, int score) {
         System.out.println(winner.name() + " won with " + score + " Points!");
+    }
+
+    // Helper Methods
+    private String getWelcomeMessage() {
+        return """
+                Welcome to Zilch!
+
+                Here are the basic rules:
+                1. You must score an initial 1000 points to start logging your points.
+                2. Sets (three sets of two) and straits (1, 2, 3, 4, 5, 6) give 1000 points.
+                3. A group of 3 identical dice give you 100 points times the value of that die. For example:
+                \t- A roll of 3 3 3 will give you 300 points.
+                \t- An exception is made for a roll of 1 1 1, which will give you 1000 points.
+                4. Each additional number added to this group of three doubles the points received from it. For example:
+                \t- A roll of 3 3 3 3 or a roll of 3 3 3 and a later roll of 3 in the same turn would give you 600 points.
+                \t- If in a group of 3 1's, 2 more 1's are rolled, the score would be 1000*2*2 = 4000.
+                5. Finally, only single 1's or 5's are worth points with a single 1 being 100 points and a 5 being 50.
+                """;
+    }
+
+    private String generateInstructions(GameCoordinator.printOptions options) {
+        String message = generateMessageBasedOnGameState();
+        return modifyMessageBasedOnOptions(message, options) + generateCommandOptions();
+    }
+
+    private String buildDiceListString(Dice dice) {
+        StringBuilder diceList = new StringBuilder();
+        dice.diceSetMap().forEach((key, value) -> diceList.append(key).append(" (").append(value).append("), "));
+        return !diceList.isEmpty() ? diceList.substring(0, diceList.length() - 2) : "";
+    }
+
+    private String generateHighScoreMessage(Player currentPlayer, String highestScoringPlayerName) {
+        StringBuilder message = new StringBuilder();
+        Score score = currentPlayer.score();
+
+        if (score.getPermanentScore() < score.getScoreLimit()) {
+            message.append(currentPlayer.name()).append("'s current score: ").append(score.getRoundScore());
+        } else if (!highestScoringPlayerName.equals(currentPlayer.name()) && score.getPermanentScore() > score.getRoundScore()) {
+            message.append("\n\nYour current score of ").append(score.getRoundScore())
+                    .append(" is ").append(score.getPermanentScore() - score.getRoundScore())
+                    .append(" less than ").append(highestScoringPlayerName)
+                    .append("'s High Score of ").append(score.getPermanentScore())
+                    .append(". Keep going! :)");
+        } else if (!highestScoringPlayerName.equals(currentPlayer.name())) {
+            message.append("You are currently tied with the highest scoring player!");
+        } else {
+            message.append("You are currently the highest scoring player.");
+        }
+
+        return message.toString();
+    }
+
+    private String generateCommandOptions() {
+        return "\tSingles -- s#, \n\tMultiples -- m#, \n\tSet -- se, \n\tStrait -- st;\n";
+    }
+
+    public void clear() {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+    }
+
+    public void pauseAndContinue() {
+        System.out.print("\nPress enter to continue... ");
+        new Scanner(System.in).nextLine();
+        clear();
+    }
+
+    private GameCoordinator.printOptions determinePrintOption() {
+        return gameCoordinator.getGameStateManager().getSelectedOptionStatus() ? NEXT : ENTER;
+    }
+
+    private void printOptionsList() {
+        if (ruleManager.isStrait()) System.out.println("\tStrait");
+        if (ruleManager.isSet()) System.out.println("\tSet");
+        if (ruleManager.isMultiple()) System.out.println("\tMultiples");
+        if (ruleManager.canAddMultiples()) System.out.println("\tAdd to Multiple");
+        if (ruleManager.isSingle(1)) System.out.println("\tSingle 1");
+        if (ruleManager.isSingle(5)) System.out.println("\tSingle 5");
+        System.out.println("\t0 to end turn or roll again");
+        System.out.println("\t? to see options");
+    }
+
+    private void printPossibleMultipleAddition() {
+        if (ruleManager.canAddMultiples()) {
+            System.out.println("You can add to your multiple of " + gameCoordinator.getGameOptionManager().getCurrentGameOption().value() + "!");
+        }
+    }
+
+    private String buildTieAnnouncement(List<Player> tiedPlayers, int score) {
+        StringJoiner joiner = new StringJoiner(", ", "", " have tied with " + score + " Points!");
+        tiedPlayers.forEach(player -> joiner.add(player.name()));
+        return joiner.toString();
+    }
+
+    private String generateMessageBasedOnGameState() {
+        Player currentPlayer = gameCoordinator.getPlayerManager().getCurrentPlayer();
+        boolean optionSelected = gameCoordinator.getGameStateManager().getSelectedOptionStatus();
+        int roundScore = currentPlayer.score().getRoundScore();
+        StringBuilder message = new StringBuilder("Enter the option you wish to take");
+
+        if (optionSelected && roundScore >= 1000) {
+            message.append(", or type 0 to end your turn: ");
+        } else if (optionSelected) {
+            message.append(", or type 0 to roll again: ");
+        } else {
+            message.append(": ");
+        }
+
+        return message.toString();
+    }
+
+    private String modifyMessageBasedOnOptions(String message, GameCoordinator.printOptions options) {
+        return switch (options) {
+            case ENTER -> message;
+            case NEXT -> message.replaceFirst("Enter", "Please enter your next choice");
+            case REENTER -> message.replaceFirst("Enter", "Please re-enter the option you wish to take");
+        };
     }
 }
