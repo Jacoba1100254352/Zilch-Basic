@@ -1,47 +1,55 @@
 package modelManagers;
 
-import managers.GameCoordinator;
 import models.Dice;
-import models.Player;
-import models.Score;
 
-public class ScoreManager {
-    private final GameCoordinator gameCoordinator;
+public class ScoreManager extends PlayerActionManager {
 
-    public ScoreManager(GameCoordinator gameCoordinator) {
-        this.gameCoordinator = gameCoordinator;
+    public ScoreManager(PlayerManager playerManager) {
+        super(playerManager);
     }
 
+
+    ///   Main Functions   ///
+
     public void scoreStraits() {
-        Player currentPlayer = gameCoordinator.getPlayerManager().getCurrentPlayer();
-        currentPlayer.score().increaseRoundScore(1000);
+        getScore().increaseRoundScore(1000);
     }
 
     public void scoreSets() {
-        Player currentPlayer = gameCoordinator.getPlayerManager().getCurrentPlayer();
-        currentPlayer.score().increaseRoundScore(1000);
-    }
-
-    public void scoreMultiple(int dieValue) {
-        Player currentPlayer = gameCoordinator.getPlayerManager().getCurrentPlayer();
-        Dice dice = currentPlayer.dice();
-        Score score = currentPlayer.score();
-
-        int mScore = calculateMultipleScore(dieValue, dice);
-        score.increaseRoundScore(mScore);
-    }
-
-    private int calculateMultipleScore(int dieValue, Dice dice) {
-        int baseScore = (dieValue == 1) ? 1000 : dieValue * 100;
-        int numMultiples = dice.diceSetMap().get(dieValue) - 3;
-        return (int) Math.pow(2, numMultiples) * baseScore;
+        getScore().increaseRoundScore(1000);
     }
 
     public void scoreSingle(int dieValue) {
-        Player currentPlayer = gameCoordinator.getPlayerManager().getCurrentPlayer();
-        Score score = currentPlayer.score();
-
         int singleScore = (dieValue == 1) ? 100 : 50;
-        score.increaseRoundScore(singleScore);
+        getScore().increaseRoundScore(singleScore);
+    }
+
+    public void scoreMultiple(int dieValue) {
+        int mScore = calculateMultipleScore(dieValue, getDice());
+
+        if (getScore().getScoreFromMultiples() == 0) {
+            getScore().increaseRoundScore(mScore);
+        } else { // Increment round score by the additional points from the new multiple, not the total multiple score.
+            getScore().increaseRoundScore(mScore - getScore().getScoreFromMultiples());
+        }
+
+        getScore().setScoreFromMultiples(mScore);
+    }
+
+
+    ///   Helper Functions   ///
+
+    private int calculateMultipleScore(int dieValue, Dice dice) {
+        int scoreForMultiples;
+        int scoreFromPreviousMultiples = getScore().getScoreFromMultiples();
+        if (scoreFromPreviousMultiples == 0) { // First Multiples Scored
+            int baseScore = (dieValue == 1) ? 1000 : dieValue * 100;
+            int numMultiples = dice.diceSetMap().get(dieValue) - 3;
+            scoreForMultiples = (int) Math.pow(2, numMultiples) * baseScore;
+        } else { // Adding Multiples
+            int numMultiples = dice.diceSetMap().get(dieValue);
+            scoreForMultiples = (int) Math.pow(2, numMultiples) * scoreFromPreviousMultiples;
+        }
+        return scoreForMultiples;
     }
 }

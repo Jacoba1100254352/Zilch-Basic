@@ -1,4 +1,4 @@
-package rules;
+package ruleManagers;
 
 import managers.GameCoordinator;
 
@@ -11,6 +11,13 @@ public class RuleManager {
 
     public RuleManager(GameCoordinator gameCoordinator) {
         this.gameCoordinator = gameCoordinator;
+    }
+
+
+    ///   Main Functions   ///
+
+    public boolean isOptionAvailable() {
+        return (isStrait() || isSet() || isMultiple() || canAddMultiples() || isSingle(1) || isSingle(5));
     }
 
     public boolean isStrait() {
@@ -30,26 +37,15 @@ public class RuleManager {
                 gameCoordinator.getPlayerManager().getCurrentPlayer().dice().diceSetMap().containsKey(single));
     }
 
-    public boolean isOptionAvailable() {
-        return (isStrait() || isSet() || isMultiple() || canAddMultiples() || isSingle(1) || isSingle(5));
-    }
-
     public boolean isMultiple() {
         return gameCoordinator.getPlayerManager().getCurrentPlayer().dice().diceSetMap().values().stream().anyMatch(count -> count >= 3);
     }
 
+    public boolean canAddMultiples() {
+        return gameCoordinator.getPlayerManager().getCurrentPlayer().dice().diceSetMap().containsKey(gameCoordinator.getGameOptionManager().getPreviouslySelectedMultipleValue());
+    }
 
     public boolean isDesiredMultipleAvailable(int desiredMultiple) {
         return gameCoordinator.getPlayerManager().getCurrentPlayer().dice().diceSetMap().getOrDefault(desiredMultiple, 0) >= 3;
-    }
-
-    public boolean canAddMultiples() {
-        return gameCoordinator.getPlayerManager().getCurrentPlayer().dice().diceSetMap().containsKey(gameCoordinator.getGameOptionManager().getCurrentGameOption().value());
-    }
-
-    public boolean canProcessMultiple(int val) {
-        return (isMultiple() && isDesiredMultipleAvailable(val)) || (
-                (gameCoordinator.getPlayerManager().getCurrentPlayer().score().getScoreFromMultiples() >= 200) &&
-                        (gameCoordinator.getGameOptionManager().getCurrentGameOption().value() == val) && (canAddMultiples()));
     }
 }

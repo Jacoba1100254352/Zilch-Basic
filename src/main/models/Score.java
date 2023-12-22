@@ -13,6 +13,9 @@ public class Score {
         this.scoreFromMultiples = scoreFromMultiples;
     }
 
+
+    ///   Getters and Setters   ///
+
     public int getScoreLimit() {
         return this.scoreLimit;
     }
@@ -29,12 +32,12 @@ public class Score {
         return this.roundScore;
     }
 
-    public void increaseRoundScore(int score) {
-        this.roundScore += score;
-    }
-
     public void setRoundScore(int roundScore) {
         this.roundScore = roundScore;
+    }
+
+    public void increaseRoundScore(int score) {
+        this.roundScore += score;
     }
 
     public int getScoreFromMultiples() {

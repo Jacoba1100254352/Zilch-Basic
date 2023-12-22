@@ -2,40 +2,47 @@ package managers;
 
 import models.Player;
 import models.Score;
-import rules.RuleManager;
 import ui.GameplayUI;
 
 import static models.Dice.FULL_SET_OF_DICE;
 
 public class GameStateManager {
     private final GameCoordinator gameCoordinator;
-    private final RuleManager ruleManager;
 
-    private boolean selectedOptionStatus;
-    private boolean turnContinuationStatus;
-    private boolean selectionContinuationStatus;
+    private boolean isOptionSelected;
+    private boolean continueTurn;
+    private boolean continueSelecting;
 
-    public GameStateManager(GameCoordinator gameCoordinator, RuleManager ruleManager) {
+    public GameStateManager(GameCoordinator gameCoordinator) {
         this.gameCoordinator = gameCoordinator;
-        this.ruleManager = ruleManager;
 
-        this.turnContinuationStatus = true;
-        this.selectedOptionStatus = false;
-        this.selectionContinuationStatus = true;
+        this.continueTurn = true;
+        this.isOptionSelected = false;
+        this.continueSelecting = true;
     }
+
+
+    ///   Main Functions   ///
 
     /**
      * Initialize each segment of 6-dice re-rolls
      */
     public void initializeRollCycle() {
-        turnContinuationStatus = true;
-        selectedOptionStatus = false; // No option has yet been selected
-        selectionContinuationStatus = true; // Can continue/start selecting
+        continueTurn = true;
+        isOptionSelected = false; // No option has yet been selected
+        continueSelecting = true; // Can continue/start selecting
 
-        gameCoordinator.getGameOptionManager().setCurrentGameOption(null); // Reset the current game option
+        gameCoordinator.getGameOptionManager().setSelectedGameOption(null); // Reset the current game option
 
         // Initialize Score
         gameCoordinator.getPlayerManager().getCurrentPlayer().score().setScoreFromMultiples(0);
+
+        // Initialize Dice
+        gameCoordinator.getPlayerManager().replenishAllDice();
+
+        // Reevaluate game options
+        gameCoordinator.getGameOptionManager().setPreviouslySelectedMultipleValue(null);
+        gameCoordinator.getGameOptionManager().evaluateGameOptions();
     }
 
     public void handleFirstRollBust() {
@@ -46,7 +53,7 @@ public class GameStateManager {
         Player currentPlayer = gameCoordinator.getPlayerManager().getCurrentPlayer();
         currentPlayer.score().increaseRoundScore(50);
 
-        setTurnContinuationStatus(true, true);
+        setContinueTurn(true, true);
     }
 
     public void handleBust() {
@@ -57,7 +64,7 @@ public class GameStateManager {
         Player currentPlayer = gameCoordinator.getPlayerManager().getCurrentPlayer();
         currentPlayer.score().setRoundScore(0);
 
-        setTurnContinuationStatus(false, true);
+        setContinueTurn(false, true);
     }
 
     public void handleNoOptionsLeft() {
@@ -74,12 +81,12 @@ public class GameStateManager {
         Score score = currentPlayer.score();
         GameplayUI gameplayUI = gameCoordinator.getGameplayUI();
 
-        if (selectedOptionStatus) {
-            selectionContinuationStatus = false;
-        } else if ((score.getRoundScore() >= 1000) && ruleManager.isOptionAvailable()) {
+        if (isOptionSelected) {
+            continueSelecting = false;
+        } else if ((score.getRoundScore() >= 1000) && gameCoordinator.getRuleManager().isOptionAvailable()) {
             score.increasePermanentScore(score.getRoundScore());
             gameplayUI.displayMessage("Your official score is now: " + score.getPermanentScore());
-        } else if (!ruleManager.isOptionAvailable()) {
+        } else if (!gameCoordinator.getRuleManager().isOptionAvailable()) {
             gameplayUI.clear();
         } else {
             gameplayUI.clear();
@@ -88,18 +95,18 @@ public class GameStateManager {
         }
     }
 
-    public boolean shouldContinueTurn() {
-        gameCoordinator.getGameStateManager().setSelectedOptionStatus(false);
+    public boolean canContinueTurn() {
+        gameCoordinator.getGameStateManager().optionIsSelected(false);
 
-        if (!ruleManager.isOptionAvailable()) {
+        if (!gameCoordinator.getRuleManager().isOptionAvailable()) {
             if (gameCoordinator.getPlayerManager().getCurrentPlayer().dice().getNumDiceInPlay() == FULL_SET_OF_DICE && gameCoordinator.getPlayerManager().getCurrentPlayer().score().getRoundScore() == 0) {
                 gameCoordinator.getGameStateManager().handleFirstRollBust();
             } else if (gameCoordinator.getPlayerManager().getCurrentPlayer().dice().getNumDiceInPlay() >= 1) {
                 gameCoordinator.getGameStateManager().handleBust();
             } else {
-                System.out.println("\nYou have a full set of dice now");
+                gameCoordinator.getGameplayUI().displayMessage("\nYou have a full set of dice now");
                 gameCoordinator.getGameplayUI().pauseAndContinue();
-                gameCoordinator.getDiceManager().replenishAllDice();
+                gameCoordinator.getPlayerManager().replenishAllDice();
             }
             return false;
         }
@@ -109,37 +116,37 @@ public class GameStateManager {
 
     ///   GETTERS AND SETTERS   ///
 
-    public boolean getSelectedOptionStatus() {
-        return selectedOptionStatus;
+    public boolean isOptionSelected() {
+        return isOptionSelected;
     }
 
-    public void setSelectedOptionStatus(boolean isOptionSelected) {
-        selectedOptionStatus = isOptionSelected;
+    public void optionIsSelected(boolean isOptionSelected) {
+        this.isOptionSelected = isOptionSelected;
     }
 
-    public void setTurnContinuationStatus(boolean continueTurn, boolean isBust) {
+    public void setContinueTurn(boolean continueTurn, boolean isBust) {
         if (isBust || gameCoordinator.getPlayerManager().getCurrentPlayer().score().getRoundScore() >= 1000) {
-            turnContinuationStatus = continueTurn;
+            this.continueTurn = continueTurn;
         } else {
-            System.out.println("You are not allowed to end without a permanent or running score higher than 1000");
-            turnContinuationStatus = true;
+            gameCoordinator.getGameplayUI().displayMessage("You are not allowed to end without a permanent or running score higher than 1000");
+            this.continueTurn = true;
         }
     }
 
-    public boolean getTurnContinuationStatus() {
-        return turnContinuationStatus;
+    public boolean getContinueTurn() {
+        return continueTurn;
     }
 
-    public void setSelectionContinuationStatus(boolean continueSelecting) {
-        if (!continueSelecting && !selectedOptionStatus) {
-            System.out.println("You must select at least one option");
-            selectionContinuationStatus = true;
+    public boolean getContinueSelecting() {
+        return continueSelecting;
+    }
+
+    public void setContinueSelecting(boolean continueSelecting) {
+        if (!continueSelecting && !isOptionSelected) {
+            gameCoordinator.getGameplayUI().displayMessage("You must select at least one option");
+            this.continueSelecting = true;
         } else {
-            selectionContinuationStatus = continueSelecting;
+            this.continueSelecting = continueSelecting;
         }
-    }
-
-    public boolean getSelectionContinuationStatus() {
-        return selectionContinuationStatus;
     }
 }

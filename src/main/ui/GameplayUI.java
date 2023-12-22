@@ -2,24 +2,19 @@ package ui;
 
 import managers.GameCoordinator;
 import models.Dice;
+import models.GameOption;
 import models.Player;
 import models.Score;
-import rules.RuleManager;
 
 import java.util.List;
 import java.util.Scanner;
 import java.util.StringJoiner;
 
-import static managers.GameCoordinator.printOptions.ENTER;
-import static managers.GameCoordinator.printOptions.NEXT;
-
 public class GameplayUI {
     private final GameCoordinator gameCoordinator;
-    private final RuleManager ruleManager;
 
     public GameplayUI(GameCoordinator gameCoordinator) {
         this.gameCoordinator = gameCoordinator;
-        this.ruleManager = gameCoordinator.getRuleManager();
     }
 
     public void displayWelcomeMessage() {
@@ -27,11 +22,8 @@ public class GameplayUI {
         System.out.println(getWelcomeMessage());
     }
 
-    public void printInstructions(GameCoordinator.printOptions options) {
-        displayCurrentScore(gameCoordinator.getPlayerManager().getCurrentPlayer());
-        displayDice();
-        System.out.print(generateInstructions(options));
-    }
+
+    ///   Main Functions   ///
 
     public void displayCurrentScore(Player currentPlayer) {
         System.out.println(currentPlayer.name() + "'s current score: " + currentPlayer.score().getRoundScore());
@@ -50,7 +42,7 @@ public class GameplayUI {
     public void displayUIElements() {
         clear();
         printPossibleMultipleAddition();
-        printInstructions(determinePrintOption());
+        printInstructions();
     }
 
     public void displayDice() {
@@ -75,20 +67,13 @@ public class GameplayUI {
         System.out.println();
     }
 
-    public void displayFailedMultipleMessage(int chosenMultiple) {
+    public void displayFailedMultipleMessage() {
         System.out.println("You have selected an impossible option");
 
-        if (chosenMultiple != 0) {
-            for (int key : gameCoordinator.getPlayerManager().getCurrentPlayer().dice().diceSetMap().keySet()) {
-                if (ruleManager.isDesiredMultipleAvailable(key))
-                    System.out.println("\tMultiples, value: " + key);
-                else if (gameCoordinator.getGameOptionManager().getCurrentGameOption().value() == key)
-                    System.out.println("Add to Multiple, value: " + key);
-            }
-        } else {
-            clear();
-            System.out.println("There is no available multiple");
-        }
+        List<GameOption> gameOptions = gameCoordinator.getGameOptionManager().getGameOptions();
+
+        gameOptions.stream().filter(gameOption -> gameOption.type() == GameOption.Type.MULTIPLE).map(gameOption -> "You can choose the multiple " + gameOption.value()).forEach(System.out::println);
+        printPossibleMultipleAddition();
     }
 
     public void displayLastTurnMessage(String playerName) {
@@ -103,7 +88,17 @@ public class GameplayUI {
         System.out.println(winner.name() + " won with " + score + " Points!");
     }
 
-    // Helper Methods
+    public void clear() {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+    }
+
+    public void pauseAndContinue() {
+        System.out.print("\nPress enter to continue... ");
+        new Scanner(System.in).nextLine();
+        clear();
+    }
+
     private String getWelcomeMessage() {
         return """
                 Welcome to Zilch!
@@ -121,9 +116,23 @@ public class GameplayUI {
                 """;
     }
 
-    private String generateInstructions(GameCoordinator.printOptions options) {
+
+    ///   Helper Functions   ///
+
+    private void printInstructions() {
+        displayCurrentScore(gameCoordinator.getPlayerManager().getCurrentPlayer());
+        displayDice();
+        System.out.print(generateInstructions());
+    }
+
+    private String generateInstructions() {
+        PrintOptions options = determinePrintOption();
         String message = generateMessageBasedOnGameState();
         return modifyMessageBasedOnOptions(message, options) + generateCommandOptions();
+    }
+
+    private String generateCommandOptions() {
+        return "\tSingles -- s#, \n\tMultiples -- m#, \n\tSet -- se, \n\tStrait -- st;\n";
     }
 
     private String buildDiceListString(Dice dice) {
@@ -153,39 +162,27 @@ public class GameplayUI {
         return message.toString();
     }
 
-    private String generateCommandOptions() {
-        return "\tSingles -- s#, \n\tMultiples -- m#, \n\tSet -- se, \n\tStrait -- st;\n";
-    }
-
-    public void clear() {
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
-    }
-
-    public void pauseAndContinue() {
-        System.out.print("\nPress enter to continue... ");
-        new Scanner(System.in).nextLine();
-        clear();
-    }
-
-    private GameCoordinator.printOptions determinePrintOption() {
-        return gameCoordinator.getGameStateManager().getSelectedOptionStatus() ? NEXT : ENTER;
+    private PrintOptions determinePrintOption() {
+        return gameCoordinator.getGameStateManager().isOptionSelected() ? PrintOptions.NEXT : PrintOptions.ENTER;
     }
 
     private void printOptionsList() {
-        if (ruleManager.isStrait()) System.out.println("\tStrait");
-        if (ruleManager.isSet()) System.out.println("\tSet");
-        if (ruleManager.isMultiple()) System.out.println("\tMultiples");
-        if (ruleManager.canAddMultiples()) System.out.println("\tAdd to Multiple");
-        if (ruleManager.isSingle(1)) System.out.println("\tSingle 1");
-        if (ruleManager.isSingle(5)) System.out.println("\tSingle 5");
+        List<GameOption> gameOptions = gameCoordinator.getGameOptionManager().getGameOptions();
+        gameOptions.forEach(gameOption ->
+                System.out.println(switch (gameOption.type()) {
+                    case STRAIT -> "\tStrait";
+                    case SET -> "\tSet";
+                    case SINGLE -> "\tSingle " + gameOption.value();
+                    case MULTIPLE ->
+                            (gameCoordinator.getRuleManager().canAddMultiples()) ? "\tAdd to Multiple" : "\tMultiples";
+                }));
         System.out.println("\t0 to end turn or roll again");
         System.out.println("\t? to see options");
     }
 
     private void printPossibleMultipleAddition() {
-        if (ruleManager.canAddMultiples()) {
-            System.out.println("You can add to your multiple of " + gameCoordinator.getGameOptionManager().getCurrentGameOption().value() + "!");
+        if (gameCoordinator.getRuleManager().canAddMultiples()) {
+            gameCoordinator.getGameOptionManager().getGameOptions().stream().filter(gameOption -> gameOption.type() == GameOption.Type.MULTIPLE).map(gameOption -> "You can add to your multiple of " + gameOption.value()).forEach(System.out::println);
         }
     }
 
@@ -197,7 +194,7 @@ public class GameplayUI {
 
     private String generateMessageBasedOnGameState() {
         Player currentPlayer = gameCoordinator.getPlayerManager().getCurrentPlayer();
-        boolean optionSelected = gameCoordinator.getGameStateManager().getSelectedOptionStatus();
+        boolean optionSelected = gameCoordinator.getGameStateManager().isOptionSelected();
         int roundScore = currentPlayer.score().getRoundScore();
         StringBuilder message = new StringBuilder("Enter the option you wish to take");
 
@@ -212,11 +209,15 @@ public class GameplayUI {
         return message.toString();
     }
 
-    private String modifyMessageBasedOnOptions(String message, GameCoordinator.printOptions options) {
+    private String modifyMessageBasedOnOptions(String message, PrintOptions options) {
         return switch (options) {
             case ENTER -> message;
             case NEXT -> message.replaceFirst("Enter", "Please enter your next choice");
             case REENTER -> message.replaceFirst("Enter", "Please re-enter the option you wish to take");
         };
+    }
+
+    private enum PrintOptions {
+        ENTER, NEXT, REENTER
     }
 }

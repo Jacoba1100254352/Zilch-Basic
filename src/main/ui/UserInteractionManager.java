@@ -1,22 +1,27 @@
 package ui;
 
+import managers.GameCoordinator;
 import models.Score;
-import models.GameOption;
-import managers.GameStateManager;
-import modelManagers.GameOptionManager;
-import rules.RuleManager;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public record UserInteractionManager(GameplayUI gameplayUI, GameOptionManager gameOptionManager, RuleManager ruleManager, GameStateManager gameStateManager) {
+public class UserInteractionManager {
+    private final GameCoordinator gameCoordinator;
+
+    public UserInteractionManager(GameCoordinator gameCoordinator) {
+        this.gameCoordinator = gameCoordinator;
+    }
 
     public static void ignoreRemainingInput(Scanner scanner) {
         if (scanner.hasNextLine()) {
             scanner.nextLine();
         }
     }
+
+
+    ///   Main Functions   ///
 
     public int getNumberOfPlayers(Scanner scanner) {
         int numPlayers;
@@ -49,11 +54,6 @@ public record UserInteractionManager(GameplayUI gameplayUI, GameOptionManager ga
         return playerNames;
     }
 
-    public void processInput(Scanner scanner) {
-        ignoreRemainingInput(scanner); // Clear remaining input.
-        readInput(scanner); // Read user input.
-    }
-
     public int getValidScoreLimit() {
         Scanner scanner = new Scanner(System.in);
         final int MIN_SCORE_LIMIT = 1000;
@@ -73,7 +73,6 @@ public record UserInteractionManager(GameplayUI gameplayUI, GameOptionManager ga
         return limit;
     }
 
-
     public boolean enterEndTurnOption(Scanner scanner, Score playerScore) {
         // Variables
         int playOrEndTurn;
@@ -89,29 +88,10 @@ public record UserInteractionManager(GameplayUI gameplayUI, GameOptionManager ga
         return playOrEndTurn == 2 && playerScore.getRoundScore() >= 1000;
     }
 
-    // Handles 's' command
-    private void executeSecondaryCommand(char ch) {
-        GameOption.Type optionType;
-        int val = Character.getNumericValue(ch);
+    public void inputGameOption(Scanner scanner) {
+        ignoreRemainingInput(scanner); // Clear remaining input.
 
-        optionType = switch (ch) {
-            case 't' -> ruleManager.isStrait() ? GameOption.Type.STRAIT : null;
-            case 'e' -> ruleManager.isSet() ? GameOption.Type.SET : null;
-            case '1' -> ruleManager.isSingle(1) ? GameOption.Type.SINGLE : null;
-            case '5' -> ruleManager.isSingle(5) ? GameOption.Type.SINGLE : null;
-            default -> null;
-        };
-
-        if (optionType != null) {
-            GameOption gameOption = new GameOption(optionType, val);
-            gameOptionManager.processMove(gameOption);
-        } else {
-            gameplayUI.displayImpossibleOptionMessage();
-        }
-    }
-
-    public void readInput(Scanner input) {
-        char ch = readValidCommand(input);
+        char ch = readValidCommand(scanner);
 
         switch (ch) {
             case '1':
@@ -120,28 +100,31 @@ public record UserInteractionManager(GameplayUI gameplayUI, GameOptionManager ga
             case '4':
             case '5':
             case '6':
-                processOptionInt(Character.getNumericValue(ch));
+                gameCoordinator.getGameOptionManager().processOptionInt(Character.getNumericValue(ch));
                 break;
             case 's':
-                executeSecondaryCommand(input.next().charAt(0));
+                gameCoordinator.getGameOptionManager().processOptionS(scanner.next().charAt(0));
                 break;
             case 'a':
-                processOptionA(input);
+                gameCoordinator.getGameOptionManager().processOptionA(scanner);
                 // Falls through to case 'm' intentionally
             case 'm':
-                processOptionM(input.nextInt());
+                gameCoordinator.getGameOptionManager().processOptionM(scanner.nextInt());
                 break;
             case '0':
-                gameStateManager.processZeroCommand();
+                gameCoordinator.getGameStateManager().processZeroCommand();
                 break;
             case '?':
-                gameplayUI.displayPossibleOptions();
+                gameCoordinator.getGameplayUI().displayPossibleOptions();
                 break;
             default:
-                gameplayUI.displayImpossibleOptionMessage();
+                gameCoordinator.getGameplayUI().displayImpossibleOptionMessage();
                 break;
         }
     }
+
+
+    ///   Helper Functions   ///
 
     private char readValidCommand(Scanner input) {
         String validCommands = "stel123456am0?";
@@ -153,50 +136,5 @@ public record UserInteractionManager(GameplayUI gameplayUI, GameOptionManager ga
         } while (!next.matches(pattern));
 
         return next.charAt(0);
-    }
-
-    private void processOptionInt(int val) {
-        GameOption.Type type = determineGameOptionType(val);
-        if (type != null) {
-            GameOption gameOption = new GameOption(type, val);
-            gameOptionManager.processMove(gameOption);
-        } else {
-            gameplayUI.displayImpossibleOptionMessage();
-        }
-    }
-
-    private void processOptionA(Scanner input) {
-        char ch = input.next().charAt(0);
-        gameplayUI.clear();
-        input.nextLine(); // Ignore the rest of the line
-        if (ch == 'l') {
-            gameOptionManager.applyAllPossibleOptions();
-        }
-    }
-
-    private void processOptionM(int val) {
-        GameOption.Type multipleType = determineGameOptionType(val);
-        if (multipleType == GameOption.Type.MULTIPLE) {
-            GameOption gameOption = new GameOption(multipleType, val);
-            gameOptionManager.processMove(gameOption);
-        } else {
-            gameplayUI.displayFailedMultipleMessage(val);
-        }
-    }
-
-    private GameOption.Type determineGameOptionType(int val) {
-        if (ruleManager.isStrait()) {
-            return GameOption.Type.STRAIT;
-        }
-        if (ruleManager.isSet()) {
-            return GameOption.Type.SET;
-        }
-        if (ruleManager.isDesiredMultipleAvailable(val)) {
-            return GameOption.Type.MULTIPLE;
-        }
-        if (ruleManager.isSingle(val)) {
-            return GameOption.Type.SINGLE;
-        }
-        return null; // Default case if no type matches
     }
 }

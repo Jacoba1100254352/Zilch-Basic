@@ -1,40 +1,42 @@
 package managers;
 
-import modelManagers.*;
-import models.*;
-import rules.*;
-import ui.*;
+import modelManagers.PlayerManager;
+import models.Player;
+import models.Score;
+import ruleManagers.GameOptionManager;
+import ruleManagers.RuleManager;
+import ui.GameplayUI;
+import ui.UserInteractionManager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Scanner;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class GameCoordinator {
+
     private final GameplayUI gameplayUI;
-    private List<Player> players;
-    private final DiceManager diceManager;
     private final UserInteractionManager userInteractionManager;
     private final GameStateManager gameStateManager;
     private final GameOptionManager gameOptionManager;
     private final GameFlowManager gameFlowManager;
-    private PlayerManager playerManager;
-    private final ScoreManager scoreManager;
     private final RuleManager ruleManager;
+    private PlayerManager playerManager;
+    private List<Player> players;
 
     public GameCoordinator() {
         this.ruleManager = new RuleManager(this);
-        this.gameStateManager = new GameStateManager(this, ruleManager);
-        this.diceManager = new DiceManager(new Dice(new HashMap<>()));
+        this.gameStateManager = new GameStateManager(this);
         this.gameOptionManager = new GameOptionManager(this);
         this.gameplayUI = new GameplayUI(this);
         this.gameFlowManager = new GameFlowManager(this);
-        this.userInteractionManager = new UserInteractionManager(gameplayUI, gameOptionManager, ruleManager, gameStateManager);
-        this.scoreManager = new ScoreManager(this);
+        this.userInteractionManager = new UserInteractionManager(this);
         this.playerManager = null;
         this.players = new ArrayList<>();
     }
+
+
+    ///   Main Functions   ///
 
     public void setupGame() {
         gameplayUI.displayWelcomeMessage();
@@ -47,11 +49,7 @@ public class GameCoordinator {
         // Initialize player manager with players
         this.playerManager = new PlayerManager(playerNames, scoreLimit);
         this.players = playerManager.getPlayers();
-
-        // Setup dice
-        diceManager.replenishAllDice();
     }
-
 
     /**
      * Game flow control methods
@@ -68,11 +66,10 @@ public class GameCoordinator {
 
                 // Set up for the next player
                 playerManager.setCurrentPlayer(player);
-                diceManager.replenishAllDice();
                 gameStateManager.initializeRollCycle();
 
                 // Delegate the turn play to GameFlowManager
-                gameFlowManager.playTurn(player);
+                gameFlowManager.playTurn(player, null);
             }
         }
     }
@@ -92,25 +89,9 @@ public class GameCoordinator {
 
         do {
             gameplayUI.displayUIElements();
-            updateAndProcessGameOption();
-            userInteractionManager.processInput(scanner);
+            userInteractionManager.inputGameOption(scanner);
             checkAndHandleTurnContinuation(scanner);
-        } while (gameStateManager.getTurnContinuationStatus() && gameStateManager.getSelectionContinuationStatus() && ruleManager.isOptionAvailable());
-    }
-
-    private void updateAndProcessGameOption() {
-        gameOptionManager.updateCurrentGameOption();
-        GameOption optionToProcess = gameOptionManager.getCurrentGameOption();
-
-        if (optionToProcess != null && optionToProcess.type() == GameOption.Type.MULTIPLE && !ruleManager.canProcessMultiple(optionToProcess.value())) {
-            gameplayUI.displayImpossibleOptionMessage();
-        }
-
-        if (optionToProcess != null && gameOptionManager.isValidMove(optionToProcess)) {
-            gameOptionManager.processMove(optionToProcess);
-        } else {
-            System.out.println("No valid move available or invalid move selected.");
-        }
+        } while (gameStateManager.getContinueTurn() && gameStateManager.getContinueSelecting() && ruleManager.isOptionAvailable());
     }
 
     private void checkAndHandleTurnContinuation(Scanner scanner) {
@@ -119,13 +100,16 @@ public class GameCoordinator {
         }
     }
 
+
+    ///   Helper Functions   ///
+
     private void handleTurnOptions(Player currentPlayer, Scanner scanner) {
         Score score = currentPlayer.score();
         if (score.getRoundScore() >= 1000) {
             gameplayUI.displayHighScoreInfo(currentPlayer, playerManager.findHighestScoringPlayer().name());
             if (userInteractionManager.enterEndTurnOption(scanner, currentPlayer.score())) {
-                gameStateManager.setTurnContinuationStatus(true, false);
-                gameStateManager.setSelectionContinuationStatus(false);
+                gameStateManager.setContinueTurn(true, false);
+                gameStateManager.setContinueSelecting(false);
                 gameplayUI.clear(); // Clear screen.
             }
         } else if (!ruleManager.isOptionAvailable()) {
@@ -133,13 +117,12 @@ public class GameCoordinator {
         }
     }
 
-    /****************************
-     *   GET AND SET FUNCTIONS   *
-     ****************************/
-
     public GameplayUI getGameplayUI() {
         return gameplayUI;
     }
+
+
+    ///   Getters and Setters   ///
 
     public PlayerManager getPlayerManager() {
         return playerManager;
@@ -149,26 +132,11 @@ public class GameCoordinator {
         return ruleManager;
     }
 
-    public ScoreManager getScoreManager() {
-        return scoreManager;
-    }
-
-    public DiceManager getDiceManager() {
-        return diceManager;
-    }
-
     public GameStateManager getGameStateManager() {
         return gameStateManager;
     }
 
     public GameOptionManager getGameOptionManager() {
         return gameOptionManager;
-    }
-
-    /************************
-     *   ENUM FOR PRINTING   *
-     ************************/
-    public enum printOptions {
-        ENTER, NEXT, REENTER
     }
 }
