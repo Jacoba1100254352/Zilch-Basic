@@ -42,7 +42,6 @@ public class GameStateManager {
 
         // Reevaluate game options
         gameCoordinator.getGameOptionManager().setPreviouslySelectedMultipleValue(null);
-        gameCoordinator.getGameOptionManager().evaluateGameOptions();
     }
 
     public void handleFirstRollBust() {

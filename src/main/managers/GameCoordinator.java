@@ -3,7 +3,7 @@ package managers;
 import modelManagers.PlayerManager;
 import models.Player;
 import models.Score;
-import ruleManagers.GameOptionManager;
+import modelManagers.GameOptionManager;
 import ruleManagers.RuleManager;
 import ui.GameplayUI;
 import ui.UserInteractionManager;

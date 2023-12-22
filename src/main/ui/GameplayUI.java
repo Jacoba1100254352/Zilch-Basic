@@ -9,6 +9,7 @@ import models.Score;
 import java.util.List;
 import java.util.Scanner;
 import java.util.StringJoiner;
+import java.util.stream.IntStream;
 
 public class GameplayUI {
     private final GameCoordinator gameCoordinator;
@@ -128,7 +129,7 @@ public class GameplayUI {
     private String generateInstructions() {
         PrintOptions options = determinePrintOption();
         String message = generateMessageBasedOnGameState();
-        return modifyMessageBasedOnOptions(message, options) + generateCommandOptions();
+        return generateCommandOptions() + modifyMessageBasedOnOptions(message, options);
     }
 
     private String generateCommandOptions() {
@@ -137,7 +138,7 @@ public class GameplayUI {
 
     private String buildDiceListString(Dice dice) {
         StringBuilder diceList = new StringBuilder();
-        dice.diceSetMap().forEach((key, value) -> diceList.append(key).append(" (").append(value).append("), "));
+        dice.diceSetMap().forEach((key, value) -> IntStream.range(0, value).forEach(i -> diceList.append(key).append(", ")));
         return !diceList.isEmpty() ? diceList.substring(0, diceList.length() - 2) : "";
     }
 

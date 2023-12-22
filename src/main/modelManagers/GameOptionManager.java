@@ -1,11 +1,10 @@
-package ruleManagers;
+package modelManagers;
 
 import managers.GameCoordinator;
 import models.GameOption;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 import static models.Dice.FULL_SET_OF_DICE;
 
@@ -80,10 +79,9 @@ public class GameOptionManager {
 
     public void processOptionS(char ch) {
         GameOption.Type optionType = switch (ch) {
-            case 't' -> gameCoordinator.getRuleManager().isStrait() ? GameOption.Type.STRAIT : null;
-            case 'e' -> gameCoordinator.getRuleManager().isSet() ? GameOption.Type.SET : null;
-            case '1' -> gameCoordinator.getRuleManager().isSingle(1) ? GameOption.Type.SINGLE : null;
-            case '5' -> gameCoordinator.getRuleManager().isSingle(5) ? GameOption.Type.SINGLE : null;
+            case 't' -> gameOptions.stream().anyMatch(option -> option.type() == GameOption.Type.STRAIT) ? GameOption.Type.STRAIT : null;
+            case 'e' -> gameOptions.stream().anyMatch(option -> option.type() == GameOption.Type.SET) ? GameOption.Type.SET : null;
+            case '1', '5' -> gameOptions.stream().anyMatch(option -> option.type() == GameOption.Type.SINGLE) ? GameOption.Type.SINGLE : null;
             default -> null;
         };
 
@@ -101,17 +99,10 @@ public class GameOptionManager {
         }
     }
 
-    public void processOptionA(Scanner input) {
-        char ch = input.next().charAt(0);
-        gameCoordinator.getGameplayUI().clear();
-        input.nextLine(); // Ignore the rest of the line
-        if (ch == 'l') {
-            gameOptions.forEach(gameOption -> processMove());
-        }
-    }
-
-    public void processOptionM(int val) {
+    public void processOptionM(char ch) {
+        int val = Character.getNumericValue(ch);
         GameOption.Type multipleType = determineGameOptionType(val);
+
         if (multipleType == GameOption.Type.MULTIPLE) {
             selectedGameOption = new GameOption(multipleType, val);
             processMove();

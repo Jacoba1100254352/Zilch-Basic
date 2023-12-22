@@ -26,14 +26,14 @@ public class UserInteractionManager {
     public int getNumberOfPlayers(Scanner scanner) {
         int numPlayers;
         while (true) {
-            System.out.print("Enter the number of players (1-6): ");
+            gameCoordinator.getGameplayUI().displayMessage("Enter the number of players (1-6): ");
             numPlayers = scanner.nextInt();
 
             if (numPlayers >= 1 && numPlayers <= 6) {
                 break;
             }
 
-            System.out.println("Invalid number of players. Please try again.");
+            gameCoordinator.getGameplayUI().displayMessage("Invalid number of players. Please try again.");
             scanner.nextLine(); // Clear buffer
         }
         return numPlayers;
@@ -46,7 +46,7 @@ public class UserInteractionManager {
         int numPlayers = getNumberOfPlayers(scanner);
 
         for (int i = 0; i < numPlayers; i++) {
-            System.out.print("Enter the name of player " + (i + 1) + ": ");
+            gameCoordinator.getGameplayUI().displayMessage("Enter the name of player " + (i + 1) + ": ");
             String playerName = scanner.next();
             playerNames.add(playerName);
         }
@@ -60,14 +60,14 @@ public class UserInteractionManager {
         int limit;
 
         while (true) {
-            System.out.print("\nEnter the score limit (minimum " + MIN_SCORE_LIMIT + "): ");
+            gameCoordinator.getGameplayUI().displayMessage("\nEnter the score limit (minimum " + MIN_SCORE_LIMIT + "): ");
             limit = scanner.nextInt();
 
             if (limit >= MIN_SCORE_LIMIT) {
                 break;
             }
 
-            System.out.println("Invalid score limit. Please try again.");
+            gameCoordinator.getGameplayUI().displayMessage("Invalid score limit. Please try again.");
             scanner.nextLine(); // Clears the buffer.
         }
         return limit;
@@ -89,52 +89,30 @@ public class UserInteractionManager {
     }
 
     public void inputGameOption(Scanner scanner) {
-        ignoreRemainingInput(scanner); // Clear remaining input.
+        String command = readValidCommand(scanner);
 
-        char ch = readValidCommand(scanner);
-
-        switch (ch) {
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-                gameCoordinator.getGameOptionManager().processOptionInt(Character.getNumericValue(ch));
-                break;
-            case 's':
-                gameCoordinator.getGameOptionManager().processOptionS(scanner.next().charAt(0));
-                break;
-            case 'a':
-                gameCoordinator.getGameOptionManager().processOptionA(scanner);
-                // Falls through to case 'm' intentionally
-            case 'm':
-                gameCoordinator.getGameOptionManager().processOptionM(scanner.nextInt());
-                break;
-            case '0':
-                gameCoordinator.getGameStateManager().processZeroCommand();
-                break;
-            case '?':
-                gameCoordinator.getGameplayUI().displayPossibleOptions();
-                break;
-            default:
-                gameCoordinator.getGameplayUI().displayImpossibleOptionMessage();
-                break;
+        switch (command.charAt(0)) {
+            case '1', '2', '3', '4', '5', '6' ->
+                    gameCoordinator.getGameOptionManager().processOptionInt(Character.getNumericValue(command.charAt(0)));
+            case 's' -> gameCoordinator.getGameOptionManager().processOptionS(command.charAt(1));
+            case 'a', 'm' -> gameCoordinator.getGameOptionManager().processOptionM(command.charAt(1));
+            case '0' -> gameCoordinator.getGameStateManager().processZeroCommand();
+            case '?' -> gameCoordinator.getGameplayUI().displayPossibleOptions();
+            default -> gameCoordinator.getGameplayUI().displayImpossibleOptionMessage();
         }
     }
 
 
     ///   Helper Functions   ///
 
-    private char readValidCommand(Scanner input) {
-        String validCommands = "stel123456am0?";
-        String pattern = "[" + validCommands + "]";
+    private String readValidCommand(Scanner input) {
+        String pattern = "s[1-6]|a[1-6]|st|se|m[1-6]|[0-6]|\\?";
 
-        String next;
+        String command;
         do {
-            next = input.next();
-        } while (!next.matches(pattern));
+            command = input.next();
+        } while (!command.matches(pattern));
 
-        return next.charAt(0);
+        return command;
     }
 }

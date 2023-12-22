@@ -15,13 +15,19 @@ public class GameFlowManager {
     ///   Main Functions   ///
 
     public void playTurn(Player player, String gameEndingPlayerName) {
-        while (gameCoordinator.getGameStateManager().canContinueTurn()) {
+        while (true) {
             if (gameEndingPlayerName != null)
                 gameCoordinator.getGameplayUI().displayHighScoreInfo(player, gameEndingPlayerName);
-            gameCoordinator.getPlayerManager().rollDice();
 
+            // Roll dice and evaluate game options
+            gameCoordinator.getPlayerManager().rollDice();
+            gameCoordinator.getGameOptionManager().evaluateGameOptions();
+
+            // Decide whether the turn ends or continues
             if (gameCoordinator.getGameStateManager().canContinueTurn()) {
                 gameCoordinator.processPlayerInput();
+            } else {
+                break;
             }
         }
     }
