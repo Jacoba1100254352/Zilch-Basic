@@ -128,6 +128,10 @@ public class GameCoordinator {
         return playerManager;
     }
 
+    public void setPlayerManager(PlayerManager playerManager) {
+        this.playerManager = playerManager;
+    }
+
     public RuleManager getRuleManager() {
         return ruleManager;
     }

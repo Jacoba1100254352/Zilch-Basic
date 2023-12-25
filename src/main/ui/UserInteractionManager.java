@@ -1,6 +1,8 @@
 package ui;
 
 import managers.GameCoordinator;
+import managers.GameStateManager;
+import models.GameOption;
 import models.Score;
 
 import java.util.ArrayList;
@@ -73,6 +75,35 @@ public class UserInteractionManager {
         return limit;
     }
 
+    public void inputGameOption(Scanner scanner) {
+        List<GameOption> gameOptions = gameCoordinator.getGameOptionManager().getGameOptions();
+        GameStateManager gameStateManager = gameCoordinator.getGameStateManager();
+
+        gameCoordinator.getGameplayUI().displayGameOptions(gameOptions,
+                gameStateManager.getContinueTurn() && gameStateManager.getContinueSelecting(),
+                !gameStateManager.getContinueTurn());
+
+        gameCoordinator.getGameplayUI().displayMessage("Enter choice: ");
+        int choice = scanner.nextInt();
+
+        if (choice == 0) {
+            // Handle help option
+            gameCoordinator.getGameplayUI().displayPossibleOptions();
+        } else if (choice == gameOptions.size() + 1 && !gameStateManager.getContinueTurn()) {
+            // Handle roll again
+            gameStateManager.setContinueTurn(true, false);
+        } else if (choice == gameOptions.size() + 2 && gameStateManager.getContinueTurn()) {
+            // Handle end turn
+            gameStateManager.setContinueTurn(false, true);
+        } else if (choice > 0 && choice <= gameOptions.size()) {
+            GameOption selectedOption = gameOptions.get(choice - 1);
+            gameCoordinator.getGameOptionManager().setSelectedGameOption(selectedOption);
+            gameCoordinator.getGameOptionManager().processMove();
+        } else {
+            gameCoordinator.getGameplayUI().displayMessage("Invalid choice. Please try again.");
+        }
+    }
+
     public boolean enterEndTurnOption(Scanner scanner, Score playerScore) {
         // Variables
         int playOrEndTurn;
@@ -86,33 +117,5 @@ public class UserInteractionManager {
         }
 
         return playOrEndTurn == 2 && playerScore.getRoundScore() >= 1000;
-    }
-
-    public void inputGameOption(Scanner scanner) {
-        String command = readValidCommand(scanner);
-
-        switch (command.charAt(0)) {
-            case '1', '2', '3', '4', '5', '6' ->
-                    gameCoordinator.getGameOptionManager().processOptionInt(Character.getNumericValue(command.charAt(0)));
-            case 's' -> gameCoordinator.getGameOptionManager().processOptionS(command.charAt(1));
-            case 'a', 'm' -> gameCoordinator.getGameOptionManager().processOptionM(command.charAt(1));
-            case '0' -> gameCoordinator.getGameStateManager().processZeroCommand();
-            case '?' -> gameCoordinator.getGameplayUI().displayPossibleOptions();
-            default -> gameCoordinator.getGameplayUI().displayImpossibleOptionMessage();
-        }
-    }
-
-
-    ///   Helper Functions   ///
-
-    private String readValidCommand(Scanner input) {
-        String pattern = "s[1-6]|a[1-6]|st|se|m[1-6]|[0-6]|\\?";
-
-        String command;
-        do {
-            command = input.next();
-        } while (!command.matches(pattern));
-
-        return command;
     }
 }

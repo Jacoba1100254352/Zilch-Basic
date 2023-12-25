@@ -55,72 +55,29 @@ public class GameOptionManager {
     }
 
     public void processMove() {
+        if (selectedGameOption == null) {
+            gameCoordinator.getGameplayUI().displayMessage("No option selected.");
+            return;
+        }
+
         if (isValidMove()) {
             switch (selectedGameOption.type()) {
                 case STRAIT -> handleStraits();
                 case SET -> handleSets();
                 case MULTIPLE -> handleMultiples();
                 case SINGLE -> handleSingles();
+                default -> gameCoordinator.getGameplayUI().displayMessage("Invalid move selected.");
             }
         } else {
             gameCoordinator.getGameplayUI().displayMessage("Invalid move selected.");
         }
-    }
 
-    public void processOptionInt(int val) {
-        GameOption.Type optionType = determineGameOptionType(val);
-        if (optionType != null) {
-            selectedGameOption = new GameOption(optionType, val);
-            processMove();
-        } else {
-            gameCoordinator.getGameplayUI().displayImpossibleOptionMessage();
-        }
-    }
-
-    public void processOptionS(char ch) {
-        GameOption.Type optionType = switch (ch) {
-            case 't' -> gameOptions.stream().anyMatch(option -> option.type() == GameOption.Type.STRAIT) ? GameOption.Type.STRAIT : null;
-            case 'e' -> gameOptions.stream().anyMatch(option -> option.type() == GameOption.Type.SET) ? GameOption.Type.SET : null;
-            case '1', '5' -> gameOptions.stream().anyMatch(option -> option.type() == GameOption.Type.SINGLE) ? GameOption.Type.SINGLE : null;
-            default -> null;
-        };
-
-        Integer val = switch (ch) {
-            case '1' -> 1;
-            case '5' -> 5;
-            default -> null;
-        };
-
-        if (optionType != null) {
-            selectedGameOption = new GameOption(optionType, val);
-            processMove();
-        } else {
-            gameCoordinator.getGameplayUI().displayImpossibleOptionMessage();
-        }
-    }
-
-    public void processOptionM(char ch) {
-        int val = Character.getNumericValue(ch);
-        GameOption.Type multipleType = determineGameOptionType(val);
-
-        if (multipleType == GameOption.Type.MULTIPLE) {
-            selectedGameOption = new GameOption(multipleType, val);
-            processMove();
-        } else {
-            gameCoordinator.getGameplayUI().displayFailedMultipleMessage();
-        }
+        // Reset the selectedGameOption after processing
+        setSelectedGameOption(null);
     }
 
 
     ///   Helper Functions   ///
-
-    private GameOption.Type determineGameOptionType(int val) {
-        return (gameCoordinator.getRuleManager().isStrait()) ? GameOption.Type.STRAIT
-                : (gameCoordinator.getRuleManager().isSet()) ? GameOption.Type.SET
-                : (gameCoordinator.getRuleManager().isDesiredMultipleAvailable(val)) ? GameOption.Type.MULTIPLE
-                : (gameCoordinator.getRuleManager().isSingle(val)) ? GameOption.Type.SINGLE
-                : null; // Default case if no type matches
-    }
 
     private void handleStraits() {
         gameCoordinator.getPlayerManager().scoreStraits();

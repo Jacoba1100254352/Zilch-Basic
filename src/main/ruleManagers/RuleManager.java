@@ -22,8 +22,20 @@ public class RuleManager {
 
     public boolean isStrait() {
         Map<Integer, Integer> diceSetMap = gameCoordinator.getPlayerManager().getCurrentPlayer().dice().diceSetMap();
-        return (diceSetMap.size() == FULL_SET_OF_DICE) &&
-                diceSetMap.entrySet().stream().allMatch(e -> e.getKey() == (e.getValue() == 1 ? 1 : 0));
+
+        // Check if the map size is exactly 6 (for numbers 1 to 6)
+        if (diceSetMap.size() != FULL_SET_OF_DICE) {
+            return false;
+        }
+
+        // Check if each number from 1 to 6 appears exactly once
+        for (int i = 1; i <= FULL_SET_OF_DICE; i++) {
+            if (!diceSetMap.containsKey(i) || diceSetMap.get(i) != 1) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public boolean isSet() {

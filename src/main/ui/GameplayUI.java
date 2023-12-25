@@ -18,13 +18,38 @@ public class GameplayUI {
         this.gameCoordinator = gameCoordinator;
     }
 
+
+    ///   Main Functions   ///
+
     public void displayWelcomeMessage() {
         clear();
         System.out.println(getWelcomeMessage());
     }
 
+    public void displayGameOptions(List<GameOption> gameOptions, boolean canEndTurn, boolean canRollAgain) {
+        System.out.println("\nAvailable Options:");
+        int optionNumber = 1;
 
-    ///   Main Functions   ///
+        for (GameOption option : gameOptions) {
+            String optionDescription = switch (option.type()) {
+                case STRAIT -> "Score a Strait";
+                case SET -> "Score a Set";
+                case MULTIPLE -> "Score Multiple " + option.value();
+                case SINGLE -> "Score Single " + option.value();
+            };
+            System.out.printf("%d. %s\n", optionNumber++, optionDescription);
+        }
+
+        if (canRollAgain) {
+            System.out.printf("%d. Roll again\n", optionNumber++);
+        }
+
+        if (canEndTurn) {
+            System.out.printf("%d. End Turn\n", optionNumber++);
+        }
+
+        System.out.printf("%d. Help\n", optionNumber);
+    }
 
     public void displayCurrentScore(Player currentPlayer) {
         System.out.println(currentPlayer.name() + "'s current score: " + currentPlayer.score().getRoundScore());
@@ -53,12 +78,7 @@ public class GameplayUI {
     }
 
     public void displayMessage(String message) {
-        System.out.println(message);
-    }
-
-    public void displayImpossibleOptionMessage() {
-        clear();
-        System.out.println("You have selected an impossible option");
+        System.out.print(message);
     }
 
     public void displayLastRoundMessage(Player gameEndingPlayer) {
@@ -66,15 +86,6 @@ public class GameplayUI {
         System.out.println("Everyone else has one more chance to win");
         pauseAndContinue();
         System.out.println();
-    }
-
-    public void displayFailedMultipleMessage() {
-        System.out.println("You have selected an impossible option");
-
-        List<GameOption> gameOptions = gameCoordinator.getGameOptionManager().getGameOptions();
-
-        gameOptions.stream().filter(gameOption -> gameOption.type() == GameOption.Type.MULTIPLE).map(gameOption -> "You can choose the multiple " + gameOption.value()).forEach(System.out::println);
-        printPossibleMultipleAddition();
     }
 
     public void displayLastTurnMessage(String playerName) {
