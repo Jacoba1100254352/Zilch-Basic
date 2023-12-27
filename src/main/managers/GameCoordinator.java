@@ -1,18 +1,18 @@
 package managers;
 
+import modelManagers.GameOptionManager;
 import modelManagers.PlayerManager;
 import models.Player;
-import models.Score;
-import modelManagers.GameOptionManager;
 import ruleManagers.RuleManager;
 import ui.GameplayUI;
 import ui.UserInteractionManager;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
-import java.util.stream.Collectors;
 
+/**
+ * Coordinates the various aspects of the game including player management, game state, and user interactions.
+ */
 public class GameCoordinator {
 
     private final GameplayUI gameplayUI;
@@ -24,105 +24,73 @@ public class GameCoordinator {
     private PlayerManager playerManager;
     private List<Player> players;
 
+    /**
+     * Constructs a new GameCoordinator, initializing all necessary components of the game.
+     */
     public GameCoordinator() {
+        // Initialize all the managers and UI components needed for the game
         this.ruleManager = new RuleManager(this);
         this.gameStateManager = new GameStateManager(this);
         this.gameOptionManager = new GameOptionManager(this);
         this.gameplayUI = new GameplayUI(this);
         this.gameFlowManager = new GameFlowManager(this);
         this.userInteractionManager = new UserInteractionManager(this);
-        this.playerManager = null;
-        this.players = new ArrayList<>();
+        this.playerManager = null; // Will be set during game setup
+        this.players = new ArrayList<>(); // List to hold all the players
     }
 
 
     ///   Main Functions   ///
 
+    /**
+     * Sets up the game by displaying the welcome message and initializing players and score limit.
+     */
     public void setupGame() {
+        // Display the welcome message and instructions
         gameplayUI.displayWelcomeMessage();
         gameplayUI.pauseAndContinue();
         gameplayUI.clear();
 
+        // Get the score limit and player names from the user
         int scoreLimit = userInteractionManager.getValidScoreLimit();
         List<String> playerNames = userInteractionManager.getPlayerNames();
 
-        // Initialize player manager with players
+        // Initialize the PlayerManager with the obtained player names and score limit
         this.playerManager = new PlayerManager(playerNames, scoreLimit);
-        this.players = playerManager.getPlayers();
+        this.players = playerManager.getPlayers(); // Store the list of players
     }
 
     /**
-     * Game flow control methods
+     * Initiates and controls the main game loop.
+     * @param isTest Boolean indicating whether the game is being played or tested.
      */
-
-    public void playGame() {
+    public void playGame(boolean isTest) {
+        // Main game loop
         while (true) {
+            // Iterate through each player for their turn
             for (Player player : players) {
-                // Delegate to GameFlowManager to check and manage game-end conditions
+                // Check if the game-ending condition is met
                 if (gameFlowManager.checkGameEndCondition(player)) {
-                    gameFlowManager.handleGameEnd();
-                    return;
+                    gameFlowManager.handleGameEnd(isTest);
+                    return; // Exit the loop if game ends
                 }
 
-                // Set up for the next player
+                // Set the current player and initialize their turn
                 playerManager.setCurrentPlayer(player);
                 gameStateManager.initializeRollCycle();
 
-                // Delegate the turn play to GameFlowManager
-                gameFlowManager.playTurn(player, null);
+                // Handle the player's turn
+                gameFlowManager.playTurn(player, null, isTest);
             }
-        }
-    }
-
-    public List<Player> getTiedPlayers(int highestScore) {
-        return players.stream()
-                .filter(player -> player.score().getPermanentScore() == highestScore)
-                .collect(Collectors.toList());
-    }
-
-    public boolean isTie(List<Player> tiedPlayers) {
-        return tiedPlayers.size() > 1;
-    }
-
-    public void processPlayerInput() {
-        Scanner scanner = new Scanner(System.in);
-
-        do {
-            gameplayUI.displayUIElements();
-            userInteractionManager.inputGameOption(scanner);
-            checkAndHandleTurnContinuation(scanner);
-        } while (gameStateManager.getContinueTurn() && gameStateManager.getContinueSelecting() && ruleManager.isOptionAvailable());
-    }
-
-    private void checkAndHandleTurnContinuation(Scanner scanner) {
-        if (playerManager.getCurrentPlayer().score().getRoundScore() >= 1000 || ruleManager.isOptionAvailable()) {
-            handleTurnOptions(playerManager.getCurrentPlayer(), scanner);
         }
     }
 
 
     ///   Helper Functions   ///
 
-    private void handleTurnOptions(Player currentPlayer, Scanner scanner) {
-        Score score = currentPlayer.score();
-        if (score.getRoundScore() >= 1000) {
-            gameplayUI.displayHighScoreInfo(currentPlayer, playerManager.findHighestScoringPlayer().name());
-            if (userInteractionManager.enterEndTurnOption(scanner, currentPlayer.score())) {
-                gameStateManager.setContinueTurn(true, false);
-                gameStateManager.setContinueSelecting(false);
-                gameplayUI.clear(); // Clear screen.
-            }
-        } else if (!ruleManager.isOptionAvailable()) {
-            gameStateManager.handleNoOptionsLeft();
-        }
-    }
-
     public GameplayUI getGameplayUI() {
         return gameplayUI;
     }
-
-
-    ///   Getters and Setters   ///
 
     public PlayerManager getPlayerManager() {
         return playerManager;
@@ -142,5 +110,9 @@ public class GameCoordinator {
 
     public GameOptionManager getGameOptionManager() {
         return gameOptionManager;
+    }
+
+    public UserInteractionManager getUserInteractionManager() {
+        return userInteractionManager;
     }
 }

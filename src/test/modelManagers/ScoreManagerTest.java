@@ -90,7 +90,7 @@ class ScoreManagerTest {
         dice.setDiceSetMap(diceMap);
 
         scoreManager.scoreMultiple(3);
-        int expectedScore = (3 * 100) * (int)Math.pow(2, 1); // 300 * 2 = 600
+        int expectedScore = (3 * 100) * (int) Math.pow(2, 1); // 300 * 2 = 600
         assertEquals(expectedScore, score.getRoundScore(), "Scoring multiples should add correctly calculated score");
 
         // Add another three to the dice
@@ -98,7 +98,7 @@ class ScoreManagerTest {
         dice.setDiceSetMap(diceMap);
 
         scoreManager.scoreMultiple(3);
-        expectedScore = (3 * 100) * (int)Math.pow(2, 2); // 300 * 4 = 1200
+        expectedScore = (3 * 100) * (int) Math.pow(2, 2); // 300 * 4 = 1200
         assertEquals(expectedScore, score.getRoundScore(), "Scoring additional multiples should add correctly calculated score");
 
         // Add another three to the dice
@@ -106,7 +106,7 @@ class ScoreManagerTest {
         dice.setDiceSetMap(diceMap);
 
         scoreManager.scoreMultiple(3);
-        expectedScore = (3 * 100) * (int)Math.pow(2, 3); // 300 * 8 = 2400
+        expectedScore = (3 * 100) * (int) Math.pow(2, 3); // 300 * 8 = 2400
         assertEquals(expectedScore, score.getRoundScore(), "Scoring additional multiples should add correctly calculated score");
     }
 
@@ -119,7 +119,7 @@ class ScoreManagerTest {
         dice.setDiceSetMap(diceMap);
 
         scoreManager.scoreMultiple(3);
-        int wrongScore = (3 * 100) * (int)Math.pow(2, 2); // 300 * 4 = 1200
+        int wrongScore = (3 * 100) * (int) Math.pow(2, 2); // 300 * 4 = 1200
         assertNotEquals(wrongScore, score.getRoundScore(), "Scoring multiples should not add incorrect score");
 
         // Add another three to the dice
@@ -127,7 +127,7 @@ class ScoreManagerTest {
         dice.setDiceSetMap(diceMap);
 
         scoreManager.scoreMultiple(3);
-        wrongScore = (3 * 100) * (int)Math.pow(2, 3); // 300 * 8 = 2400
+        wrongScore = (3 * 100) * (int) Math.pow(2, 3); // 300 * 8 = 2400
         assertNotEquals(wrongScore, score.getRoundScore(), "Scoring additional multiples should not add incorrect score");
     }
 }

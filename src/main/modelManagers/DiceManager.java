@@ -27,7 +27,7 @@ public class DiceManager extends PlayerActionManager {
     }
 
     public void replenishAllDice() {
-        removeZeros();
+        getDice().diceSetMap().clear();
         getDice().setNumDiceInPlay(FULL_SET_OF_DICE);
     }
 
@@ -37,13 +37,14 @@ public class DiceManager extends PlayerActionManager {
     }
 
     public void eliminateDice(int dieValue) {
-        getDice().diceSetMap().put(dieValue, 0);
-        removeZeros();
+        getDice().diceSetMap().remove(dieValue);
+        getDice().calculateNumDiceInPlay();
     }
 
     public void removeDice(int dieValue, int numToRemove) {
         getDice().diceSetMap().put(dieValue, getDice().diceSetMap().get(dieValue) - numToRemove);
         removeZeros();
+        getDice().calculateNumDiceInPlay();
     }
 
 

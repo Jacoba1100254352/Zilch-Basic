@@ -11,6 +11,6 @@ public class ZilchClient {
         gameCoordinator.setupGame();
 
         // Start the game
-        gameCoordinator.playGame();
+        gameCoordinator.playGame(false);
     }
 }
