@@ -1,6 +1,5 @@
 package managers;
 
-import modelManagers.GameOptionManager;
 import modelManagers.PlayerManager;
 import models.Player;
 import ruleManagers.RuleManager;

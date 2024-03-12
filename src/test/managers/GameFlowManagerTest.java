@@ -2,16 +2,22 @@ package managers;
 
 import modelManagers.PlayerManager;
 import models.Player;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class GameFlowManagerTest {
+    private final PrintStream standardOut = System.out;
+    private final PrintStream standardErr = System.err;
+    private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
 
     private GameCoordinator gameCoordinator;
     private GameFlowManager gameFlowManager;
@@ -20,6 +26,11 @@ class GameFlowManagerTest {
 
     @BeforeEach
     void setUp() {
+        // Redirect all System.out to outputStreamCaptor
+        System.setOut(new PrintStream(outputStreamCaptor));
+        System.setErr(new PrintStream(outputStreamCaptor));
+
+        // Set up game coordinator and player
         final int scoreLimit = 5000;
         gameCoordinator = new GameCoordinator();
         gameFlowManager = new GameFlowManager(gameCoordinator);
@@ -29,13 +40,24 @@ class GameFlowManagerTest {
         gameCoordinator.setPlayerManager(new PlayerManager(playerNames, scoreLimit));
         player = gameCoordinator.getPlayerManager().getCurrentPlayer();
 
+        // Set up executor for testing
         executor = Executors.newSingleThreadExecutor();
+    }
+
+    @AfterEach
+    public void tearDown() {
+        // Reset System.out and System.err
+        System.setOut(standardOut);
+        System.setErr(standardErr);
+
+        // Shut down executor
+        executor.shutdownNow();
     }
 
     @Test
     @DisplayName("End Turn Successfully")
     void endTurnSuccessfully() {
-        // Set up player's round score to trigger end of turn logic
+        // Set up player's round score to trigger the end of the turn logic
         player.score().setRoundScore(1200);
 
         // Set game state to end turn
@@ -59,7 +81,15 @@ class GameFlowManagerTest {
         // Simulate a bust scenario
         gameCoordinator.getGameStateManager().handleBust();
 
-        gameFlowManager.playTurn(player, null, true); // true for isTest
+        // Check if continueTurn is false after a bust
+        assertFalse(gameCoordinator.getGameStateManager().getContinueTurn(), "Continue turn should be false after a bust");
+
+        // Only call playTurn if continueTurn is false
+        if (!gameCoordinator.getGameStateManager().getContinueTurn()) {
+            gameFlowManager.playTurn(player, null, true); // true for isTest
+        } else {
+            fail("Continue turn should be false after a bust, but it was true");
+        }
 
         // Check if the round score is reset
         assertEquals(0, player.score().getRoundScore(), "Round score should reset to 0 on bust");
