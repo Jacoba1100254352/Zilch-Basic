@@ -6,6 +6,7 @@ import models.Score;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
@@ -60,6 +61,10 @@ public class PlayerManager {
     /*************
      *    DICE   *
      ************/
+    public Map<Integer, Integer> getDice(Player player) {
+        return player.dice().diceSetMap();
+    }
+
     public void rollDice() {
         diceManager.rollDice();
     }
@@ -84,6 +89,10 @@ public class PlayerManager {
     /**************
      *    SCORE   *
      *************/
+    public Score getScore() {
+        return scoreManager.getScore();
+    }
+
     public void scoreStraits() {
         scoreManager.scoreStraits();
     }

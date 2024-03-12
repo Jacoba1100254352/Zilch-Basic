@@ -1,10 +1,12 @@
-package modelManagers;
+package managers;
 
-import managers.GameCoordinator;
+import modelManagers.PlayerManager;
 import models.GameOption;
+import ruleManagers.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static models.Dice.FULL_SET_OF_DICE;
 
@@ -74,15 +76,17 @@ public class GameOptionManager {
 
     // Adds game options based on the current rules and dice state
     private void addGameOptionsBasedOnRules() {
-        // Add straits and sets if applicable
-        if (gameCoordinator.getRuleManager().isStrait()) {
+        // TODO: Implement a getPlayerDice method that takes in the currentPlayer and returns their dice (or diceSetMap)
+        final PlayerManager playerManager = gameCoordinator.getPlayerManager();
+        final Map<Integer, Integer> diceSetMap = playerManager.getDice(playerManager.getCurrentPlayer());;
+
+        if (gameCoordinator.getRuleManager().isRuleValid(new StraitRule(), diceSetMap)) {
             gameOptions.add(new GameOption(GameOption.Type.STRAIT, null));
         }
-        if (gameCoordinator.getRuleManager().isSet()) {
+        if (gameCoordinator.getRuleManager().isRuleValid(new SetRule(), diceSetMap)) {
             gameOptions.add(new GameOption(GameOption.Type.SET, null));
         }
 
-        // Add multiples and singles based on the dice values
         for (int dieValue = 1; dieValue <= FULL_SET_OF_DICE; dieValue++) {
             addMultipleAndSingleOptions(dieValue);
         }
@@ -90,11 +94,14 @@ public class GameOptionManager {
 
     // Adds multiple and single game options based on a given die value
     private void addMultipleAndSingleOptions(int dieValue) {
-        if (gameCoordinator.getRuleManager().isDesiredMultipleAvailable(dieValue)) {
+        PlayerManager playerManager = gameCoordinator.getPlayerManager();
+        Map<Integer, Integer> diceSetMap = playerManager.getDice(playerManager.getCurrentPlayer());
+
+        if (gameCoordinator.getRuleManager().isRuleValid(new MultipleRule(), diceSetMap) || gameCoordinator.getRuleManager().isRuleValid(new AddMultipleRule(dieValue), diceSetMap)) {
             gameOptions.add(new GameOption(GameOption.Type.MULTIPLE, dieValue));
         }
         if (dieValue == 1 || dieValue == 5) {
-            if (gameCoordinator.getRuleManager().isSingle(dieValue)) {
+            if (gameCoordinator.getRuleManager().isRuleValid(new SingleRule(dieValue), diceSetMap)) {
                 gameOptions.add(new GameOption(GameOption.Type.SINGLE, dieValue));
             }
         }
@@ -128,9 +135,21 @@ public class GameOptionManager {
 
     // Handles the scoring and dice removal for multiples
     private void handleMultiples() {
-        previouslySelectedMultipleValue = selectedGameOption.value();
-        gameCoordinator.getPlayerManager().scoreMultiple(selectedGameOption.value());
-        gameCoordinator.getPlayerManager().eliminateDice(selectedGameOption.value());
+        Multiples multiples = new Multiples(selectedGameOption.value());
+        PlayerManager playerManager = gameCoordinator.getPlayerManager();
+
+        // Check if the selected multiple is valid
+        if (multiples.isValidMultiple(playerManager.getDice(playerManager.getCurrentPlayer()))) {
+            int mScore = multiples.getCount(playerManager.getDice(playerManager.getCurrentPlayer())) * multiples.getValue() * 100;
+
+            if (playerManager.getScore().getScoreFromMultiples() == 0) {
+                playerManager.getScore().increaseRoundScore(mScore);
+            } else { // Increase the round score by the difference between the new multiple score and the previous multiple score
+                playerManager.getScore().increaseRoundScore(mScore - playerManager.getScore().getScoreFromMultiples());
+            }
+
+            playerManager.getScore().setScoreFromMultiples(mScore);
+        }
     }
 
     // Handles the scoring and dice removal for singles
