@@ -1,21 +1,23 @@
 package rules;
 
-
-import interfaces.IRule;
+import abstracts.AbstractRule;
 
 import java.util.Map;
 
-
-public class AddMultipleRule implements IRule
+public class AddMultipleRule extends AbstractRule
 {
-	private final Integer value;
 	
 	public AddMultipleRule(Integer value) {
-		this.value = value;
+		super(value);
+	}
+	
+	@Override
+	public boolean isValid(Map<Integer, Integer> diceSetMap, Integer value) {
+		return diceSetMap.getOrDefault(value, 0) >= 3;
 	}
 	
 	@Override
 	public boolean isValid(Map<Integer, Integer> diceSetMap) {
-		return diceSetMap.getOrDefault(value, 0) >= 3;
+		return diceSetMap.getOrDefault(this.value, 0) >= 3;
 	}
 }

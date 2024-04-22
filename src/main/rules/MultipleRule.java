@@ -1,20 +1,18 @@
 package rules;
 
-
-import interfaces.IRule;
+import abstracts.AbstractRule;
 
 import java.util.Map;
 
-
-public class MultipleRule implements IRule
+public class MultipleRule extends AbstractRule
 {
-	private Integer value;
 	
 	public MultipleRule() {
+		super(null);
 	}
-	
+
 	public MultipleRule(Integer value) {
-		this.value = value;
+		super(value);
 	}
 	
 	@Override
@@ -22,7 +20,8 @@ public class MultipleRule implements IRule
 		return diceSetMap.values().stream().anyMatch(count -> count >= 3);
 	}
 	
-	public boolean isDesiredMultipleAvailable(Map<Integer, Integer> diceSetMap) {
+	@Override
+	public boolean isValid(Map<Integer, Integer> diceSetMap, Integer value) {
 		return diceSetMap.getOrDefault(value, 0) >= 3;
 	}
 }

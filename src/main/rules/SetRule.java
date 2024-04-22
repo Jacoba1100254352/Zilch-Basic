@@ -1,12 +1,10 @@
 package rules;
 
-
-import interfaces.IRule;
+import abstracts.AbstractRule;
 
 import java.util.Map;
 
-
-public class SetRule implements IRule
+public class SetRule extends AbstractRule
 {
 	@Override
 	public boolean isValid(Map<Integer, Integer> diceSetMap) {

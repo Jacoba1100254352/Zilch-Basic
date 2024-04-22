@@ -1,14 +1,12 @@
 package rules;
 
-
-import interfaces.IRule;
+import abstracts.AbstractRule;
 
 import java.util.Map;
 
 import static models.Dice.FULL_SET_OF_DICE;
 
-
-public class StraitRule implements IRule
+public class StraitRule extends AbstractRule
 {
 	@Override
 	public boolean isValid(Map<Integer, Integer> diceSetMap) {

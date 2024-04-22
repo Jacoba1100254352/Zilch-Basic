@@ -1,15 +1,13 @@
 package ruleManagers;
 
-
-import interfaces.IRule;
+import interfaces.IRuleStrategy;
 import managers.GameCoordinator;
 import modelManagers.PlayerManager;
+import rules.*;
 
 import java.util.Map;
 
-
-public class RuleManager
-{
+public class RuleManager {
 	private final GameCoordinator gameCoordinator;
 	
 	public RuleManager(GameCoordinator gameCoordinator) {
@@ -21,16 +19,19 @@ public class RuleManager
 		Map<Integer, Integer> diceSetMap = playerManager.getDice(playerManager.getCurrentPlayer());
 		
 		return (
-				isRuleValid(RuleType.STRAIT, diceSetMap, null) ||
-						isRuleValid(RuleType.SET, diceSetMap, null) ||
-						isRuleValid(RuleType.MULTIPLE, diceSetMap, null) ||
-						isRuleValid(RuleType.SINGLE, diceSetMap, 1) ||
-						isRuleValid(RuleType.SINGLE, diceSetMap, 5)
+				isRuleValid(new StraitRule(), diceSetMap, null) ||
+						isRuleValid(new SetRule(), diceSetMap, null) ||
+						isRuleValid(new MultipleRule(), diceSetMap, null) ||
+						isRuleValid(new SingleRule(1), diceSetMap, 1) ||
+						isRuleValid(new SingleRule(5), diceSetMap, 5)
 		);
 	}
 	
-	public boolean isRuleValid(RuleType ruleType, Map<Integer, Integer> diceSetMap, Integer value) {
-		IRule rule = RuleFactory.getRule(ruleType, value);
+	public boolean isRuleValid(IRuleStrategy rule, Map<Integer, Integer> diceSetMap) {
 		return rule.isValid(diceSetMap);
+	}
+	
+	public boolean isRuleValid(IRuleStrategy rule, Map<Integer, Integer> diceSetMap, Integer value) {
+		return rule.isValid(diceSetMap, value);
 	}
 }

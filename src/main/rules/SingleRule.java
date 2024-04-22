@@ -1,22 +1,24 @@
 package rules;
 
-
-import interfaces.IRule;
+import abstracts.AbstractRule;
 import types.Singles;
 
 import java.util.Map;
 
-
-public class SingleRule implements IRule
+public class SingleRule extends AbstractRule
 {
-	private int value;
-	
-	public SingleRule(int value) {
-		this.value = value;
+	public SingleRule(Integer value) {
+		super(value);
 	}
 	
 	@Override
 	public boolean isValid(Map<Integer, Integer> diceSetMap) {
+		Singles single = new Singles(value);
+		return single.isValidSingle() && diceSetMap.getOrDefault(value, 0) > 0;
+	}
+	
+	@Override
+	public boolean isValid(Map<Integer, Integer> diceSetMap, Integer value) {
 		Singles single = new Singles(value);
 		return single.isValidSingle() && diceSetMap.getOrDefault(value, 0) > 0;
 	}
