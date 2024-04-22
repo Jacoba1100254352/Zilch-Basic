@@ -1,47 +1,53 @@
 package modelManagers;
 
-import models.Dice;
 
-public class ScoreManager extends PlayerActionManager {
-
-    public ScoreManager(PlayerManager playerManager) {
-        super(playerManager);
-    }
+import abstracts.AbstractScoreManager;
+import models.Score;
 
 
-    ///   Main Functions   ///
-
-    public void scoreStraits() {
-        getScore().increaseRoundScore(1000);
-    }
-
-    public void scoreSets() {
-        getScore().increaseRoundScore(1000);
-    }
-
-    public void scoreSingle(int dieValue) {
-        int singleScore = (dieValue == 1) ? 100 : 50;
-        getScore().increaseRoundScore(singleScore);
-    }
-
-    public void scoreMultiple(int dieValue) {
-        int mScore = calculateMultipleScore(dieValue, getDice());
-
-        if (getScore().getScoreFromMultiples() == 0) {
-            getScore().increaseRoundScore(mScore);
-        } else { // Increase the round score by the difference between the new multiple score and the previous multiple score
-            getScore().increaseRoundScore(mScore - getScore().getScoreFromMultiples());
-        }
-
-        getScore().setScoreFromMultiples(mScore);
-    }
-
-
-    ///   Helper Functions   ///
-
-    private int calculateMultipleScore(int dieValue, Dice dice) {
-        int baseScore = (dieValue == 1) ? 1000 : dieValue * 100;
-        int numMultiples = dice.diceSetMap().get(dieValue) - 3;
-        return baseScore * (int) Math.pow(2, numMultiples);
-    }
+public class ScoreManager extends AbstractScoreManager
+{
+	public ScoreManager(int scoreLimit) {
+		super(scoreLimit);
+	}
+	
+	///   Main Functions   ///
+	
+	@Override
+	public void scoreStraits(Score score) {
+		score.increaseRoundScore(1000);
+	}
+	
+	@Override
+	public void scoreSets(Score score) {
+		score.increaseRoundScore(1000);
+	}
+	
+	@Override
+	public void scoreSingle(Score score, int dieValue) {
+		int singleScore = (dieValue == 1) ? 100 : 50;
+		score.increaseRoundScore(singleScore);
+	}
+	
+	@Override
+	public void scoreMultiple(Score score, int numMultiples, int dieValue) {
+		int mScore = calculateMultipleScore(numMultiples, dieValue);
+		
+		if (score.getScoreFromMultiples() == 0) {
+			score.increaseRoundScore(mScore);
+		} else { // Increase the round score by the difference between the new multiple score and the previous multiple score
+			score.increaseRoundScore(mScore - score.getScoreFromMultiples());
+		}
+		
+		score.setScoreFromMultiples(mScore);
+	}
+	
+	
+	///   Helper Functions   ///
+	
+	private int calculateMultipleScore(int numMultiples, int dieValue) {
+		int baseScore = (dieValue == 1) ? 1000 : dieValue * 100;
+		numMultiples -= -3;
+		return baseScore * (int) Math.pow(2, numMultiples);
+	}
 }
