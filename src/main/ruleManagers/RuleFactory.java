@@ -12,8 +12,8 @@ public class RuleFactory
 			case ADD_MULTIPLE -> new AddMultipleRule(value);
 			case MULTIPLE -> new MultipleRule(value);
 			case SINGLE -> new SingleRule(value);
-			case SET -> new SetRule();
-			case STRAIT -> new StraitRule();
+			case SET -> new SetRule(value);
+			case STRAIT -> new StraitRule(value);
 		};
 	}
 }

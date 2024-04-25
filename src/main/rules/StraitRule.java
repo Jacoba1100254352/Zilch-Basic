@@ -1,10 +1,12 @@
 package rules;
 
+
 import abstracts.AbstractRule;
 
 import java.util.Map;
 
 import static models.Dice.FULL_SET_OF_DICE;
+
 
 public class StraitRule extends AbstractRule
 {

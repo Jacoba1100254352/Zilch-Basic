@@ -3,7 +3,7 @@ package ui;
 
 import interfaces.IGameplayUI;
 import interfaces.IInputManager;
-import modelManagers.PlayerActionManager;
+import modelManagers.PlayerManager;
 import models.Dice;
 import models.GameOption;
 import models.Player;
@@ -21,17 +21,17 @@ import static interfaces.IScoreManager.scoreLimit;
  */
 public class ConsoleGameplayUI implements IGameplayUI
 {
-	private final PlayerActionManager playerActionManager;
+	private final PlayerManager playerManager;
 	private final IInputManager inputManager;
 	
 	
 	/**
 	 * Constructs a new ConsoleGameplayUI object.
 	 *
-	 * @param playerActionManager The coordinator of the game's overall logic and flow.
+	 * @param playerManager The coordinator of the game's overall logic and flow.
 	 */
-	public ConsoleGameplayUI(PlayerActionManager playerActionManager, IInputManager inputManager) {
-		this.playerActionManager = playerActionManager;
+	public ConsoleGameplayUI(PlayerManager playerManager, IInputManager inputManager) {
+		this.playerManager = playerManager;
 		this.inputManager = inputManager;
 	}
 	
@@ -54,7 +54,7 @@ public class ConsoleGameplayUI implements IGameplayUI
 	@Override
 	public void displayGameOptions(List<GameOption> gameOptions) {
 		// Create local score variable
-		Score score = playerActionManager.getScore();
+		Score score = playerManager.getScore();
 		
 		///   Display Game Options   ///
 		System.out.println("\nAvailable Options:");
@@ -93,7 +93,7 @@ public class ConsoleGameplayUI implements IGameplayUI
 	 */
 	@Override
 	public void displayDice() {
-		Dice dice = gameCoordinator.getPlayerManager().getCurrentPlayer().dice();
+		Dice dice = playerManager.getCurrentPlayer().dice();
 		dice.calculateNumDiceInPlay();
 		System.out.println("\nYou have " + dice.getNumDiceInPlay() + " dice left.");
 		System.out.println(buildDiceListString(dice));

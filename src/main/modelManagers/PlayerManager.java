@@ -1,6 +1,7 @@
 package modelManagers;
 
 
+import abstracts.AbstractManager;
 import interfaces.IDiceManager;
 import interfaces.IScoreManager;
 import models.Dice;
@@ -14,7 +15,7 @@ import java.util.Vector;
 import java.util.stream.Collectors;
 
 
-public class PlayerManager
+public class PlayerManager extends AbstractManager
 {
 	private final IDiceManager diceManager;
 	private final IScoreManager scoreManager;
@@ -70,24 +71,28 @@ public class PlayerManager
 		return player.dice().diceSetMap();
 	}
 	
+	public Dice getDice() {
+		return currentPlayer.dice();
+	}
+	
 	public void rollDice() {
-		diceManager.rollDice();
+		diceManager.rollDice(getDice());
 	}
 	
 	public void replenishAllDice() {
-		diceManager.replenishAllDice();
+		diceManager.replenishAllDice(getDice());
 	}
 	
 	public void eliminateDice(int dieValue) {
-		diceManager.eliminateDice(dieValue);
+		diceManager.eliminateDice(getDice(), dieValue);
 	}
 	
 	public void removeDice(int dieValue, int numToRemove) {
-		diceManager.removeDice(dieValue, numToRemove);
+		diceManager.removeDice(getDice(), dieValue, numToRemove);
 	}
 	
 	public void removeAllDice() {
-		diceManager.removeAllDice();
+		diceManager.removeAllDice(getDice());
 	}
 	
 	
@@ -95,22 +100,31 @@ public class PlayerManager
 	 *    SCORE   *
 	 *************/
 	public Score getScore() {
-		return scoreManager.getScore();
+		return currentPlayer.score();
 	}
 	
 	public void scoreStraits() {
-		scoreManager.scoreStraits();
+		scoreManager.scoreStraits(getScore());
 	}
 	
 	public void scoreSets() {
-		scoreManager.scoreSets();
+		scoreManager.scoreSets(getScore());
 	}
 	
 	public void scoreSingle(int dieValue) {
-		scoreManager.scoreSingle(dieValue);
+		scoreManager.scoreSingle(getScore(), dieValue);
 	}
 	
 	public void scoreMultiple(int dieValue) {
 		scoreManager.scoreMultiple(getScore(), this.getDice(this.currentPlayer).get(dieValue), dieValue);
+	}
+	
+	public void initializePlayers() {
+	
+	}
+	
+	@Override
+	protected void initialize() {
+	
 	}
 }

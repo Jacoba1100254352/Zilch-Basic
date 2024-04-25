@@ -4,7 +4,7 @@ package abstracts;
 import interfaces.IScoreManager;
 
 
-public abstract class AbstractScoreManager implements IScoreManager
+public abstract class AbstractScoreManager extends AbstractManager implements IScoreManager
 {
 	protected int scoreLimit;
 	

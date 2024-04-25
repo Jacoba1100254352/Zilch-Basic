@@ -1,6 +1,7 @@
 package modelManagers;
 
 
+import abstracts.AbstractManager;
 import interfaces.IDiceManager;
 import models.Dice;
 
@@ -9,7 +10,7 @@ import java.security.SecureRandom;
 import static models.Dice.FULL_SET_OF_DICE;
 
 
-public class DiceManager implements IDiceManager
+public class DiceManager extends AbstractManager implements IDiceManager
 {
 	
 	private static final SecureRandom secureRandom = new SecureRandom();
@@ -60,5 +61,10 @@ public class DiceManager implements IDiceManager
 	
 	private void removeZeros(Dice dice) {
 		dice.diceSetMap().values().removeIf(value -> value == 0);
+	}
+	
+	@Override
+	protected void initialize() {
+	
 	}
 }

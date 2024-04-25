@@ -1,6 +1,7 @@
 package ui;
 
 
+import modelManagers.GameEngine;
 import models.GameOption;
 
 import java.util.ArrayList;
@@ -8,16 +9,18 @@ import java.util.List;
 import java.util.Scanner;
 
 
+/**
+ * Manages user interactions during the game, handling inputs for player details and game decisions.
+ */
 public class UserInteractionManager
 {
 	private final ConsoleGameplayUI consoleGameplayUI;
+	private final GameEngine gameEngine; // Added to manage game options
 	
-	public UserInteractionManager(ConsoleGameplayUI consoleGameplayUI) {
+	public UserInteractionManager(ConsoleGameplayUI consoleGameplayUI, GameEngine gameEngine) {
 		this.consoleGameplayUI = consoleGameplayUI;
+		this.gameEngine = gameEngine; // Initialize with GameEngine
 	}
-	
-	
-	///   Main Functions   ///
 	
 	public int getNumberOfPlayers(Scanner scanner) {
 		int numPlayers;
@@ -43,10 +46,8 @@ public class UserInteractionManager
 		return numPlayers;
 	}
 	
-	public List<String> getPlayerNames() {
+	public List<String> getPlayerNames(Scanner scanner) {
 		List<String> playerNames = new ArrayList<>();
-		Scanner scanner = new Scanner(System.in);
-		
 		int numPlayers = getNumberOfPlayers(scanner);
 		
 		for (int i = 0; i < numPlayers; i++) {
@@ -58,30 +59,24 @@ public class UserInteractionManager
 		return playerNames;
 	}
 	
-	public int getValidScoreLimit() {
-		Scanner scanner = new Scanner(System.in);
+	public int getValidScoreLimit(Scanner scanner) {
 		final int MIN_SCORE_LIMIT = 1000;
 		int limit;
 		
 		while (true) {
-			while (true) {
-				try {
-					consoleGameplayUI.displayMessage("\nEnter the score limit (minimum " + MIN_SCORE_LIMIT + "): ");
-					limit = scanner.nextInt();
+			try {
+				consoleGameplayUI.displayMessage("\nEnter the score limit (minimum " + MIN_SCORE_LIMIT + "): ");
+				limit = scanner.nextInt();
+				if (limit >= MIN_SCORE_LIMIT) {
 					break;
-				} catch (Exception e) {
-					consoleGameplayUI.clear();
+				} else {
 					consoleGameplayUI.displayMessage("Invalid score limit. Please try again.");
-					scanner.nextLine(); // Clears the buffer.
 				}
+			} catch (Exception e) {
+				consoleGameplayUI.clear();
+				consoleGameplayUI.displayMessage("Invalid score limit. Please try again.");
+				scanner.nextLine(); // Clears the buffer.
 			}
-			
-			if (limit >= MIN_SCORE_LIMIT) {
-				break;
-			}
-			
-			consoleGameplayUI.displayMessage("Invalid score limit. Please try again.");
-			scanner.nextLine(); // Clears the buffer.
 		}
 		return limit;
 	}
@@ -91,45 +86,25 @@ public class UserInteractionManager
 		int choice;
 		
 		do {
-			try {
-				// Retrieve current game options and display them
-				gameOptions = gameCoordinator.getGameOptionManager().getGameOptions();
-				consoleGameplayUI.displayGameOptions(gameOptions);
-				
-				// Prompt for and read the player's choice
-				consoleGameplayUI.displayMessage("Enter choice: ");
-				choice = scanner.nextInt();
-				scanner.nextLine(); // Clear the buffer to handle any residual input
-				
-				// Process the player's choice based on the game options
-				if (0 < choice && choice <= gameOptions.size()) {
-					// Process a valid game option selection
-					GameOption selectedOption = gameOptions.get(choice - 1);
-					gameCoordinator.getGameOptionManager().setSelectedGameOption(selectedOption);
-					gameCoordinator.getGameOptionManager().setOptionSelectedForCurrentRoll(true);
-					gameCoordinator.getGameOptionManager().processMove();
-					break; // Exit the loop on valid choice
-				} else if (choice == gameOptions.size() + 1 && gameCoordinator.getGameOptionManager().isOptionSelectedForCurrentRoll()) {
-					// Handle the decision to roll again
-					gameCoordinator.getGameStateManager().setReroll(true);
-					break;
-				} else if (choice == gameOptions.size() + 2) {
-					// Handle the decision to end the turn
-					gameCoordinator.getGameStateManager().setReroll(false);
-					gameCoordinator.getGameStateManager().setContinueTurn(false);
-					break;
-				} else {
-					// Handle invalid choice input
-					throw new IllegalArgumentException("Invalid choice. Please try again.");
-				}
-			} catch (IllegalArgumentException e) {
-				// Display message for invalid game option choice
-				consoleGameplayUI.displayMessage(e.getMessage());
-			} catch (Exception e) {
-				// Handle and display message for general input errors
-				consoleGameplayUI.displayMessage("Error: Invalid input. Please enter a number.");
-				scanner.nextLine(); // Clear the buffer to reset for next input
+			// Retrieve current game options and display them
+			gameOptions = gameEngine.getGameOptions();
+			consoleGameplayUI.displayGameOptions(gameOptions);
+			
+			// Prompt for and read the player's choice
+			consoleGameplayUI.displayMessage("Enter choice: ");
+			choice = scanner.nextInt();
+			scanner.nextLine(); // Clear the buffer to handle any residual input
+			
+			if (0 < choice && choice <= gameOptions.size()) {
+				// Process a valid game option selection
+				GameOption selectedOption = gameOptions.get(choice - 1);
+				gameEngine.setSelectedGameOption(selectedOption);
+				gameEngine.processGameOption(selectedOption); // Updated to process within GameEngine
+				break; // Exit the loop on valid choice
+			} else {
+				// Handle invalid choice input
+				consoleGameplayUI.displayMessage("Invalid choice. Please try again.");
 			}
-		} while (true); // Loop until a valid choice is made or an action is taken
+		} while (true); // Loop until a valid choice is made
 	}
 }

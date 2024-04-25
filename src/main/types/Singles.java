@@ -1,23 +1,19 @@
 package types;
 
 
-public class Singles
+import abstracts.AbstractDieType;
+
+import java.util.Map;
+
+
+public class Singles extends AbstractDieType
 {
-	private int value;
-	
 	public Singles(int value) {
-		this.value = value;
+		super(value);
 	}
 	
-	public int getValue() {
-		return value;
-	}
-	
-	public void setValue(int value) {
-		this.value = value;
-	}
-	
-	public boolean isValidSingle() {
+	@Override
+	public boolean isValid(Map<Integer, Integer> diceSetMap) {
 		return value == 1 || value == 5;
 	}
 }

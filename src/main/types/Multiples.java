@@ -1,26 +1,18 @@
 package types;
 
 
+import abstracts.AbstractDieType;
+
 import java.util.Map;
 
 
-public class Multiples
+public class Multiples extends AbstractDieType
 {
-	private int value;
-	
 	public Multiples(int value) {
-		this.value = value;
+		super(value);
 	}
 	
-	public int getValue() {
-		return value;
-	}
-	
-	public void setValue(int value) {
-		this.value = value;
-	}
-	
-	public boolean isValidMultiple(Map<Integer, Integer> diceSetMap) {
+	public boolean isValid(Map<Integer, Integer> diceSetMap) {
 		return diceSetMap.getOrDefault(value, 0) >= 3;
 	}
 	

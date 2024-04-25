@@ -1,84 +1,76 @@
 package managers;
 
-import interfaces.IDiceManager;
-import interfaces.IEventDispatcher;
-import interfaces.IScoreManager;
-import modelManagers.DiceManager;
-import modelManagers.PlayerManager;
-import modelManagers.ScoreManager;
-import models.Player;
 
-import java.util.List;
+import interfaces.IEventDispatcher;
+import modelManagers.GameEngine;
+import modelManagers.PlayerManager;
+import models.Player;
+import ui.ConsoleGameplayUI;
+
 
 /**
- * Coordinates the various aspects of the game including player management, game state, and user interactions.
+ * Unified manager for game setup, gameplay logic, and flow control.
  */
-public class GameCoordinator {
+public class GameCoordinator
+{
 	
-	private static GameCoordinator instance = null;
-	private GameEngine gameEngine;
-	private IEventDispatcher eventDispatcher;
+	private final GameEngine gameEngine;
+	private final PlayerManager playerManager;
+	private final ConsoleGameplayUI gameplayUI;
+	private Player gameEndingPlayer;
 	
-	/**
-	 * Constructs a new GameCoordinator, initializing all necessary components of the game.
-	 */
-	private GameCoordinator(IEventDispatcher eventDispatcher) {
-		this.eventDispatcher = eventDispatcher;
-		this.gameEngine = new GameEngine(eventDispatcher);
+	public GameCoordinator(IEventDispatcher eventDispatcher, PlayerManager playerManager, ConsoleGameplayUI gameplayUI) {
+		this.gameEngine = new GameEngine(eventDispatcher, playerManager);
+		this.playerManager = playerManager;
+		this.gameplayUI = gameplayUI;
 	}
 	
-	public static GameCoordinator getInstance(IEventDispatcher eventDispatcher) {
-		if (instance == null) {
-			instance = new GameCoordinator(eventDispatcher);
-		}
-		return instance;
-	}
-	
-	///   Main Functions   ///
-	
-	/**
-	 * Sets up the game by displaying the welcome message and initializing players and score limit.
-	 */
 	public void setupGame() {
-		// Display the welcome message and instructions
+		playerManager.initializePlayers();
 		gameplayUI.displayWelcomeMessage();
-		gameplayUI.pauseAndContinue();
-		gameplayUI.clear();
-		
-		// Get the score limit and player names from the user
-		int scoreLimit = userInteractionManager.getValidScoreLimit();
-		List<String> playerNames = userInteractionManager.getPlayerNames();
-		
-		// Initialize the PlayerManager with the obtained player names and score limit
-		IDiceManager diceManager = new DiceManager();
-		IScoreManager scoreManager = new ScoreManager(scoreLimit);
-		this.playerManager = new PlayerManager(playerNames, diceManager, scoreManager);
-		this.players = playerManager.getPlayers(); // Store the list of players
+		System.out.println("Game setup is complete.");
 	}
 	
-	/**
-	 * Initiates and controls the main game loop.
-	 *
-	 * @param isTest Boolean indicating whether the game is being played or tested.
-	 */
 	public void playGame(boolean isTest) {
-		// Main game loop
-		while (true) {
-			// Iterate through each player for their turn
-			for (Player player : players) {
-				// Check if the game-ending condition is met
-				if (gameFlowManager.checkGameEndCondition(player)) {
-					gameFlowManager.handleGameEnd(isTest);
-					return; // Exit the loop if game ends
-				}
-				
-				// Set the current player and initialize their turn
-				playerManager.setCurrentPlayer(player);
-				gameStateManager.initializeRollCycle();
-				
-				// Handle the player's turn
-				gameFlowManager.playTurn(player, null, isTest);
+		System.out.println("Starting the game...");
+		while (!gameEngine.isGameOver()) {
+			playTurn(playerManager.getCurrentPlayer(), isTest);
+			if (isTest) break; // For testing purposes to prevent infinite loops
+		}
+		concludeGame();
+		System.out.println("Game has ended.");
+	}
+	
+	private void playTurn(Player player, boolean isTest) {
+		gameplayUI.displayCurrentScore(player);
+		gameEngine.processGameTurn(player);
+		
+		if (gameEngine.checkGameOver(player)) {
+			if (gameEndingPlayer == null) {
+				gameEndingPlayer = player;
+				handleLastTurns(isTest);
 			}
+		}
+		
+		if (!gameEngine.isGameOver()) {
+			playerManager.switchToNextPlayer();
+		}
+	}
+	
+	private void handleLastTurns(boolean isTest) {
+		Player initialPlayer = playerManager.getCurrentPlayer();
+		do {
+			playTurn(playerManager.getCurrentPlayer(), isTest);
+			playerManager.switchToNextPlayer();
+		} while (playerManager.getCurrentPlayer() != initialPlayer);
+	}
+	
+	private void concludeGame() {
+		if (gameEndingPlayer != null) {
+			gameplayUI.announceWinner(gameEndingPlayer, gameEndingPlayer.score().getPermanentScore());
+		} else {
+			Player highestScoringPlayer = playerManager.findHighestScoringPlayer();
+			gameplayUI.announceWinner(highestScoringPlayer, highestScoringPlayer.score().getPermanentScore());
 		}
 	}
 }

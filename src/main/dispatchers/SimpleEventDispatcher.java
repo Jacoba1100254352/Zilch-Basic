@@ -1,4 +1,4 @@
-package modelManagers;
+package dispatchers;
 
 
 import events.Event;

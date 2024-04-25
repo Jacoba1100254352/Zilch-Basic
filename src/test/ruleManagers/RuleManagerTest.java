@@ -1,13 +1,13 @@
 package ruleManagers;
 
 
+import dispatchers.SimpleEventDispatcher;
 import interfaces.IDiceManager;
 import interfaces.IScoreManager;
 import managers.GameCoordinator;
 import modelManagers.DiceManager;
 import modelManagers.PlayerManager;
 import modelManagers.ScoreManager;
-import modelManagers.SimpleEventDispatcher;
 import models.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +42,7 @@ class RuleManagerTest
 		//eventDispatcher.addListener(GameEventTypes.GAME_STATE_CHANGED, new GameStateChangeListener());
 		
 		GameCoordinator gameCoordinator = new GameCoordinator(eventDispatcher);
-		ruleManager = new RuleManager(gameCoordinator);
+		ruleManager = new RuleManager();
 		List<String> playerNames = List.of("TestPlayer");
 		
 		// Initialize player manager with players

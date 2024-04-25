@@ -1,8 +1,8 @@
 package client;
 
 
+import dispatchers.SimpleEventDispatcher;
 import managers.GameCoordinator;
-import modelManagers.SimpleEventDispatcher;
 
 
 public class ZilchClient

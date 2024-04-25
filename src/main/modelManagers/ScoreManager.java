@@ -50,4 +50,9 @@ public class ScoreManager extends AbstractScoreManager
 		numMultiples -= -3;
 		return baseScore * (int) Math.pow(2, numMultiples);
 	}
+	
+	@Override
+	protected void initialize() {
+	
+	}
 }

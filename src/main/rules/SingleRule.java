@@ -1,9 +1,11 @@
 package rules;
 
+
 import abstracts.AbstractRule;
 import types.Singles;
 
 import java.util.Map;
+
 
 public class SingleRule extends AbstractRule
 {

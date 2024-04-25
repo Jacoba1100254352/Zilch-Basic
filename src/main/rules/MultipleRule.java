@@ -1,8 +1,11 @@
 package rules;
 
+
 import abstracts.AbstractRule;
+import types.Multiples;
 
 import java.util.Map;
+
 
 public class MultipleRule extends AbstractRule
 {
@@ -10,14 +13,15 @@ public class MultipleRule extends AbstractRule
 	public MultipleRule() {
 		super(null);
 	}
-
+	
 	public MultipleRule(Integer value) {
 		super(value);
 	}
 	
 	@Override
 	public boolean isValid(Map<Integer, Integer> diceSetMap) {
-		return diceSetMap.values().stream().anyMatch(count -> count >= 3);
+		Multiples multiple = new Multiples(9);
+		return multiple.isValidMultiple() && diceSetMap.values().stream().anyMatch(count -> count >= 3);
 	}
 	
 	@Override
