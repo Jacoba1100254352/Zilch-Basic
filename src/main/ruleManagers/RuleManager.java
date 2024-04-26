@@ -46,6 +46,16 @@ public class RuleManager
 			}
 		}
 		
+		// Option to roll again if a score has been made and an option selected in the current roll.
+		if (player.score().getRoundScore() > 0 && isOptionSelectedForCurrentRoll) {
+			gameOptions.add(new GameOption(GameOption.Type.ROLL_AGAIN, null));
+		}
+		
+		// Option to end turn if the score exceeds 1000.
+		if (player.score().getPermanentScore() >= 1000 || player.score().getRoundScore() >= 1000) {
+			gameOptions.add(new GameOption(GameOption.Type.END_TURN, null));
+		}
+		
 		return gameOptions;
 	}
 	
@@ -60,8 +70,8 @@ public class RuleManager
 	 */
 	public boolean isRuleValid(RuleType ruleType, Map<Integer, Integer> diceSetMap, Integer value) {
 		return switch (ruleType) {
-			case STRAIT -> new StraitRule().isValid(diceSetMap);
-			case SET -> new SetRule().isValid(diceSetMap);
+			case STRAIT -> new StraitRule(value).isValid(diceSetMap);
+			case SET -> new SetRule(value).isValid(diceSetMap);
 			case MULTIPLE -> new MultipleRule(value).isValid(diceSetMap, value);
 			case ADD_MULTIPLE -> new AddMultipleRule(value).isValid(diceSetMap, value);
 			case SINGLE -> new SingleRule(value).isValid(diceSetMap, value);

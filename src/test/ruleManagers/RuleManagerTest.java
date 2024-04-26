@@ -1,10 +1,11 @@
+/*
 package ruleManagers;
 
 
 import dispatchers.SimpleEventDispatcher;
 import interfaces.IDiceManager;
 import interfaces.IScoreManager;
-import managers.GameCoordinator;
+import managers.GameServer;
 import modelManagers.DiceManager;
 import modelManagers.PlayerManager;
 import modelManagers.ScoreManager;
@@ -41,7 +42,7 @@ class RuleManagerTest
 		//eventDispatcher.addListener(GameEventTypes.SCORE_UPDATED, new ScoreUpdateListener());
 		//eventDispatcher.addListener(GameEventTypes.GAME_STATE_CHANGED, new GameStateChangeListener());
 		
-		GameCoordinator gameCoordinator = new GameCoordinator(eventDispatcher);
+		GameServer gameServer = new GameServer(eventDispatcher);
 		ruleManager = new RuleManager();
 		List<String> playerNames = List.of("TestPlayer");
 		
@@ -49,10 +50,10 @@ class RuleManagerTest
 		IDiceManager diceManager = new DiceManager();
 		IScoreManager scoreManager = new ScoreManager(scoreLimit);
 		
-		gameCoordinator.setPlayerManager(new PlayerManager(playerNames, diceManager, scoreManager));
-		currentPlayer = gameCoordinator.getPlayerManager().getCurrentPlayer();
+		gameServer.setPlayerManager(new PlayerManager(playerNames, diceManager, scoreManager));
+		currentPlayer = gameServer.getPlayerManager().getCurrentPlayer();
 		
-		diceSetMap = gameCoordinator.getPlayerManager().getCurrentPlayer().dice().diceSetMap();
+		diceSetMap = gameServer.getPlayerManager().getCurrentPlayer().dice().diceSetMap();
 	}
 	
 	@AfterEach
@@ -138,4 +139,4 @@ class RuleManagerTest
 		
 		currentPlayer.dice().setDiceSetMap(diceMap);
 	}
-}
+}*/

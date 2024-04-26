@@ -2,19 +2,21 @@ package client;
 
 
 import dispatchers.SimpleEventDispatcher;
-import managers.GameCoordinator;
+import managers.GameServer;
+import modelManagers.PlayerManager;
+import ui.ConsoleGameplayUI;
 
 
 public class ZilchClient
 {
 	public static void main(String[] args) {
-		// Create an instance of the GameCoordinator class
-		GameCoordinator gameCoordinator = new GameCoordinator(new SimpleEventDispatcher());
+		// Create an instance of the GameServer class
+		GameServer gameServer = new GameServer(new SimpleEventDispatcher(), new PlayerManager(), new ConsoleGameplayUI());
 		
 		// Set up the game
-		gameCoordinator.setupGame();
+		gameServer.setupGame();
 		
 		// Start the game
-		gameCoordinator.playGame(false);
+		gameServer.playGame(false);
 	}
 }

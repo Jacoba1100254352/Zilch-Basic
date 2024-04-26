@@ -13,20 +13,16 @@ import java.util.Map;
 
 public class SimpleEventDispatcher implements IEventDispatcher
 {
-	private final Map<String, List<IEventListener>> listeners;
-	
-	public SimpleEventDispatcher() {
-		this.listeners = new HashMap<>();
-	}
+	private final Map<String, List<IEventListener>> listeners = new HashMap<>();
 	
 	@Override
 	public void addListener(String eventType, IEventListener listener) {
-		this.listeners.computeIfAbsent(eventType, k -> new ArrayList<>()).add(listener);
+		listeners.computeIfAbsent(eventType, k -> new ArrayList<>()).add(listener);
 	}
 	
 	@Override
 	public void removeListener(String eventType, IEventListener listener) {
-		List<IEventListener> listenersOfType = this.listeners.get(eventType);
+		List<IEventListener> listenersOfType = listeners.get(eventType);
 		if (listenersOfType != null) {
 			listenersOfType.remove(listener);
 		}
@@ -34,7 +30,7 @@ public class SimpleEventDispatcher implements IEventDispatcher
 	
 	@Override
 	public void dispatchEvent(String eventType, Event event) {
-		List<IEventListener> listenersOfType = this.listeners.get(eventType);
+		List<IEventListener> listenersOfType = listeners.get(eventType);
 		if (listenersOfType != null) {
 			for (IEventListener listener : listenersOfType) {
 				listener.handleEvent(event);
@@ -42,3 +38,4 @@ public class SimpleEventDispatcher implements IEventDispatcher
 		}
 	}
 }
+

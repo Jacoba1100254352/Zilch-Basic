@@ -1,7 +1,7 @@
 package ui;
 
 
-import modelManagers.GameEngine;
+import modelManagers.GameOptionManager;
 import models.GameOption;
 
 import java.util.ArrayList;
@@ -15,11 +15,11 @@ import java.util.Scanner;
 public class UserInteractionManager
 {
 	private final ConsoleGameplayUI consoleGameplayUI;
-	private final GameEngine gameEngine; // Added to manage game options
+	private final GameOptionManager gameOptionManager; // Added to manage game options
 	
-	public UserInteractionManager(ConsoleGameplayUI consoleGameplayUI, GameEngine gameEngine) {
+	public UserInteractionManager(ConsoleGameplayUI consoleGameplayUI, GameOptionManager gameOptionManager) {
 		this.consoleGameplayUI = consoleGameplayUI;
-		this.gameEngine = gameEngine; // Initialize with GameEngine
+		this.gameOptionManager = gameOptionManager; // Initialize with GameEngine
 	}
 	
 	public int getNumberOfPlayers(Scanner scanner) {
@@ -87,8 +87,9 @@ public class UserInteractionManager
 		
 		do {
 			// Retrieve current game options and display them
-			gameOptions = gameEngine.getGameOptions();
-			consoleGameplayUI.displayGameOptions(gameOptions);
+			
+			gameOptions = gameOptionManager.getGameOptions();
+			consoleGameplayUI.displayGameOptions(gameOptions, gameOptionManager.isOptionSelected());
 			
 			// Prompt for and read the player's choice
 			consoleGameplayUI.displayMessage("Enter choice: ");
@@ -98,8 +99,8 @@ public class UserInteractionManager
 			if (0 < choice && choice <= gameOptions.size()) {
 				// Process a valid game option selection
 				GameOption selectedOption = gameOptions.get(choice - 1);
-				gameEngine.setSelectedGameOption(selectedOption);
-				gameEngine.processGameOption(selectedOption); // Updated to process within GameEngine
+				gameOptionManager.setSelectedGameOption(selectedOption);
+				gameOptionManager.applyGameOption(selectedOption); // Updated to process within GameEngine
 				break; // Exit the loop on valid choice
 			} else {
 				// Handle invalid choice input

@@ -11,7 +11,6 @@ public record Dice(Map<Integer, Integer> diceSetMap)
 	
 	public void setDiceSetMap(Map<Integer, Integer> diceSetMap) {
 		this.diceSetMap.clear();
-		
 		this.diceSetMap.putAll(diceSetMap);
 	}
 	

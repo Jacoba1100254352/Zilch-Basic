@@ -44,7 +44,7 @@ public class DiceManager extends AbstractManager implements IDiceManager
 	}
 	
 	@Override
-	public void eliminateDice(Dice dice, int dieValue) {
+	public void removeDice(Dice dice, int dieValue) {
 		dice.diceSetMap().remove(dieValue);
 		dice.calculateNumDiceInPlay();
 	}

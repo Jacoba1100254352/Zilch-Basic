@@ -8,6 +8,6 @@ public record GameOption(GameOption.Type type, Integer value)
 {
 	public enum Type
 	{
-		STRAIT, SET, MULTIPLE, SINGLE
+		STRAIT, SET, MULTIPLE, SINGLE, ROLL_AGAIN, END_TURN
 	}
 }

@@ -12,7 +12,7 @@ public interface IDiceManager
 	
 	void removeAllDice(Dice dice);
 	
-	void eliminateDice(Dice dice, int dieValue);
+	void removeDice(Dice dice, int dieValue);
 	
 	void removeDice(Dice dice, int dieValue, int numToRemove);
 }

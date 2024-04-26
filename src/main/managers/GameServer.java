@@ -2,28 +2,29 @@ package managers;
 
 
 import interfaces.IEventDispatcher;
+import interfaces.IScoreManager;
 import modelManagers.GameEngine;
 import modelManagers.PlayerManager;
+import modelManagers.ScoreManager;
 import models.Player;
 import ui.ConsoleGameplayUI;
 
 
-/**
- * Unified manager for game setup, gameplay logic, and flow control.
- */
-public class GameCoordinator
+public class GameServer
 {
 	
 	private final GameEngine gameEngine;
 	private final PlayerManager playerManager;
 	private final ConsoleGameplayUI gameplayUI;
-	private Player gameEndingPlayer;
+	private final IScoreManager scoreManager;
 	
-	public GameCoordinator(IEventDispatcher eventDispatcher, PlayerManager playerManager, ConsoleGameplayUI gameplayUI) {
-		this.gameEngine = new GameEngine(eventDispatcher, playerManager);
+	public GameServer(IEventDispatcher eventDispatcher, PlayerManager playerManager, ConsoleGameplayUI gameplayUI, int scoreLimit) {
 		this.playerManager = playerManager;
 		this.gameplayUI = gameplayUI;
+		this.scoreManager = new ScoreManager(scoreLimit);
+		this.gameEngine = new GameEngine(eventDispatcher, playerManager, scoreManager); // Assuming GameEngine now also takes ScoreManager
 	}
+	
 	
 	public void setupGame() {
 		playerManager.initializePlayers();
@@ -42,8 +43,8 @@ public class GameCoordinator
 	}
 	
 	private void playTurn(Player player, boolean isTest) {
-		gameplayUI.displayCurrentScore(player);
-		gameEngine.processGameTurn(player);
+		gameplayUI.displayCurrentScore();
+		gameEngine.processGameTurn();
 		
 		if (gameEngine.checkGameOver(player)) {
 			if (gameEndingPlayer == null) {

@@ -1,8 +1,8 @@
 package managers;
 
 
+import modelManagers.ActionManager;
 import modelManagers.GameEngine;
-import modelManagers.PlayerManager;
 import models.Player;
 import ui.ConsoleGameplayUI;
 
@@ -13,16 +13,16 @@ import ui.ConsoleGameplayUI;
 public class GameStateManager
 {
 	private final GameEngine gameEngine;
-	private final PlayerManager playerManager;
+	private final ActionManager actionManager;
 	private final ConsoleGameplayUI consoleGameplayUI;
 	
 	private boolean reroll;
 	private boolean continueTurn;
 	private boolean isBust;
 	
-	public GameStateManager(GameEngine gameEngine, PlayerManager playerManager, ConsoleGameplayUI consoleGameplayUI) {
+	public GameStateManager(GameEngine gameEngine, ActionManager actionManager, ConsoleGameplayUI consoleGameplayUI) {
 		this.gameEngine = gameEngine;
-		this.playerManager = playerManager;
+		this.actionManager = actionManager;
 		this.consoleGameplayUI = consoleGameplayUI;
 		
 		this.reroll = false;
@@ -42,12 +42,12 @@ public class GameStateManager
 		gameEngine.setSelectedGameOption(null);
 		
 		// Initialize Score
-		Player currentPlayer = playerManager.getCurrentPlayer();
+		Player currentPlayer = actionManager.getCurrentPlayer();
 		currentPlayer.score().setScoreFromMultiples(0);
 		currentPlayer.score().setRoundScore(0);
 		
 		// Initialize Dice
-		playerManager.replenishAllDice();
+		actionManager.replenishAllDice();
 		
 		// No need to reevaluate game options here since it's handled within the game turn
 	}
@@ -56,7 +56,7 @@ public class GameStateManager
 		consoleGameplayUI.displayMessage("You have busted on the first roll, try again");
 		consoleGameplayUI.pauseAndContinue();
 		
-		Player currentPlayer = playerManager.getCurrentPlayer();
+		Player currentPlayer = actionManager.getCurrentPlayer();
 		if (currentPlayer.score().getRoundScore() == 0) {
 			currentPlayer.score().increaseRoundScore(50);  // Provide minimal score after bust
 		}
@@ -70,7 +70,7 @@ public class GameStateManager
 		consoleGameplayUI.displayMessage("You have busted");
 		consoleGameplayUI.pauseAndContinue();
 		
-		playerManager.getCurrentPlayer().score().setRoundScore(0);
+		actionManager.getCurrentPlayer().score().setRoundScore(0);
 		
 		isBust = true;
 		setReroll(false);

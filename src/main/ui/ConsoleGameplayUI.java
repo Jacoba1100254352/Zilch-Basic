@@ -2,8 +2,6 @@ package ui;
 
 
 import interfaces.IGameplayUI;
-import interfaces.IInputManager;
-import modelManagers.PlayerManager;
 import models.Dice;
 import models.GameOption;
 import models.Player;
@@ -11,6 +9,7 @@ import models.Score;
 
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static interfaces.IScoreManager.scoreLimit;
@@ -21,19 +20,10 @@ import static interfaces.IScoreManager.scoreLimit;
  */
 public class ConsoleGameplayUI implements IGameplayUI
 {
-	private final PlayerManager playerManager;
-	private final IInputManager inputManager;
-	
-	
 	/**
 	 * Constructs a new ConsoleGameplayUI object.
-	 *
-	 * @param playerManager The coordinator of the game's overall logic and flow.
 	 */
-	public ConsoleGameplayUI(PlayerManager playerManager, IInputManager inputManager) {
-		this.playerManager = playerManager;
-		this.inputManager = inputManager;
-	}
+	public ConsoleGameplayUI() {}
 	
 	///   Main Functions   ///
 	
@@ -49,13 +39,11 @@ public class ConsoleGameplayUI implements IGameplayUI
 	/**
 	 * Displays the list of available game options for the player to choose from.
 	 *
-	 * @param gameOptions The list of game options currently available.
+	 * @param gameOptions                    The list of game options currently available.
+	 * @param isOptionSelectedForCurrentRoll A flag indicating if an option has been selected for the current roll.
 	 */
 	@Override
-	public void displayGameOptions(List<GameOption> gameOptions) {
-		// Create local score variable
-		Score score = playerManager.getScore();
-		
+	public void displayGameOptions(Score score, List<GameOption> gameOptions, boolean isOptionSelectedForCurrentRoll) {
 		///   Display Game Options   ///
 		System.out.println("\nAvailable Options:");
 		int optionNumber = 1;
@@ -68,17 +56,10 @@ public class ConsoleGameplayUI implements IGameplayUI
 				case SET -> "Score a Set";
 				case MULTIPLE -> "Score Multiple " + option.value();
 				case SINGLE -> "Score Single " + option.value();
+				case ROLL_AGAIN -> "Roll Again";
+				case END_TURN -> "End Turn";
 			};
 			System.out.printf("%d. %s\n", optionNumber++, optionDescription);
-		}
-		
-		// Option to roll again if a score has been made and an option selected in the current roll.
-		if (score.getRoundScore() > 0 && gameCoordinator.getGameOptionManager().isOptionSelectedForCurrentRoll()) {
-			System.out.printf("%d. Roll again\n", optionNumber++);
-		}
-		// Option to end turn if the score exceeds 1000.
-		if (score.getPermanentScore() >= 1000 || score.getRoundScore() >= 1000) {
-			System.out.printf("%d. End Turn\n", optionNumber);
 		}
 	}
 	
@@ -92,8 +73,7 @@ public class ConsoleGameplayUI implements IGameplayUI
 	 * Displays the current dice configuration for the player.
 	 */
 	@Override
-	public void displayDice() {
-		Dice dice = playerManager.getCurrentPlayer().dice();
+	public void displayDice(Dice dice) { //playerManager.getCurrentPlayer().dice()
 		dice.calculateNumDiceInPlay();
 		System.out.println("\nYou have " + dice.getNumDiceInPlay() + " dice left.");
 		System.out.println(buildDiceListString(dice));
@@ -126,11 +106,11 @@ public class ConsoleGameplayUI implements IGameplayUI
 	 * @param gameEndingPlayer The player who triggered the last round.
 	 */
 	@Override
-	public void displayLastRoundMessage(Player gameEndingPlayer) {
+	public void displayLastRoundMessage(Player gameEndingPlayer, Supplier<Boolean> waitFunction) {
 		// TODO: Verify that scoreLimit here and below are updated values and not the default of 2000
 		System.out.println(gameEndingPlayer.name() + " is over " + scoreLimit + " points!");
 		System.out.println("Everyone else has one more chance to win");
-		pauseAndContinue();
+		pauseAndContinue(waitFunction);
 		System.out.println();
 	}
 	
@@ -165,11 +145,11 @@ public class ConsoleGameplayUI implements IGameplayUI
 	}
 	
 	/**
-	 * Pauses the game and waits for the player to press enter before continuing.
+	 * Pauses the game and waits for the player to press 'enter' before continuing.
 	 */
 	@Override
-	public void pauseAndContinue() {
-		inputManager.waitForEnterKey();
+	public void pauseAndContinue(Supplier<Boolean> waitFunction) {
+		waitFunction.get();
 		clear();
 	}
 	

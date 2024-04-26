@@ -6,9 +6,6 @@ package abstracts;
  */
 public abstract class AbstractManager
 {
-	
 	// Method to initialize manager components, if any specific setup is needed
 	protected abstract void initialize();
-	
-	// Other common functionalities can be added here
 }
