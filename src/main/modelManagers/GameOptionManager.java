@@ -24,7 +24,7 @@ public class GameOptionManager extends AbstractManager
 	
 	public void evaluateGameOptions(Player player) {
 		gameOptions.clear();
-		gameOptions.addAll(ruleManager.evaluateRules(player));
+		gameOptions.addAll(ruleManager.evaluateRules(player, isOptionSelected()));
 	}
 	
 	public void applyGameOption(GameOption option) {

@@ -23,7 +23,7 @@ public class RuleManager
 	 *
 	 * @return A list of valid game options for the player.
 	 */
-	public List<GameOption> evaluateRules(Player player) {
+	public List<GameOption> evaluateRules(Player player, boolean isOptionSelectedForCurrentRoll) {
 		List<GameOption> gameOptions = new ArrayList<>();
 		Map<Integer, Integer> diceSetMap = player.dice().diceSetMap();
 		
