@@ -3,7 +3,7 @@ package managers;
 
 
 import modelManagers.PlayerManager;
-import models.Player;
+import model.entities.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

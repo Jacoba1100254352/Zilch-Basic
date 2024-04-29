@@ -2,8 +2,8 @@
 package modelManagers;
 
 
-import models.Dice;
-import models.Score;
+import model.entities.Dice;
+import model.entities.Score;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

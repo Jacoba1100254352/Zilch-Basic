@@ -1,111 +1,164 @@
 package ui;
 
 
-import modelManagers.GameOptionManager;
-import models.GameOption;
+import model.entities.Dice;
+import model.entities.GameOption;
+import model.entities.Player;
+import model.entities.Score;
+import model.managers.GameOptionManager;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 
 /**
- * Manages user interactions during the game, handling inputs for player details and game decisions.
+ * Manages user interactions during the game, handling inputs for player details and game decisions,
+ * and delegating display responsibilities to ConsoleGameplayUI.
  */
-public class UserInteractionManager
+public class UserInteractionManager implements IGameplayUI, IUserInteraction
 {
-	private final ConsoleGameplayUI consoleGameplayUI;
-	private final GameOptionManager gameOptionManager; // Added to manage game options
+	private final IGameplayUI gameplayUI;
+	private final IInputManager inputManager;
 	
-	public UserInteractionManager(ConsoleGameplayUI consoleGameplayUI, GameOptionManager gameOptionManager) {
-		this.consoleGameplayUI = consoleGameplayUI;
-		this.gameOptionManager = gameOptionManager; // Initialize with GameEngine
+	public UserInteractionManager(IGameplayUI gameplayUI, IInputManager inputManager) {
+		this.gameplayUI = gameplayUI;
+		this.inputManager = inputManager;
 	}
 	
-	public int getNumberOfPlayers(Scanner scanner) {
-		int numPlayers;
-		while (true) {
-			try {
-				consoleGameplayUI.displayMessage("Enter the number of players (1-6): ");
-				numPlayers = scanner.nextInt();
-			} catch (Exception e) {
-				consoleGameplayUI.clear();
-				consoleGameplayUI.displayMessage("Invalid number of players. Please try again.\n");
-				scanner.nextLine(); // Clear buffer
-				continue;
-			}
-			
-			if (numPlayers >= 1 && numPlayers <= 6) {
-				break;
-			}
-			
-			consoleGameplayUI.clear();
-			consoleGameplayUI.displayMessage("Invalid number of players. Please try again.\n");
-			scanner.nextLine(); // Clear buffer
+	public void runGameSetup() {
+		gameplayUI.displayWelcomeMessage();
+		int numPlayers = getNumberOfPlayers();
+		List<String> playerNames = getPlayerNames(numPlayers);
+		// Additional setup steps can be added here if needed
+	}
+	
+	@Override
+	public int getNumberOfPlayers() {
+		gameplayUI.displayMessage("Enter the number of players (1-6): ");
+		int numPlayers = inputManager.getInputInt();
+		// Validate the number of players
+		while (numPlayers < 1 || numPlayers > 6) {
+			gameplayUI.displayMessage("Invalid number. Please enter a number between 1 and 6: ");
+			numPlayers = inputManager.getInputInt();
 		}
 		return numPlayers;
 	}
 	
-	public List<String> getPlayerNames(Scanner scanner) {
-		List<String> playerNames = new ArrayList<>();
-		int numPlayers = getNumberOfPlayers(scanner);
-		
+	@Override
+	public List<String> getPlayerNames(int numPlayers) {
+		List<String> names = new ArrayList<>();
 		for (int i = 0; i < numPlayers; i++) {
-			consoleGameplayUI.displayMessage("Enter the name of player " + (i + 1) + ": ");
-			String playerName = scanner.next();
-			playerNames.add(playerName);
+			gameplayUI.displayMessage("Enter the name of player " + (i + 1) + ": ");
+			names.add(inputManager.getInputString());
 		}
-		
-		return playerNames;
+		return names;
 	}
 	
-	public int getValidScoreLimit(Scanner scanner) {
+	@Override
+	public int getValidScoreLimit() {
 		final int MIN_SCORE_LIMIT = 1000;
 		int limit;
 		
 		while (true) {
 			try {
-				consoleGameplayUI.displayMessage("\nEnter the score limit (minimum " + MIN_SCORE_LIMIT + "): ");
-				limit = scanner.nextInt();
-				if (limit >= MIN_SCORE_LIMIT) {
-					break;
+				displayMessage("\nEnter the score limit (minimum " + MIN_SCORE_LIMIT + "): ");
+				limit = inputManager.getInputInt();
+				if (limit < MIN_SCORE_LIMIT) {
+					displayMessage("Invalid score limit. Please try again.");
 				} else {
-					consoleGameplayUI.displayMessage("Invalid score limit. Please try again.");
+					break;
 				}
 			} catch (Exception e) {
-				consoleGameplayUI.clear();
-				consoleGameplayUI.displayMessage("Invalid score limit. Please try again.");
-				scanner.nextLine(); // Clears the buffer.
+				clear();
+				displayMessage("Invalid score limit. Please try again.");
+				inputManager.getInputString(); // Clears the buffer.
 			}
 		}
 		return limit;
 	}
 	
-	public void inputGameOption(Scanner scanner) {
-		List<GameOption> gameOptions;
-		int choice;
+	public void handleGameOptions(Player currentPlayer, GameOptionManager gameOptionManager) {
+		Score score = currentPlayer.score();
+		List<GameOption> gameOptions = gameOptionManager.getGameOptions();
 		
-		do {
-			// Retrieve current game options and display them
-			
-			gameOptions = gameOptionManager.getGameOptions();
-			consoleGameplayUI.displayGameOptions(gameOptions, gameOptionManager.isOptionSelected());
-			
-			// Prompt for and read the player's choice
-			consoleGameplayUI.displayMessage("Enter choice: ");
-			choice = scanner.nextInt();
-			scanner.nextLine(); // Clear the buffer to handle any residual input
-			
-			if (0 < choice && choice <= gameOptions.size()) {
-				// Process a valid game option selection
-				GameOption selectedOption = gameOptions.get(choice - 1);
-				gameOptionManager.setSelectedGameOption(selectedOption);
-				gameOptionManager.applyGameOption(selectedOption); // Updated to process within GameEngine
-				break; // Exit the loop on valid choice
-			} else {
-				// Handle invalid choice input
-				consoleGameplayUI.displayMessage("Invalid choice. Please try again.");
-			}
-		} while (true); // Loop until a valid choice is made
+		gameplayUI.displayGameOptions(score, gameOptions, gameOptionManager.isOptionSelected());
+		gameplayUI.displayMessage("Select an option: ");
+		int choice = inputManager.getInputInt();
+		
+		while (choice < 1 || choice > gameOptions.size()) {
+			gameplayUI.displayMessage("Invalid choice. Please select a valid option: ");
+			choice = inputManager.getInputInt();
+		}
+		
+		GameOption selectedOption = gameOptions.get(choice - 1);
+		gameOptionManager.setSelectedGameOption(selectedOption);
+		gameOptionManager.applyGameOption(selectedOption);
+	}
+	
+	// Facade methods for the ConsoleGameplayUI
+	@Override
+	public void displayWelcomeMessage() {
+		gameplayUI.displayWelcomeMessage();
+	}
+	
+	@Override
+	public void displayGameOptions(Score score, List<GameOption> gameOptions, boolean isOptionSelectedForCurrentRoll) {
+		gameplayUI.displayGameOptions(score, gameOptions, isOptionSelectedForCurrentRoll);
+	}
+	
+	@Override
+	public void displayCurrentScore(String playerName, int roundScore) {
+		gameplayUI.displayCurrentScore(playerName, roundScore);
+	}
+	
+	@Override
+	public void displayDice(Dice dice) {
+		gameplayUI.displayDice(dice);
+	}
+	
+	@Override
+	public void displayHighScoreInfo(Player currentPlayer, String highestScoringPlayerName) {
+		gameplayUI.displayHighScoreInfo(currentPlayer, highestScoringPlayerName);
+	}
+	
+	@Override
+	public void displayMessage(String message) {
+		gameplayUI.displayMessage(message);
+	}
+	
+	@Override
+	public void displayAndWait(String message) {
+		gameplayUI.displayMessage(message);
+		gameplayUI.pauseAndContinue(inputManager.waitForEnterKey());
+	}
+	
+	@Override
+	public void displayLastRoundMessage(Player gameEndingPlayer, Runnable waitFunction) {
+		gameplayUI.displayLastRoundMessage(gameEndingPlayer, waitFunction);
+	}
+	
+	@Override
+	public void announceTie(List<Player> tiedPlayers, int score) {
+		gameplayUI.announceTie(tiedPlayers, score);
+	}
+	
+	@Override
+	public void announceWinner(Player winner, int score) {
+		gameplayUI.announceWinner(winner, score);
+	}
+	
+	@Override
+	public void clear() {
+		gameplayUI.clear();
+	}
+	
+	@Override
+	public void pauseAndContinue(Runnable waitFunction) {
+		gameplayUI.pauseAndContinue(waitFunction);
+	}
+	
+	@Override
+	public void displayCurrentScore(Player currentPlayer) {
+		gameplayUI.displayCurrentScore(currentPlayer);
 	}
 }

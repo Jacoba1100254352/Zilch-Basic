@@ -3,13 +3,13 @@ package ruleManagers;
 
 
 import dispatchers.SimpleEventDispatcher;
-import interfaces.IDiceManager;
-import interfaces.IScoreManager;
+import model.managers.IDiceManager;
+import model.managers.IScoreManager;
 import managers.GameServer;
 import modelManagers.DiceManager;
 import modelManagers.PlayerManager;
 import modelManagers.ScoreManager;
-import models.Player;
+import model.entities.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

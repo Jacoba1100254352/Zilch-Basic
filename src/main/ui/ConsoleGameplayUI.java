@@ -1,18 +1,16 @@
 package ui;
 
 
-import interfaces.IGameplayUI;
-import models.Dice;
-import models.GameOption;
-import models.Player;
-import models.Score;
+import model.entities.Dice;
+import model.entities.GameOption;
+import model.entities.Player;
+import model.entities.Score;
 
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-import static interfaces.IScoreManager.scoreLimit;
+import static model.managers.IScoreManager.scoreLimit;
 
 
 /**
@@ -52,6 +50,7 @@ public class ConsoleGameplayUI implements IGameplayUI
 		for (GameOption option : gameOptions) {
 			// Switch case to determine the description of each game option
 			String optionDescription = switch (option.type()) {
+				case ADD_MULTIPLE -> "Score Added Multiple " + option.value();
 				case STRAIT -> "Score a Strait";
 				case SET -> "Score a Set";
 				case MULTIPLE -> "Score Multiple " + option.value();
@@ -101,12 +100,24 @@ public class ConsoleGameplayUI implements IGameplayUI
 	}
 	
 	/**
+	 * Displays a message to the player and waits for them to press 'enter' before continuing.
+	 *
+	 * @param message The message to display.
+	 */
+	@Override
+	public void displayAndWait(String message) {
+		System.out.print(message);
+		pauseAndContinue(() -> {});
+		throw new UnsupportedOperationException("Method not implemented.");
+	}
+	
+	/**
 	 * Displays a message indicating the start of the last round after a player reaches the score limit.
 	 *
 	 * @param gameEndingPlayer The player who triggered the last round.
 	 */
 	@Override
-	public void displayLastRoundMessage(Player gameEndingPlayer, Supplier<Boolean> waitFunction) {
+	public void displayLastRoundMessage(Player gameEndingPlayer, Runnable waitFunction) {
 		// TODO: Verify that scoreLimit here and below are updated values and not the default of 2000
 		System.out.println(gameEndingPlayer.name() + " is over " + scoreLimit + " points!");
 		System.out.println("Everyone else has one more chance to win");
@@ -148,8 +159,8 @@ public class ConsoleGameplayUI implements IGameplayUI
 	 * Pauses the game and waits for the player to press 'enter' before continuing.
 	 */
 	@Override
-	public void pauseAndContinue(Supplier<Boolean> waitFunction) {
-		waitFunction.get();
+	public void pauseAndContinue(Runnable waitFunction) {
+		waitFunction.run();
 		clear();
 	}
 	
