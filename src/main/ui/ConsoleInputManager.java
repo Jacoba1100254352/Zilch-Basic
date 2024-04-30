@@ -23,7 +23,9 @@ public class ConsoleInputManager implements IInputManager
 			System.out.println("Please enter a valid integer:");
 			scanner.next(); // Consume the invalid input
 		}
-		return scanner.nextInt();
+		int result = scanner.nextInt();
+		scanner.nextLine(); // Consume the newline character
+		return result;
 	}
 	
 	@Override

@@ -37,12 +37,11 @@ public class GameServer
 	}
 	
 	public void playGame() {
-		uiManager.displayWelcomeMessage();
 		playGame(false);
 	}
 	
 	public void playGame(boolean isTest) {
-		System.out.println("Starting the game...");
+		uiManager.displayWelcomeMessage();
 		while (!gameEngine.isGameOver()) {
 			playTurn(actionManager.getCurrentPlayer());
 			if (isTest) break; // For testing purposes to prevent infinite loops
