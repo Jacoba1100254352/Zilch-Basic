@@ -2,6 +2,9 @@ package controllers;
 
 
 import eventHandling.dispatchers.IEventDispatcher;
+import eventHandling.events.Event;
+import eventHandling.events.EventDataKey;
+import eventHandling.events.GameEventType;
 import model.entities.Player;
 import model.managers.AbstractManager;
 import model.managers.ActionManager;
@@ -53,7 +56,11 @@ public class GameEngine extends AbstractManager
 		if (canTurnEnd(player)) { // gameStateManager.canTurnEnd(player)
 			// gameOver = true;
 			System.out.println(player.name() + " has won the game!");
-			// eventDispatcher.dispatchEvent(GameEventType.GAME_STATE_CHANGED, new Event(player.name() + " wins!"));
+			// Assuming you want to notify that a player has won the game
+			Event event = new Event(GameEventType.GAME_STATE_CHANGED);
+			event.setData(EventDataKey.WINNER, player); // Assuming 'player' is the winner object or data
+			
+			eventDispatcher.dispatchEvent(event);
 		}
 	}
 	

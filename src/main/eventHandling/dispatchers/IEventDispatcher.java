@@ -12,5 +12,5 @@ public interface IEventDispatcher
 	
 	void removeListener(GameEventType eventType, IEventListener listener);
 	
-	void dispatchEvent(GameEventType eventType, Event event);
+	void dispatchEvent(Event event);
 }

@@ -3,7 +3,7 @@ package eventHandling.listeners;
 
 import controllers.GameServer;
 import eventHandling.events.Event;
-import eventHandling.events.GameEventType;
+import eventHandling.events.EventDataKey;
 import model.entities.Player;
 import model.managers.ActionManager;
 import ui.IGameplayUI;
@@ -30,10 +30,10 @@ public class GameOverListener implements IEventListener
 	@Override
 	public void handleEvent(Event event) {
 		if (event.getType() == GAME_OVER) {
-			Player winner = (Player) event.getData(GameEventType.valueOf("winner")); // FIXME: This will need to be fixed, maybe use an enum?
+			Player winner = (Player) event.getData(EventDataKey.WINNER);
 			uiManager.announceWinner(winner, winner.score().getPermanentScore());
 		} else if (event.getType() == SCORE_UPDATED) {
-			Player player = (Player) event.getData(GameEventType.valueOf("player")); // FIXME: Fix me too
+			Player player = (Player) event.getData(EventDataKey.PLAYER);
 			if (player.score().getPermanentScore() >= scoreLimit) {
 				System.out.println(player.name() + " has won the game!");
 				actionManager.setGameEndingPlayer(player);

@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class SimpleEventDispatcher implements IEventDispatcher
 {
-	private final Map<String, List<IEventListener>> listeners = new HashMap<>();
+	private final Map<GameEventType, List<IEventListener>> listeners = new HashMap<>();
 	
 	@Override
 	public void addListener(GameEventType eventType, IEventListener listener) {
@@ -29,8 +29,8 @@ public class SimpleEventDispatcher implements IEventDispatcher
 	}
 	
 	@Override
-	public void dispatchEvent(GameEventType eventType, Event event) {
-		List<IEventListener> listenersOfType = listeners.get(eventType);
+	public void dispatchEvent(Event event) {
+		List<IEventListener> listenersOfType = listeners.get(event.getType());
 		if (listenersOfType != null) {
 			for (IEventListener listener : listenersOfType) {
 				listener.handleEvent(event);

@@ -5,6 +5,7 @@ import model.entities.Dice;
 import model.entities.GameOption;
 import model.entities.Player;
 import model.entities.Score;
+import model.managers.AbstractManager;
 import model.managers.GameOptionManager;
 
 import java.util.ArrayList;
@@ -15,10 +16,15 @@ import java.util.List;
  * Manages user interactions during the game, handling inputs for player details and game decisions,
  * and delegating display responsibilities to ConsoleGameplayUI.
  */
-public class UserInteractionManager implements IGameplayUI, IUserInteraction
+public class UserInteractionManager extends AbstractManager implements IGameplayUI, IUserInteraction
 {
 	private final IGameplayUI gameplayUI;
 	private final IInputManager inputManager;
+	
+	@SuppressWarnings("unused")
+	public UserInteractionManager() {
+		this(new ConsoleGameplayUI(), new ConsoleInputManager());
+	}
 	
 	public UserInteractionManager(IGameplayUI gameplayUI, IInputManager inputManager) {
 		this.gameplayUI = gameplayUI;
@@ -160,5 +166,10 @@ public class UserInteractionManager implements IGameplayUI, IUserInteraction
 	@Override
 	public void displayCurrentScore(Player currentPlayer) {
 		gameplayUI.displayCurrentScore(currentPlayer);
+	}
+	
+	@Override
+	protected void doInitialize() {
+	
 	}
 }

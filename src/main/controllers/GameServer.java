@@ -3,6 +3,7 @@ package controllers;
 
 import eventHandling.dispatchers.IEventDispatcher;
 import eventHandling.events.Event;
+import eventHandling.events.EventDataKey;
 import eventHandling.events.GameEventType;
 import eventHandling.listeners.GameOverListener;
 import model.entities.Player;
@@ -56,8 +57,8 @@ public class GameServer extends AbstractManager
 		
 		// Dispatch a scoreUpdated event instead of directly checking for game over
 		Event scoreUpdatedEvent = new Event(GameEventType.SCORE_UPDATED);
-		scoreUpdatedEvent.setData(GameEventType.valueOf("player"), player); // FIXME: Fix this
-		eventDispatcher.dispatchEvent(GameEventType.SCORE_UPDATED, scoreUpdatedEvent);
+		scoreUpdatedEvent.setData(EventDataKey.PLAYER, player);
+		eventDispatcher.dispatchEvent(scoreUpdatedEvent);
 		
 		if (!gameEngine.isGameOver()) {
 			actionManager.switchToNextPlayer();
@@ -77,18 +78,24 @@ public class GameServer extends AbstractManager
 		Player gameEndingPlayer = actionManager.getGameEndingPlayer();
 		if (gameEndingPlayer != null) {
 			// FIXME: These will need to be fixed
-			gameOverEvent.setData(GameEventType.valueOf("winner"), gameEndingPlayer);
+			gameOverEvent.setData(EventDataKey.WINNER, gameEndingPlayer);
 		} else {
 			Player highestScoringPlayer = actionManager.findHighestScoringPlayer();
-			gameOverEvent.setData(GameEventType.valueOf("winner"), highestScoringPlayer);
+			gameOverEvent.setData(EventDataKey.WINNER, highestScoringPlayer);
 		}
-		eventDispatcher.dispatchEvent(GameEventType.GAME_OVER, gameOverEvent);
+		eventDispatcher.dispatchEvent(gameOverEvent);
 	}
 	
 	@Override
 	public void doInitialize() {
+		gameEngine.initialize();
 		actionManager.initialize();
+		uiManager.initialize();
 		uiManager.displayWelcomeMessage();
+		private final GameEngine gameEngine;
+		private final IGameplayUI uiManager;
+		private final ActionManager actionManager;
+		private final IEventDispatcher eventDispatcher;
 		//System.out.println("Game setup is complete.");
 	}
 }
