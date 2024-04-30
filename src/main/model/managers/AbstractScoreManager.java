@@ -1,7 +1,7 @@
 package model.managers;
 
 
-public abstract class AbstractScoreManager extends AbstractManager implements IScoreManager
+public abstract class AbstractScoreManager implements IScoreManager
 {
 	protected int scoreLimit;
 	

@@ -33,9 +33,4 @@ public class PlayerManager extends AbstractPlayerManager
 		                    .max(Comparator.comparing(p -> p.score().getPermanentScore()))
 		                    .orElse(null);
 	}
-	
-	@Override
-	public void doInitialize() {
-		// Initialization logic for players if necessary
-	}
 }

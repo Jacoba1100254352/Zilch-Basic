@@ -33,9 +33,4 @@ public class GameStateManager extends AbstractGameStateManager
 		setReroll(false);
 		setContinueTurn(false);
 	}
-	
-	@Override
-	protected void doInitialize() {
-		// Specific initialization logic for this game state manager
-	}
 }

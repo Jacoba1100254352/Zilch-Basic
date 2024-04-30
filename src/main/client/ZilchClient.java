@@ -25,9 +25,6 @@ public class ZilchClient
 		// Create game server
 		GameServer gameServer = new GameCreator().createSimpleGameServer(playerNames, (IGameplayUI) userSetup, gameID, scoreLimit);
 		
-		// Set up the game
-		gameServer.initialize();
-		
 		// Play Game
 		gameServer.playGame();
 	}

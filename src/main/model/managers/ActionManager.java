@@ -4,7 +4,7 @@ package model.managers;
 import model.entities.Player;
 
 
-public class ActionManager extends AbstractManager
+public class ActionManager
 {
 	private final IPlayerManager playerManager;
 	private final IDiceManager diceManager;
@@ -93,11 +93,5 @@ public class ActionManager extends AbstractManager
 	
 	public int getScoreLimit() {
 		return scoreManager.getScoreLimit();
-	}
-	
-	
-	@Override
-	public void doInitialize() {
-		// Initialization logic for actions, if necessary
 	}
 }

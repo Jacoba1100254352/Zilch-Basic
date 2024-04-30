@@ -3,11 +3,11 @@ package rules.managers;
 
 import model.entities.GameOption;
 import model.entities.Player;
-import model.managers.AbstractManager;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static rules.managers.RuleType.*;
 
@@ -15,7 +15,7 @@ import static rules.managers.RuleType.*;
 /**
  * Unified manager for rule evaluation and management.
  */
-public class RuleManager extends AbstractManager implements IRuleManager
+public class RuleManager implements IRuleManager
 {
 	private final IRuleRegistry ruleRegistry;
 	private final String gameId;
@@ -23,6 +23,23 @@ public class RuleManager extends AbstractManager implements IRuleManager
 	public RuleManager(IRuleRegistry ruleRegistry, String gameId) {
 		this.ruleRegistry = ruleRegistry;
 		this.gameId = gameId;
+	}
+	
+	/**
+	 * Initializes the rules for a game.
+	 *
+	 * @param gameId          The ID of the game to initialize rules for.
+	 * @param addMultipleMin  The minimum number of dice required to add to a multiple.
+	 * @param multipleMin     The minimum number of dice required to be the same value.
+	 * @param singleValues    The set of values that can be scored as singles.
+	 * @param setMin          The minimum number of dice required to be the same value.
+	 * @param numStraitValues The number of values required to be in a strait.
+	 */
+	@Override
+	public void initializeRules(
+			String gameId, Integer addMultipleMin, Integer multipleMin, Set<Integer> singleValues, Integer setMin, Integer numStraitValues
+	) {
+		ruleRegistry.initializeRulesForGame(gameId, addMultipleMin, multipleMin, singleValues, setMin, numStraitValues);
 	}
 	
 	/**
@@ -66,10 +83,5 @@ public class RuleManager extends AbstractManager implements IRuleManager
 		}
 		
 		return gameOptions;
-	}
-	
-	@Override
-	protected void doInitialize() {
-	
 	}
 }

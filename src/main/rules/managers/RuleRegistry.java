@@ -15,6 +15,11 @@ public class RuleRegistry implements IRuleRegistry
 {
 	private final Map<String, Map<RuleType, IRuleStrategy>> gameRules = new ConcurrentHashMap<>();
 	
+	public RuleRegistry() {
+		// Initialize rules for the default game
+		initializeRulesForGame("default", 3, 3, Set.of(1, 5), 3, 5);
+	}
+	
 	@Override
 	public void initializeRulesForGame(
 			String gameId, Integer addMultipleMin, Integer multipleMin, Set<Integer> singleValues, Integer setMin, Integer numStraitValues

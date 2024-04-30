@@ -7,14 +7,13 @@ import eventHandling.events.EventDataKey;
 import eventHandling.events.GameEventType;
 import eventHandling.listeners.GameOverListener;
 import model.entities.Player;
-import model.managers.AbstractManager;
 import model.managers.ActionManager;
 import model.managers.GameOptionManager;
 import rules.managers.IRuleManager;
 import ui.IGameplayUI;
 
 
-public class GameServer extends AbstractManager
+public class GameServer
 {
 	private final GameEngine gameEngine;
 	private final IGameplayUI uiManager;
@@ -38,6 +37,7 @@ public class GameServer extends AbstractManager
 	}
 	
 	public void playGame() {
+		uiManager.displayWelcomeMessage();
 		playGame(false);
 	}
 	
@@ -77,25 +77,11 @@ public class GameServer extends AbstractManager
 		Event gameOverEvent = new Event(GameEventType.GAME_OVER);
 		Player gameEndingPlayer = actionManager.getGameEndingPlayer();
 		if (gameEndingPlayer != null) {
-			// FIXME: These will need to be fixed
 			gameOverEvent.setData(EventDataKey.WINNER, gameEndingPlayer);
 		} else {
 			Player highestScoringPlayer = actionManager.findHighestScoringPlayer();
 			gameOverEvent.setData(EventDataKey.WINNER, highestScoringPlayer);
 		}
 		eventDispatcher.dispatchEvent(gameOverEvent);
-	}
-	
-	@Override
-	public void doInitialize() {
-		gameEngine.initialize();
-		actionManager.initialize();
-		uiManager.initialize();
-		uiManager.displayWelcomeMessage();
-		private final GameEngine gameEngine;
-		private final IGameplayUI uiManager;
-		private final ActionManager actionManager;
-		private final IEventDispatcher eventDispatcher;
-		//System.out.println("Game setup is complete.");
 	}
 }

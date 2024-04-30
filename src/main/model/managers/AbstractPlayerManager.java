@@ -6,7 +6,7 @@ import model.entities.Player;
 import java.util.List;
 
 
-public abstract class AbstractPlayerManager extends AbstractManager implements IPlayerManager
+public abstract class AbstractPlayerManager implements IPlayerManager
 {
 	protected Player currentPlayer;
 	protected Player gameEndingPlayer;

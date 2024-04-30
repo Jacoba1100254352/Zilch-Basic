@@ -6,18 +6,16 @@ import eventHandling.events.Event;
 import eventHandling.events.EventDataKey;
 import eventHandling.events.GameEventType;
 import model.entities.Player;
-import model.managers.AbstractManager;
 import model.managers.ActionManager;
 import model.managers.GameOptionManager;
 
 
-public class GameEngine extends AbstractManager
+public class GameEngine
 {
 	private final GameStateManager gameStateManager;
 	private final IEventDispatcher eventDispatcher;
 	private final GameOptionManager gameOptionManager;
 	private final ActionManager actionManager;
-	// private boolean gameOver = false;
 	
 	public GameEngine(
 			IEventDispatcher eventDispatcher, GameStateManager gameStateManager, ActionManager actionManager,
@@ -66,10 +64,5 @@ public class GameEngine extends AbstractManager
 	
 	private boolean canTurnEnd(Player player) {
 		return player.score().getRoundScore() >= 1000 || player.score().getPermanentScore() >= 1000;
-	}
-	
-	@Override
-	public void doInitialize() {
-		// Initialization logic here
 	}
 }

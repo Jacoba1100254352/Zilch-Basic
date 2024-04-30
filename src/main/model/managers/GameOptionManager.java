@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class GameOptionManager extends AbstractManager
+public class GameOptionManager
 {
 	private final ActionManager actionManager;
 	private final IRuleManager ruleManager;
@@ -55,10 +55,5 @@ public class GameOptionManager extends AbstractManager
 	
 	public boolean isOptionSelected() {
 		return selectedGameOption != null;
-	}
-	
-	@Override
-	public void doInitialize() {
-		// Initialize if necessary
 	}
 }

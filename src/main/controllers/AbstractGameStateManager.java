@@ -2,13 +2,12 @@ package controllers;
 
 
 import model.entities.Player;
-import model.managers.AbstractManager;
 import model.managers.ActionManager;
 import model.managers.GameOptionManager;
 import ui.IGameplayUI;
 
 
-public abstract class AbstractGameStateManager extends AbstractManager implements IGameStateManager
+public abstract class AbstractGameStateManager implements IGameStateManager
 {
 	protected GameOptionManager gameOptionManager;
 	protected IGameplayUI uiManager;
@@ -79,7 +78,4 @@ public abstract class AbstractGameStateManager extends AbstractManager implement
 			this.continueTurn = continueTurn;
 		}
 	}
-	
-	@Override
-	protected abstract void doInitialize();
 }
