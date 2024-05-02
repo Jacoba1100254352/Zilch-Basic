@@ -2,7 +2,7 @@ package creators.patterns;
 
 
 import controllers.GameServer;
-import ui.IGameplayUI;
+import ui.IMessage;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import java.util.List;
 public class GameBuilder extends AbstractGameServerCreator
 {
 	private List<String> playerNames;
-	private IGameplayUI uiManager;
+	private IMessage uiManager;
 	private String gameID;
 	private int scoreLimit;
 	
@@ -27,7 +27,7 @@ public class GameBuilder extends AbstractGameServerCreator
 		return this;
 	}
 	
-	public GameBuilder setUiManager(IGameplayUI uiManager) {
+	public GameBuilder setUiManager(IMessage uiManager) {
 		this.uiManager = uiManager;
 		return this;
 	}

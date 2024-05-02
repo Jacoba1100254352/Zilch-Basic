@@ -6,7 +6,7 @@ import eventHandling.events.Event;
 import eventHandling.events.EventDataKey;
 import model.entities.Player;
 import model.managers.ActionManager;
-import ui.IGameplayUI;
+import ui.IMessage;
 
 import static eventHandling.events.GameEventType.GAME_OVER;
 import static eventHandling.events.GameEventType.SCORE_UPDATED;
@@ -16,11 +16,11 @@ public class GameOverListener implements IEventListener
 {
 	private final int scoreLimit;
 	private final GameServer gameServer;
-	private final IGameplayUI uiManager;
+	private final IMessage uiManager;
 	private final ActionManager actionManager;
 	private Player gameEndingPlayer;
 	
-	public GameOverListener(int scoreLimit, GameServer gameServer, ActionManager actionManager, IGameplayUI uiManager) {
+	public GameOverListener(int scoreLimit, GameServer gameServer, ActionManager actionManager, IMessage uiManager) {
 		this.scoreLimit = scoreLimit;
 		this.gameServer = gameServer;
 		this.uiManager = uiManager;

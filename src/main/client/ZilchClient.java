@@ -3,7 +3,7 @@ package client;
 
 import controllers.GameServer;
 import creators.core.GameCreator;
-import ui.IGameplayUI;
+import ui.IMessage;
 import ui.IUserInteraction;
 import ui.UserInteractionManager;
 
@@ -23,7 +23,7 @@ public class ZilchClient
 		String gameID = "Zilch"; // TODO: Create function to generate gameID
 		
 		// Create game server
-		GameServer gameServer = new GameCreator().createSimpleGameServer(playerNames, (IGameplayUI) userSetup, gameID, scoreLimit);
+		GameServer gameServer = new GameCreator().createSimpleGameServer(playerNames, (IMessage) userSetup, gameID, scoreLimit);
 		
 		// Play Game
 		gameServer.playGame();

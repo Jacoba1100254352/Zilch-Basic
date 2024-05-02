@@ -10,17 +10,17 @@ import model.entities.Player;
 import model.managers.ActionManager;
 import model.managers.GameOptionManager;
 import rules.managers.IRuleManager;
-import ui.IGameplayUI;
+import ui.IMessage;
 
 
 public class GameServer
 {
 	private final GameEngine gameEngine;
-	private final IGameplayUI uiManager;
+	private final IMessage uiManager;
 	private final ActionManager actionManager;
 	private final IEventDispatcher eventDispatcher;
 	
-	public GameServer(IEventDispatcher eventDispatcher, ActionManager actionManager, IRuleManager ruleManager, IGameplayUI uiManager) {
+	public GameServer(IEventDispatcher eventDispatcher, ActionManager actionManager, IRuleManager ruleManager, IMessage uiManager) {
 		this.uiManager = uiManager;
 		this.actionManager = actionManager;
 		this.eventDispatcher = eventDispatcher;
@@ -42,6 +42,9 @@ public class GameServer
 	
 	public void playGame(boolean isTest) {
 		uiManager.displayWelcomeMessage();
+		// TODO: Rule Initialization sequence here
+		gameEngine.initializeRules();
+		
 		while (!gameEngine.isGameOver()) {
 			playTurn(actionManager.getCurrentPlayer());
 			if (isTest) break; // For testing purposes to prevent infinite loops

@@ -53,7 +53,7 @@ public class GameOptionManager
 		this.selectedGameOption = gameOption;
 	}
 	
-	public boolean isOptionSelected() {
-		return selectedGameOption != null;
+	public int isOptionSelected() {
+		return (selectedGameOption != null) ? 1 : 0;
 	}
 }

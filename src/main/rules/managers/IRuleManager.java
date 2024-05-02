@@ -15,5 +15,5 @@ public interface IRuleManager
 			String gameId, Integer addMultipleMin, Integer multipleMin, Set<Integer> singleValues, Integer setMin, Integer numStraitValues
 	);
 	
-	List<GameOption> evaluateRules(Player player, boolean isOptionSelectedForCurrentRoll);
+	List<GameOption> evaluateRules(Player player, int numOptionsSelected);
 }

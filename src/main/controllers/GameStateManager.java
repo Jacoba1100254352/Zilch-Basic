@@ -4,12 +4,12 @@ package controllers;
 import model.entities.Player;
 import model.managers.ActionManager;
 import model.managers.GameOptionManager;
-import ui.IGameplayUI;
+import ui.IMessage;
 
 
 public class GameStateManager extends AbstractGameStateManager
 {
-	public GameStateManager(GameOptionManager gameOptionManager, IGameplayUI uiManager, ActionManager actionManager) {
+	public GameStateManager(GameOptionManager gameOptionManager, IMessage uiManager, ActionManager actionManager) {
 		super(gameOptionManager, uiManager, actionManager);
 	}
 	

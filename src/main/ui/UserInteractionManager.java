@@ -6,26 +6,27 @@ import model.entities.GameOption;
 import model.entities.Player;
 import model.entities.Score;
 import model.managers.GameOptionManager;
+import rules.managers.IRuleManager;
+import rules.managers.RuleType;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 
 /**
  * Manages user interactions during the game, handling inputs for player details and game decisions,
- * and delegating display responsibilities to ConsoleGameplayUI.
+ * and delegating display responsibilities to ConsoleMessage.
  */
-public class UserInteractionManager implements IGameplayUI, IUserInteraction
+public class UserInteractionManager implements IMessage, IUserInteraction
 {
-	private final IGameplayUI gameplayUI;
+	private final IMessage gameplayUI;
 	private final IInputManager inputManager;
 	
 	@SuppressWarnings("unused")
 	public UserInteractionManager() {
-		this(new ConsoleGameplayUI(), new ConsoleInputManager());
+		this(new ConsoleMessage(), new ConsoleInputManager());
 	}
 	
-	public UserInteractionManager(IGameplayUI gameplayUI, IInputManager inputManager) {
+	public UserInteractionManager(IMessage gameplayUI, IInputManager inputManager) {
 		this.gameplayUI = gameplayUI;
 		this.inputManager = inputManager;
 	}
@@ -36,6 +37,33 @@ public class UserInteractionManager implements IGameplayUI, IUserInteraction
 		List<String> playerNames = getPlayerNames(numPlayers);
 		// Additional setup steps can be added here if needed
 	}
+	
+	@Override
+	public void selectRules(IRuleManager ruleManager) {
+		Map<RuleType, Boolean> selectedRules = new EnumMap<>(RuleType.class);
+		
+		System.out.println("Please select the rules you want to enable (yes/no):");
+		
+		gameplayUI.displayRulesMenu();
+		
+		// Iterate over the RuleType enum to display options
+		for (RuleType ruleType : RuleType.values()) {
+			boolean isEnabled = ConsoleHelper.readYesNo("Enable " + ruleType + "?");
+			selectedRules.put(ruleType, isEnabled);
+		}
+		
+		Set<Integer> singleValues = ruleSelections.get(RuleType.SINGLE) ? Set.of(1, 5) : Set.of();
+		int minMultiple = ruleSelections.get(RuleType.MULTIPLE) ? 2 : 0; // Example settings
+		int minSet = ruleSelections.get(RuleType.SET) ? 3 : 0;
+		int numStraitValues = ruleSelections.get(RuleType.STRAIT) ? 5 : 0;
+		
+		// Assuming ruleManager is already initialized and available
+		ruleManager.initializeRules("TestGameID", minMultiple, minMultiple, singleValues, minSet, numStraitValues);
+		
+		System.out.println("Rules have been initialized. Starting the game...");
+		// Continue with the game setup or start the gameplay loop
+	}
+	
 	
 	@Override
 	public int getNumberOfPlayers() {
@@ -100,15 +128,15 @@ public class UserInteractionManager implements IGameplayUI, IUserInteraction
 		gameOptionManager.applyGameOption(selectedOption);
 	}
 	
-	// Facade methods for the ConsoleGameplayUI
+	// Facade methods for the ConsoleMessage
 	@Override
 	public void displayWelcomeMessage() {
 		gameplayUI.displayWelcomeMessage();
 	}
 	
 	@Override
-	public void displayGameOptions(Score score, List<GameOption> gameOptions, boolean isOptionSelectedForCurrentRoll) {
-		gameplayUI.displayGameOptions(score, gameOptions, isOptionSelectedForCurrentRoll);
+	public void displayGameOptions(Score score, List<GameOption> gameOptions, int numOptionsSelected) {
+		gameplayUI.displayGameOptions(score, gameOptions, numOptionsSelected);
 	}
 	
 	@Override
@@ -153,6 +181,11 @@ public class UserInteractionManager implements IGameplayUI, IUserInteraction
 	}
 	
 	@Override
+	public void displayRulesMenu() {
+		gameplayUI.displayRulesMenu();
+	}
+	
+	@Override
 	public void clear() {
 		gameplayUI.clear();
 	}
@@ -160,10 +193,5 @@ public class UserInteractionManager implements IGameplayUI, IUserInteraction
 	@Override
 	public void pauseAndContinue(Runnable waitFunction) {
 		gameplayUI.pauseAndContinue(waitFunction);
-	}
-	
-	@Override
-	public void displayCurrentScore(Player currentPlayer) {
-		gameplayUI.displayCurrentScore(currentPlayer);
 	}
 }

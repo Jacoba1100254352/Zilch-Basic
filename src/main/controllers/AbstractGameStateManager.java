@@ -4,20 +4,20 @@ package controllers;
 import model.entities.Player;
 import model.managers.ActionManager;
 import model.managers.GameOptionManager;
-import ui.IGameplayUI;
+import ui.IMessage;
 
 
 public abstract class AbstractGameStateManager implements IGameStateManager
 {
 	protected GameOptionManager gameOptionManager;
-	protected IGameplayUI uiManager;
+	protected IMessage uiManager;
 	protected ActionManager actionManager;
 	
 	protected boolean reroll;
 	protected boolean continueTurn;
 	protected boolean isBust;
 	
-	public AbstractGameStateManager(GameOptionManager gameOptionManager, IGameplayUI uiManager, ActionManager actionManager) {
+	public AbstractGameStateManager(GameOptionManager gameOptionManager, IMessage uiManager, ActionManager actionManager) {
 		this.gameOptionManager = gameOptionManager;
 		this.uiManager = uiManager;
 		this.actionManager = actionManager;

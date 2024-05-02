@@ -9,14 +9,14 @@ import rules.managers.IRuleManager;
 import rules.managers.IRuleRegistry;
 import rules.managers.RuleManager;
 import rules.managers.RuleRegistry;
-import ui.IGameplayUI;
+import ui.IMessage;
 
 import java.util.List;
 
 
 public abstract class AbstractGameServerCreator
 {
-	protected GameServer createGameServer(List<String> playerNames, IGameplayUI uiManager, String gameID, int scoreLimit) {
+	protected GameServer createGameServer(List<String> playerNames, IMessage uiManager, String gameID, int scoreLimit) {
 		IEventDispatcher dispatcher = new SimpleEventDispatcher();
 		IPlayerManager playerManager = new PlayerManager(playerNames);
 		IDiceManager diceManager = new DiceManager();

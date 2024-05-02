@@ -27,6 +27,10 @@ public class GameEngine
 		this.gameStateManager = gameStateManager;
 	}
 	
+	public void initializeRules() {
+		gameStateManager.initializeRules();
+	}
+	
 	public void processGameTurn() {
 		Player currentPlayer = actionManager.getCurrentPlayer();
 		if (currentPlayer == null) {

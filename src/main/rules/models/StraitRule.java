@@ -15,6 +15,11 @@ public class StraitRule implements IRuleStrategy
 	}
 	
 	@Override
+	public String getDescription() {
+		return "";
+	}
+	
+	@Override
 	public boolean isValid(Map<Integer, Integer> diceSetMap, Integer value) {
 		if (diceSetMap.size() != FULL_SET_OF_DICE) {
 			return false;

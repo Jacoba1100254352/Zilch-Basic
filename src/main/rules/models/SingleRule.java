@@ -14,6 +14,11 @@ public class SingleRule implements IRuleStrategy
 	}
 	
 	@Override
+	public String getDescription() {
+		return "";
+	}
+	
+	@Override
 	public boolean isValid(Map<Integer, Integer> diceSetMap, Integer value) {
 		return this.acceptedValues.contains(value) && diceSetMap.getOrDefault(value, 0) > 0;
 	}
