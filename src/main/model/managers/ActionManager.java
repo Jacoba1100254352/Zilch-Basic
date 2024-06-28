@@ -90,8 +90,4 @@ public class ActionManager
 		Player currentPlayer = getCurrentPlayer();
 		scoreManager.scoreMultiple(currentPlayer.score(), currentPlayer.dice().diceSetMap().get(dieValue), dieValue);
 	}
-	
-	public int getScoreLimit() {
-		return scoreManager.getScoreLimit();
-	}
 }

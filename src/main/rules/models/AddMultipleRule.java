@@ -33,17 +33,6 @@ public class AddMultipleRule implements IRuleStrategy
 	 */
 	public AddMultipleRule(Integer value, Boolean applyRule) {
 		this.value = value;
-		this.isApplied = applyRule;
-	}
-	
-	@Override
-	public void apply(boolean applyRule) {
-		this.isApplied = applyRule;
-	}
-	
-	@Override
-	public boolean isApplied() {
-		return this.isApplied;
 	}
 	
 	@Override

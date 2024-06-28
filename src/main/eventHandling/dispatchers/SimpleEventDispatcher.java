@@ -17,7 +17,7 @@ public class SimpleEventDispatcher implements IEventDispatcher
 	
 	@Override
 	public void addListener(GameEventType eventType, IEventListener listener) {
-		listeners.computeIfAbsent(eventType, k -> new ArrayList<>()).add(listener);
+		listeners.computeIfAbsent(eventType, _ -> new ArrayList<>()).add(listener);
 	}
 	
 	@Override

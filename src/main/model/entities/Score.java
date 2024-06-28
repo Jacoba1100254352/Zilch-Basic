@@ -14,9 +14,7 @@ public class Score
 	}
 	
 	public Score() {
-		this.permanentScore = 0;
-		this.roundScore = 0;
-		this.scoreFromMultiples = 0;
+		this(0, 0, 0);
 	}
 	
 	

@@ -9,6 +9,7 @@ import model.managers.GameOptionManager;
 import rules.managers.IRuleManager;
 import rules.managers.RuleType;
 
+import java.io.IOException;
 import java.util.*;
 
 
@@ -22,11 +23,11 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	private final IInputManager inputManager;
 	
 	@SuppressWarnings("unused")
-	public UserInteractionManager() {
+	public UserInteractionManager() throws IOException {
 		this(new ConsoleMessage(), new ConsoleInputManager());
 	}
 	
-	public UserInteractionManager(IMessage gameplayUI, IInputManager inputManager) {
+	public UserInteractionManager(IMessage gameplayUI, IInputManager inputManager) throws IOException {
 		this.gameplayUI = gameplayUI;
 		this.inputManager = inputManager;
 	}
@@ -38,8 +39,18 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		// Additional setup steps can be added here if needed
 	}
 	
+	private boolean readYesNo(String message) {
+		gameplayUI.displayMessage(message);
+		String input = inputManager.getInputString().toLowerCase();
+		while (!input.equals("yes") && !input.equals("no")) {
+			gameplayUI.displayMessage("Invalid input. Please enter 'yes' or 'no': ");
+			input = inputManager.getInputString().toLowerCase();
+		}
+		return input.equals("yes");
+	}
+	
 	@Override
-	public void selectRules(IRuleManager ruleManager) {
+	public void selectRules(IRuleManager ruleManager) { // TODO: Fix and finish to use CONFIG
 		Map<RuleType, Boolean> selectedRules = new EnumMap<>(RuleType.class);
 		
 		System.out.println("Please select the rules you want to enable (yes/no):");
@@ -48,14 +59,14 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		
 		// Iterate over the RuleType enum to display options
 		for (RuleType ruleType : RuleType.values()) {
-			boolean isEnabled = ConsoleHelper.readYesNo("Enable " + ruleType + "?");
+			boolean isEnabled = readYesNo("Enable " + ruleType + "?");
 			selectedRules.put(ruleType, isEnabled);
 		}
 		
-		Set<Integer> singleValues = ruleSelections.get(RuleType.SINGLE) ? Set.of(1, 5) : Set.of();
-		int minMultiple = ruleSelections.get(RuleType.MULTIPLE) ? 2 : 0; // Example settings
-		int minSet = ruleSelections.get(RuleType.SET) ? 3 : 0;
-		int numStraitValues = ruleSelections.get(RuleType.STRAIT) ? 5 : 0;
+		Set<Integer> singleValues = selectedRules.get(RuleType.SINGLE) ? Set.of(1, 5) : Set.of();
+		int minMultiple = selectedRules.get(RuleType.MULTIPLE) ? 2 : 0; // Example settings
+		int minSet = selectedRules.get(RuleType.SET) ? 3 : 0;
+		int numStraitValues = selectedRules.get(RuleType.STRAIT) ? 5 : 0;
 		
 		// Assuming ruleManager is already initialized and available
 		ruleManager.initializeRules("TestGameID", minMultiple, minMultiple, singleValues, minSet, numStraitValues);
@@ -89,7 +100,7 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	
 	@Override
 	public int getValidScoreLimit() {
-		final int MIN_SCORE_LIMIT = 1000;
+		final int MIN_SCORE_LIMIT = 1000; // This is a hardcoded minimum score limit (No configuration)
 		int limit;
 		
 		while (true) {
@@ -97,7 +108,7 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 				displayMessage("\nEnter the score limit (minimum " + MIN_SCORE_LIMIT + "): ");
 				limit = inputManager.getInputInt();
 				if (limit < MIN_SCORE_LIMIT) {
-					displayMessage("Invalid score limit. Please try again.");
+					displayMessage("Invalid score limit. Score limit must be at least 1000. Please try again.");
 				} else {
 					break;
 				}

@@ -1,6 +1,8 @@
 package controllers;
 
 
+import config.Config;
+import config.ReadOnlyConfig;
 import eventHandling.dispatchers.IEventDispatcher;
 import eventHandling.events.Event;
 import eventHandling.events.EventDataKey;
@@ -12,6 +14,8 @@ import model.managers.GameOptionManager;
 import rules.managers.IRuleManager;
 import ui.IMessage;
 
+import java.io.IOException;
+
 
 public class GameServer
 {
@@ -20,10 +24,13 @@ public class GameServer
 	private final ActionManager actionManager;
 	private final IEventDispatcher eventDispatcher;
 	
-	public GameServer(IEventDispatcher eventDispatcher, ActionManager actionManager, IRuleManager ruleManager, IMessage uiManager) {
+	public GameServer(
+			IEventDispatcher eventDispatcher, ActionManager actionManager, IRuleManager ruleManager, IMessage uiManager
+	) throws IOException {
 		this.uiManager = uiManager;
 		this.actionManager = actionManager;
 		this.eventDispatcher = eventDispatcher;
+		int scoreLimit = ((ReadOnlyConfig) new Config("config.properties")).getScoreLimit();
 		
 		// Initialize the game engine
 		GameOptionManager gameOptionManager = new GameOptionManager(actionManager, ruleManager);
@@ -31,7 +38,7 @@ public class GameServer
 		this.gameEngine = new GameEngine(eventDispatcher, gameStateManager, actionManager, gameOptionManager);
 		
 		// Add a GameOverListener to the event dispatcher
-		GameOverListener gameOverListener = new GameOverListener(actionManager.getScoreLimit(), this, actionManager, uiManager);
+		GameOverListener gameOverListener = new GameOverListener(scoreLimit, this, actionManager, uiManager);
 		eventDispatcher.addListener(GameEventType.SCORE_UPDATED, gameOverListener);
 		eventDispatcher.addListener(GameEventType.GAME_STATE_CHANGED, gameOverListener); // NOTE: Game Over
 	}

@@ -4,12 +4,8 @@ package model.managers;
 import model.entities.Score;
 
 
-public class ScoreManager extends AbstractScoreManager
+public class ScoreManager implements IScoreManager
 {
-	public ScoreManager(int scoreLimit) {
-		super(scoreLimit);
-	}
-	
 	///   Main Functions   ///
 	
 	@Override

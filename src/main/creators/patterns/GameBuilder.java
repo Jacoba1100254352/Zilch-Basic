@@ -4,6 +4,7 @@ package creators.patterns;
 import controllers.GameServer;
 import ui.IMessage;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -42,7 +43,7 @@ public class GameBuilder extends AbstractGameServerCreator
 		return this;
 	}
 	
-	public GameServer build() {
-		return createGameServer(playerNames, uiManager, gameID, scoreLimit);
+	public GameServer build() throws IOException {
+		return createGameServer(playerNames, uiManager, gameID);
 	}
 }

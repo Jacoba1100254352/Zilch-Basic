@@ -1,16 +1,17 @@
 package ui;
 
 
+import config.Config;
+import config.ReadOnlyConfig;
 import model.entities.Dice;
 import model.entities.GameOption;
 import model.entities.Player;
 import model.entities.Score;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.IntStream;
-
-import static model.managers.IScoreManager.scoreLimit;
 
 
 /**
@@ -18,10 +19,14 @@ import static model.managers.IScoreManager.scoreLimit;
  */
 public class ConsoleMessage implements IMessage
 {
+	private final int scoreLimit;
+	
 	/**
 	 * Constructs a new ConsoleMessage object.
 	 */
-	public ConsoleMessage() {}
+	public ConsoleMessage() throws IOException {
+		scoreLimit = ((ReadOnlyConfig) new Config("config.properties")).getScoreLimit();
+	}
 	
 	///   Main Functions   ///
 	

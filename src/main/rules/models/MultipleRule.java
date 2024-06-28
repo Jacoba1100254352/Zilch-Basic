@@ -7,7 +7,6 @@ import java.util.Map;
 public class MultipleRule implements IRuleStrategy
 {
 	Integer minimumMultiples;
-	Boolean isApplied;
 	
 	/**
 	 * @note Applies the rule by default and assigns value a default of 3
@@ -32,18 +31,6 @@ public class MultipleRule implements IRuleStrategy
 	 */
 	public MultipleRule(Integer minimumMultiples, Boolean applyRule) {
 		this.minimumMultiples = minimumMultiples;
-		this.isApplied = applyRule;
-	}
-	
-	
-	@Override
-	public void apply(boolean applyRule) {
-		this.isApplied = applyRule;
-	}
-	
-	@Override
-	public boolean isApplied() {
-		return this.isApplied;
 	}
 	
 	@Override

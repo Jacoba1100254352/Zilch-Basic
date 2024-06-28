@@ -33,4 +33,8 @@ public class GameStateManager extends AbstractGameStateManager
 		setReroll(false);
 		setContinueTurn(false);
 	}
+	
+	public void initializeRules() {
+		// TODO: Implement this method
+	}
 }

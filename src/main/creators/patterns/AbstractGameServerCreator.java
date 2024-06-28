@@ -11,16 +11,17 @@ import rules.managers.RuleManager;
 import rules.managers.RuleRegistry;
 import ui.IMessage;
 
+import java.io.IOException;
 import java.util.List;
 
 
 public abstract class AbstractGameServerCreator
 {
-	protected GameServer createGameServer(List<String> playerNames, IMessage uiManager, String gameID, int scoreLimit) {
+	protected GameServer createGameServer(List<String> playerNames, IMessage uiManager, String gameID) throws IOException {
 		IEventDispatcher dispatcher = new SimpleEventDispatcher();
 		IPlayerManager playerManager = new PlayerManager(playerNames);
 		IDiceManager diceManager = new DiceManager();
-		IScoreManager scoreManager = new ScoreManager(scoreLimit);
+		IScoreManager scoreManager = new ScoreManager();
 		ActionManager actionManager = new ActionManager(playerManager, diceManager, scoreManager);
 		IRuleRegistry ruleRegistry = new RuleRegistry();
 		IRuleManager ruleManager = new RuleManager(ruleRegistry, gameID);
