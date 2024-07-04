@@ -1,38 +1,46 @@
 package rules.models;
 
 
+import rules.managers.RuleType;
+
+import java.util.HashMap;
 import java.util.Map;
 
 
-// FIXME: This Rule needs to be adjusted
 public class AddMultipleRule implements IRuleStrategy
 {
-	Integer value;
+	private final RuleType key = RuleType.ADD_MULTIPLE;
+	private Integer value;
 	
-	/**
-	 * @note Applies the rule and assigns value a default of 3
-	 */
-	@SuppressWarnings("unused")
-	public AddMultipleRule() {
-		this(3);
-	}
+	public AddMultipleRule() {}
 	
-	/**
-	 * @param value Minimum number before this rule becomes an option
-	 *
-	 * @note Applies the rule by default
-	 */
-	public AddMultipleRule(Integer value) {
-		this.value = value;
+	@Override
+	public void configure(Map<RuleType, Object> config) {
+		if (!config.containsKey(key)) {
+			config.put(key, getDefaultConfig().get(key));
+		}
+		this.value = (Integer) config.get(key);
 	}
 	
 	@Override
 	public String getDescription() {
-		return "";
+		return "Add Multiple Rule";
 	}
 	
 	@Override
 	public boolean isValid(Map<Integer, Integer> diceSetMap, Integer value) {
-		return diceSetMap.getOrDefault(value, 0) >= value;
+		return diceSetMap.getOrDefault(this.value, 0) >= this.value;
+	}
+	
+	@Override
+	public Map<RuleType, Object> getDefaultConfig() {
+		Map<RuleType, Object> defaultConfig = new HashMap<>();
+		defaultConfig.put(key, 3); // Default value for addMultipleMin
+		return defaultConfig;
+	}
+	
+	@Override
+	public RuleType getRuleType() {
+		return key;
 	}
 }

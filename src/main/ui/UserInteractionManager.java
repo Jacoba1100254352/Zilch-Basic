@@ -7,11 +7,14 @@ import model.entities.Player;
 import model.entities.Score;
 import model.managers.GameOptionManager;
 import rules.managers.IRuleManager;
+import rules.managers.RuleRegistry;
 import rules.managers.RuleType;
 
 import java.io.IOException;
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Manages user interactions during the game, handling inputs for player details and game decisions,
@@ -50,31 +53,30 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	}
 	
 	@Override
-	public void selectRules(IRuleManager ruleManager) { // TODO: Fix and finish to use CONFIG
-		Map<RuleType, Boolean> selectedRules = new EnumMap<>(RuleType.class);
+	public void selectRules(IRuleManager ruleManager) {
+		RuleRegistry ruleRegistry = new RuleRegistry();
+		Map<RuleType, Object> defaultConfig = ruleRegistry.getDefaultConfig();
+		Map<RuleType, Object> selectedConfig = new EnumMap<>(RuleType.class);
 		
 		System.out.println("Please select the rules you want to enable (yes/no):");
 		
 		gameplayUI.displayRulesMenu();
 		
-		// Iterate over the RuleType enum to display options
-		for (RuleType ruleType : RuleType.values()) {
+		// Iterate over the default configuration to display options
+		for (Map.Entry<RuleType, Object> entry : defaultConfig.entrySet()) {
+			RuleType ruleType = entry.getKey();
 			boolean isEnabled = readYesNo("Enable " + ruleType + "?");
-			selectedRules.put(ruleType, isEnabled);
+			if (isEnabled) {
+				selectedConfig.put(ruleType, entry.getValue());
+			}
 		}
 		
-		Set<Integer> singleValues = selectedRules.get(RuleType.SINGLE) ? Set.of(1, 5) : Set.of();
-		int minMultiple = selectedRules.get(RuleType.MULTIPLE) ? 2 : 0; // Example settings
-		int minSet = selectedRules.get(RuleType.SET) ? 3 : 0;
-		int numStraitValues = selectedRules.get(RuleType.STRAIT) ? 5 : 0;
-		
-		// Assuming ruleManager is already initialized and available
-		ruleManager.initializeRules("TestGameID", minMultiple, minMultiple, singleValues, minSet, numStraitValues);
+		// Initialize the rules with the selected configuration
+		ruleManager.initializeRules(selectedConfig);
 		
 		System.out.println("Rules have been initialized. Starting the game...");
 		// Continue with the game setup or start the gameplay loop
 	}
-	
 	
 	@Override
 	public int getNumberOfPlayers() {

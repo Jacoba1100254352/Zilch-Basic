@@ -3,14 +3,14 @@ package rules.managers;
 
 import model.entities.GameOption;
 import model.entities.Player;
-import rules.config.RulesConfig;
 
 import java.util.List;
+import java.util.Map;
 
 
 public interface IRuleManager
 {
-	void initializeRules(RulesConfig config);
+	void initializeRules(Map<RuleType, Object> config);
 	
 	List<GameOption> evaluateRules(Player player, int numOptionsSelected);
 }

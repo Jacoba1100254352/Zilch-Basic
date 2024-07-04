@@ -1,46 +1,46 @@
 package rules.models;
 
 
+import rules.managers.RuleType;
+
+import java.util.HashMap;
 import java.util.Map;
 
 
 public class MultipleRule implements IRuleStrategy
 {
-	Integer minimumMultiples;
+	private final RuleType key = RuleType.MULTIPLE;
+	private Integer minimumMultiples;
 	
-	/**
-	 * @note Applies the rule by default and assigns value a default of 3
-	 */
-	@SuppressWarnings("unused")
-	public MultipleRule() {
-		this(3);
-	}
+	public MultipleRule() {}
 	
-	/**
-	 * @param minimumMultiples Minimum number of multiples before this rule becomes an option
-	 *
-	 * @note Applies the rule by default
-	 */
-	public MultipleRule(Integer minimumMultiples) {
-		this(minimumMultiples, true);
-	}
-	
-	/**
-	 * @param minimumMultiples Minimum number before this rule becomes an option
-	 * @param applyRule        Determines whether this rule may be applied
-	 */
-	public MultipleRule(Integer minimumMultiples, Boolean applyRule) {
-		this.minimumMultiples = minimumMultiples;
+	@Override
+	public void configure(Map<RuleType, Object> config) {
+		if (!config.containsKey(key)) {
+			config.put(key, getDefaultConfig().get(key));
+		}
+		this.minimumMultiples = (Integer) config.get(key);
 	}
 	
 	@Override
 	public String getDescription() {
-		return "";
+		return "Multiple Rule";
 	}
 	
 	@Override
 	public boolean isValid(Map<Integer, Integer> diceSetMap, Integer value) {
-		// return diceSetMap.getOrDefault(value, 0) >= 3 && diceSetMap.values().stream().anyMatch(count -> count >= 3);
 		return diceSetMap.getOrDefault(value, 0) >= minimumMultiples;
+	}
+	
+	@Override
+	public Map<RuleType, Object> getDefaultConfig() {
+		Map<RuleType, Object> defaultConfig = new HashMap<>();
+		defaultConfig.put(key, 3); // Default value for multipleMin
+		return defaultConfig;
+	}
+	
+	@Override
+	public RuleType getRuleType() {
+		return key;
 	}
 }

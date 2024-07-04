@@ -1,6 +1,9 @@
 package rules.models;
 
 
+import rules.managers.RuleType;
+
+import java.util.HashMap;
 import java.util.Map;
 
 import static model.entities.Dice.FULL_SET_OF_DICE;
@@ -8,15 +11,22 @@ import static model.entities.Dice.FULL_SET_OF_DICE;
 
 public class StraitRule implements IRuleStrategy
 {
-	Integer value;
+	private final RuleType key = RuleType.STRAIT;
+	private Integer numStraitValues;
 	
-	public StraitRule(Integer value) {
-		this.value = value;
+	public StraitRule() {}
+	
+	@Override
+	public void configure(Map<RuleType, Object> config) {
+		if (!config.containsKey(key)) {
+			config.put(key, getDefaultConfig().get(key));
+		}
+		this.numStraitValues = (Integer) config.get(key);
 	}
 	
 	@Override
 	public String getDescription() {
-		return "";
+		return "Strait Rule";
 	}
 	
 	@Override
@@ -32,5 +42,17 @@ public class StraitRule implements IRuleStrategy
 		}
 		
 		return true;
+	}
+	
+	@Override
+	public Map<RuleType, Object> getDefaultConfig() {
+		Map<RuleType, Object> defaultConfig = new HashMap<>();
+		defaultConfig.put(key, 6); // Default value for numStraitValues
+		return defaultConfig;
+	}
+	
+	@Override
+	public RuleType getRuleType() {
+		return key;
 	}
 }

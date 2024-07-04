@@ -24,7 +24,7 @@ public abstract class AbstractGameServerCreator
 		IScoreManager scoreManager = new ScoreManager();
 		ActionManager actionManager = new ActionManager(playerManager, diceManager, scoreManager);
 		IRuleRegistry ruleRegistry = new RuleRegistry();
-		IRuleManager ruleManager = new RuleManager(ruleRegistry, gameID);
+		IRuleManager ruleManager = new RuleManager(ruleRegistry);
 		
 		return new GameServer(dispatcher, actionManager, ruleManager, uiManager);
 	}

@@ -1,6 +1,8 @@
 package rules.models;
 
 
+import rules.managers.RuleType;
+
 import java.util.Map;
 
 
@@ -14,4 +16,10 @@ public interface IRuleStrategy
 	String getDescription();
 	
 	boolean isValid(Map<Integer, Integer> diceSetMap, Integer value);
+	
+	void configure(Map<RuleType, Object> config);
+	
+	Map<RuleType, Object> getDefaultConfig(); // Method to provide default config values
+	
+	RuleType getRuleType(); // Method to get the rule type
 }

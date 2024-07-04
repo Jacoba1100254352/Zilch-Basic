@@ -15,7 +15,7 @@ public class EndTurnRule implements IConstantRule
 	
 	@Override
 	public String getDescription() {
-		return "";
+		return "End Turn Rule";
 	}
 	
 	@Override

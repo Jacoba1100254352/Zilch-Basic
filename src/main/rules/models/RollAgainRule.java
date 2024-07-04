@@ -5,7 +5,7 @@ public class RollAgainRule implements IConstantRule
 {
 	@Override
 	public String getDescription() {
-		return "";
+		return "Roll Again";
 	}
 	
 	@Override
