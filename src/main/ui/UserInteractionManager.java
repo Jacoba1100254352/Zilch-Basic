@@ -27,7 +27,7 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		this(new ConsoleMessage(), new ConsoleInputManager());
 	}
 	
-	public UserInteractionManager(IMessage gameplayUI, IInputManager inputManager) throws IOException {
+	public UserInteractionManager(IMessage gameplayUI, IInputManager inputManager) {
 		this.gameplayUI = gameplayUI;
 		this.inputManager = inputManager;
 	}

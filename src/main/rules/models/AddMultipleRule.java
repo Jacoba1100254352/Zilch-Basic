@@ -23,15 +23,6 @@ public class AddMultipleRule implements IRuleStrategy
 	 * @note Applies the rule by default
 	 */
 	public AddMultipleRule(Integer value) {
-		this(value, true);
-	}
-	
-	
-	/**
-	 * @param value     Minimum number before this rule becomes an option
-	 * @param applyRule Determines whether this rule may be applied
-	 */
-	public AddMultipleRule(Integer value, Boolean applyRule) {
 		this.value = value;
 	}
 	

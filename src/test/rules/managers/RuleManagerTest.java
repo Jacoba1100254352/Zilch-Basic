@@ -10,6 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import rules.config.RulesConfig;
+import rules.config.RulesConfigBuilder;
 import rules.models.*;
 
 import java.util.List;
@@ -42,6 +44,13 @@ class RuleManagerTest
 	void initializeRules() {
 		// Assume we're initializing with certain parameters
 		Set<Integer> singleValues = Set.of(1, 5);
+		RulesConfig config = new RulesConfigBuilder("TestGameID")
+				.setAddMultipleMin(3)
+				.setMultipleMin(3)
+				.setSingleValues(singleValues)
+				.setSetMin(3)
+				.setNumStraitValues(6)
+				.build();
 		ruleManager.initializeRules("TestGameID", 3, 3, singleValues, 3, 6);
 		
 		// Verify that the rule registry is called with the correct parameters

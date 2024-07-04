@@ -42,8 +42,8 @@ public class ConsoleMessage implements IMessage
 	/**
 	 * Displays the list of available game options for the player to choose from.
 	 *
-	 * @param gameOptions                    The list of game options currently available.
-	 * @param numOptionsSelected             A flag with values 1 or 2 indicating if an option has been selected for the current roll.
+	 * @param gameOptions        The list of game options currently available.
+	 * @param numOptionsSelected A flag with values 1 or 2 indicating if an option has been selected for the current roll.
 	 */
 	@Override
 	public void displayGameOptions(Score score, List<GameOption> gameOptions, int numOptionsSelected) {
@@ -206,7 +206,7 @@ public class ConsoleMessage implements IMessage
 	 */
 	private String buildDiceListString(Dice dice) {
 		StringBuilder diceList = new StringBuilder();
-		dice.diceSetMap().forEach((key, value) -> IntStream.range(0, value).forEach(i -> diceList.append(key).append(", ")));
+		dice.diceSetMap().forEach((key, value) -> IntStream.range(0, value).forEach(_ -> diceList.append(key).append(", ")));
 		return !diceList.isEmpty() ? diceList.substring(0, diceList.length() - 2) : "";
 	}
 	

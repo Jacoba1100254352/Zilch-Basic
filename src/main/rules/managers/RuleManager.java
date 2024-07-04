@@ -3,12 +3,12 @@ package rules.managers;
 
 import model.entities.GameOption;
 import model.entities.Player;
+import rules.config.RulesConfig;
 import rules.models.IConstantRule;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static rules.managers.RuleType.*;
 
@@ -16,36 +16,27 @@ import static rules.managers.RuleType.*;
 /**
  * Unified manager for rule evaluation and management.
  */
+
 public class RuleManager implements IRuleManager
 {
 	private final IRuleRegistry ruleRegistry;
 	private final String gameId;
-	
-	@SuppressWarnings("unused")
-	public RuleManager(String gameId) {
-		this(new RuleRegistry(), gameId);
-	}
 	
 	public RuleManager(IRuleRegistry ruleRegistry, String gameId) {
 		this.ruleRegistry = ruleRegistry;
 		this.gameId = gameId;
 	}
 	
-	/**
-	 * Initializes the rules for a game.
-	 *
-	 * @param gameId          The ID of the game to initialize rules for.
-	 * @param addMultipleMin  The minimum number of dice required to add to a multiple.
-	 * @param multipleMin     The minimum number of dice required to be the same value.
-	 * @param singleValues    The set of values that can be scored as singles.
-	 * @param setMin          The minimum number of dice required to be the same value.
-	 * @param numStraitValues The number of values required to be in a strait.
-	 */
 	@Override
-	public void initializeRules(
-			String gameId, Integer addMultipleMin, Integer multipleMin, Set<Integer> singleValues, Integer setMin, Integer numStraitValues
-	) {
-		ruleRegistry.initializeRulesForGame(gameId, addMultipleMin, multipleMin, singleValues, setMin, numStraitValues);
+	public void initializeRules(RulesConfig config) {
+		ruleRegistry.initializeRulesForGame(
+				config.getGameId(),
+				config.getAddMultipleMin(),
+				config.getMultipleMin(),
+				config.getSingleValues(),
+				config.getSetMin(),
+				config.getNumStraitValues()
+		);
 	}
 	
 	/**
