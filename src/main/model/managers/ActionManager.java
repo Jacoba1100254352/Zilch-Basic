@@ -1,26 +1,27 @@
 package model.managers;
 
-
 import model.entities.Player;
+import rules.managers.IRuleManager;
+import rules.managers.RuleType;
+import rules.models.IRule;
 
 
 public class ActionManager
 {
 	private final IPlayerManager playerManager;
 	private final IDiceManager diceManager;
-	private final IScoreManager scoreManager;
+	private final IRuleManager ruleManager;
 	
-	public ActionManager(IPlayerManager playerManager, IDiceManager diceManager, IScoreManager scoreManager) {
+	public ActionManager(IPlayerManager playerManager, IDiceManager diceManager, IRuleManager ruleManager) {
 		this.playerManager = playerManager;
 		this.diceManager = diceManager;
-		this.scoreManager = scoreManager;
+		this.ruleManager = ruleManager;
 	}
 	
 	// Game-related actions
 	public void endTurn() {
-		System.err.println("End turn action not implemented.");
+		applyRule(RuleType.END_TURN);
 	}
-	
 	
 	// Player-related actions
 	public void switchToNextPlayer() {
@@ -69,25 +70,14 @@ public class ActionManager
 		diceManager.removeAllDice(currentPlayer.dice());
 	}
 	
-	
 	// Score-related actions
-	public void scoreStraits() {
+	public void applyRule(RuleType ruleType) {
 		Player currentPlayer = getCurrentPlayer();
-		scoreManager.scoreStraits(currentPlayer.score());
-	}
-	
-	public void scoreSets() {
-		Player currentPlayer = getCurrentPlayer();
-		scoreManager.scoreSets(currentPlayer.score());
-	}
-	
-	public void scoreSingle(int dieValue) {
-		Player currentPlayer = getCurrentPlayer();
-		scoreManager.scoreSingle(currentPlayer.score(), dieValue);
-	}
-	
-	public void scoreMultiple(int dieValue) {
-		Player currentPlayer = getCurrentPlayer();
-		scoreManager.scoreMultiple(currentPlayer.score(), currentPlayer.dice().diceSetMap().get(dieValue), dieValue);
+		IRule rule = ruleManager.getRule(ruleType);
+		if (rule != null) {
+			rule.apply(this, currentPlayer);
+		} else {
+			System.err.println("Rule not found: " + ruleType);
+		}
 	}
 }

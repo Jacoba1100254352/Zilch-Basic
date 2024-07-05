@@ -24,19 +24,6 @@ public class ScoreManager implements IScoreManager
 		score.increaseRoundScore(singleScore);
 	}
 	
-	@Override
-	public void scoreMultiple(Score score, Integer numMultiples, Integer dieValue) {
-		int mScore = calculateMultipleScore(numMultiples, dieValue);
-		
-		if (score.getScoreFromMultiples() == 0) {
-			score.increaseRoundScore(mScore);
-		} else { // Increase the round score by the difference between the new multiple score and the previous multiple score
-			score.increaseRoundScore(mScore - score.getScoreFromMultiples());
-		}
-		
-		score.setScoreFromMultiples(mScore);
-	}
-	
 	
 	///   Helper Functions   ///
 	

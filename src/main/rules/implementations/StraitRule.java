@@ -1,7 +1,8 @@
-package rules.models;
+package rules.implementations;
 
 
 import rules.managers.RuleType;
+import rules.models.IRule;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +10,7 @@ import java.util.Map;
 import static model.entities.Dice.FULL_SET_OF_DICE;
 
 
-public class StraitRule implements IRuleStrategy
+public class StraitRule implements IRule
 {
 	private final RuleType key = RuleType.STRAIT;
 	private Integer numStraitValues;

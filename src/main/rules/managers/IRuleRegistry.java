@@ -1,7 +1,7 @@
 package rules.managers;
 
 
-import rules.models.IRuleStrategy;
+import rules.models.IRule;
 
 import java.util.Map;
 
@@ -11,7 +11,7 @@ public interface IRuleRegistry
 	
 	void configureRules(Map<RuleType, Object> config);
 	
-	IRuleStrategy getRule(RuleType ruleType);
+	IRule getRule(RuleType ruleType);
 	
 	Map<RuleType, Object> getDefaultConfig();
 }

@@ -3,7 +3,8 @@ package rules.managers;
 
 import model.entities.GameOption;
 import model.entities.Player;
-import rules.models.IRuleStrategy;
+import model.managers.ActionManager;
+import rules.models.IRule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,11 +30,24 @@ public class RuleManager implements IRuleManager
 		Map<Integer, Integer> diceSetMap = player.dice().diceSetMap();
 		
 		for (RuleType ruleType : RuleType.values()) {
-			IRuleStrategy rule = ruleRegistry.getRule(ruleType);
-			if (rule != null && rule.isValid(diceSetMap, null)) {
+			IRule rule = ruleRegistry.getRule(ruleType);
+			if (rule != null && rule.isValid(diceSetMap)) {
 				gameOptions.add(new GameOption(ruleType, null, rule.getDescription()));
 			}
 		}
 		return gameOptions;
+	}
+	
+	@Override
+	public IRule getRule(RuleType ruleType) {
+		return ruleRegistry.getRule(ruleType);
+	}
+	
+	@Override
+	public void applyRule(ActionManager actionManager, GameOption option, Player player) {
+		IRule rule = getRule(option.type());
+		if (rule != null) {
+			rule.apply(actionManager, player);
+		}
 	}
 }

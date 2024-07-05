@@ -1,4 +1,4 @@
-package rules.models;
+package rules.constantModels;
 
 
 public interface IConstantRule
