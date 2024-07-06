@@ -1,4 +1,4 @@
-package rules.models;
+package rules.variableModels;
 
 
 import rules.context.RuleContext;
@@ -9,21 +9,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-// FIXME: This class will need to be checked as it needs to be differentiated from MultipleRule
-// FIXME: There needs to be a check that verifies that the MultipleRule is enabled before this class can be enabled
-public class AddMultipleRule extends AbstractRule
+public class MultipleRule extends AbstractRule implements IVariableRule
 {
-	private final RuleType ruleType;
-	private Integer value;
+	private Integer minimumMultiples;
 	
 	@SuppressWarnings("unused") // This is automatically called by the ServiceLoader
-	public AddMultipleRule() {
-		this.ruleType = RuleType.ADD_MULTIPLE;
+	public MultipleRule() {
+		this.ruleType = RuleType.MULTIPLE;
 	}
 	
 	@Override
 	public String getDescription() {
-		return "Add Multiple Rule";
+		return "Multiple Rule";
 	}
 	
 	@Override
@@ -32,18 +29,18 @@ public class AddMultipleRule extends AbstractRule
 			throw new IllegalArgumentException("Value cannot be null.");
 		}
 		
-		return validationContext.getDiceSetMap().getOrDefault(this.value, 0) >= validationContext.getValue(); // >= this.value
+		return validationContext.getDiceSetMap().getOrDefault(validationContext.getValue(), 0) >= this.minimumMultiples;
 	}
 	
 	@Override
-	public void setConfigValue(Object value) {
-		this.value = (Integer) value;
+	protected void setConfigValue(Object value) {
+		this.minimumMultiples = (Integer) value;
 	}
 	
 	@Override
 	public Map<RuleType, Object> getDefaultConfig() {
 		Map<RuleType, Object> defaultConfig = new HashMap<>();
-		defaultConfig.put(ruleType, 3); // Default value for addMultipleMin
+		defaultConfig.put(this.ruleType, 3); // Default value for multipleMin
 		return defaultConfig;
 	}
 	

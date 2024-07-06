@@ -2,7 +2,7 @@ package rules.managers;
 
 
 import rules.constantModels.IConstantRule;
-import rules.models.IRule;
+import rules.variableModels.IRule;
 
 import java.util.EnumMap;
 import java.util.HashMap;

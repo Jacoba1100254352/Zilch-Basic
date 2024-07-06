@@ -1,4 +1,4 @@
-package rules.models;
+package rules.variableModels;
 
 
 import rules.context.RuleContext;
@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class SetRule extends AbstractRule
+public class SetRule extends AbstractRule implements IVariableRule
 {
 	private Integer setMin;
 	

@@ -1,7 +1,6 @@
-package rules.models;
+package rules.variableModels;
 
 
-import rules.context.RuleContext;
 import rules.managers.RuleType;
 
 import java.util.Map;
@@ -25,8 +24,4 @@ public abstract class AbstractRule implements IRule
 	public RuleType getRuleType() {
 		return ruleType;
 	}
-	
-	@Override
-	public abstract boolean isValid(RuleContext validationContext);
 }
-

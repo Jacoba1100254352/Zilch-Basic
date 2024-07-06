@@ -1,4 +1,4 @@
-package rules.models;
+package rules.variableModels;
 
 
 import rules.context.RuleContext;
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 
-public class SingleRule extends AbstractRule
+public class SingleRule extends AbstractRule implements IVariableRule
 {
 	private Set<Integer> acceptedValues;
 	

@@ -1,16 +1,11 @@
 package rules.constantModels;
 
 
-import rules.managers.RuleType;
+import rules.variableModels.IRule;
 
 
-public interface IConstantRule
+public interface IConstantRule extends IRule
 {
-	RuleType getRuleType();
-	
-	String getDescription();
-	
 	boolean isValid(Integer value1, Integer value2);
-	
 	void applyAction();
 }

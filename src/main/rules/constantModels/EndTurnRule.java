@@ -1,16 +1,20 @@
 package rules.constantModels;
 
 
-public class EndTurnRule implements IConstantRule
+import rules.managers.RuleType;
+import rules.variableModels.AbstractRule;
+
+import java.util.HashMap;
+import java.util.Map;
+
+
+public class EndTurnRule extends AbstractRule implements IConstantRule
 {
-	Integer startingScoreLimit;
+	private Integer startingScoreLimit;
 	
-	EndTurnRule() {
-		this.startingScoreLimit = 1000;
-	}
-	
-	EndTurnRule(Integer startingScoreLimit) {
-		this.startingScoreLimit = startingScoreLimit;
+	@SuppressWarnings("unused") // This is automatically called by the ServiceLoader
+	public EndTurnRule() {
+		this.ruleType = RuleType.END_TURN;
 	}
 	
 	@Override
@@ -26,5 +30,25 @@ public class EndTurnRule implements IConstantRule
 	@Override
 	public void applyAction() {
 	
+	}
+	
+	@Override
+	protected void setConfigValue(Object value) {
+		this.startingScoreLimit = (Integer) value;
+	}
+	
+	@Override
+	public void configure(Map<RuleType, Object> config) {
+		if (!config.containsKey(ruleType)) {
+			config.put(ruleType, getDefaultConfig().get(ruleType));
+		}
+		this.startingScoreLimit = (Integer) config.get(ruleType);
+	}
+	
+	@Override
+	public Map<RuleType, Object> getDefaultConfig() {
+		Map<RuleType, Object> defaultConfig = new HashMap<>();
+		defaultConfig.put(ruleType, 1000); // Default value for startingScoreLimit
+		return defaultConfig;
 	}
 }

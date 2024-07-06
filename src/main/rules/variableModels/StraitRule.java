@@ -1,4 +1,4 @@
-package rules.models;
+package rules.variableModels;
 
 
 import rules.context.RuleContext;
@@ -11,7 +11,7 @@ import java.util.Map;
 import static model.entities.Dice.FULL_SET_OF_DICE;
 
 
-public class StraitRule extends AbstractRule
+public class StraitRule extends AbstractRule implements IVariableRule
 {
 	private Integer minNumStraitValues;
 	

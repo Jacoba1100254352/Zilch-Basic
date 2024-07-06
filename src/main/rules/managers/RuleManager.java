@@ -1,16 +1,16 @@
 package rules.managers;
 
-
 import model.entities.GameOption;
 import model.entities.Player;
+import rules.constantModels.IConstantRule;
 import rules.context.RuleContext;
 import rules.context.ScoreContext;
-import rules.models.IRule;
+import rules.variableModels.IRule;
+import rules.variableModels.IVariableRule;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 
 public class RuleManager implements IRuleManager
 {
@@ -31,11 +31,15 @@ public class RuleManager implements IRuleManager
 		
 		for (RuleType ruleType : RuleType.values()) {
 			IRule rule = ruleRegistry.getRule(ruleType);
-			if (rule != null && rule.isValid(new RuleContext(diceSetMap))) {
-				// FIXME: This will need to change depending on the rule
-				// ... Maybe have some logic elsewhere that determines based on if the user provided a value what to put
-				// OR default to providing all the values for now
-				gameOptions.add(new GameOption(ruleType, null, rule.getDescription()));
+			if (rule instanceof IVariableRule variableRule) {
+				if (variableRule.isValid(new RuleContext(diceSetMap))) {
+					gameOptions.add(new GameOption(ruleType, null, rule.getDescription()));
+				}
+			}
+			if (rule instanceof IConstantRule constantRule) {
+				if (constantRule.isValid(null, null)) { // Replace with actual values if needed
+					gameOptions.add(new GameOption(ruleType, null, rule.getDescription()));
+				}
 			}
 		}
 		return gameOptions;
@@ -49,8 +53,10 @@ public class RuleManager implements IRuleManager
 	@Override
 	public void applyRule(Player player, GameOption option) {
 		IRule rule = getRule(option.type());
-		if (rule != null) {
-			rule.score(new ScoreContext(player.score(), option.value(), player.dice().diceSetMap().get(option.value())));
+		if (rule instanceof IVariableRule variableRule) {
+			variableRule.score(new ScoreContext(player.score(), option.value(), player.dice().diceSetMap().get(option.value())));
+		} else if (rule instanceof IConstantRule constantRule) {
+			constantRule.applyAction();
 		}
 	}
 }
