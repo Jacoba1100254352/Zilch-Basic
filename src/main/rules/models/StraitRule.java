@@ -1,8 +1,8 @@
 package rules.models;
 
 
-import rules.context.IRuleContext;
-import rules.context.IScoreContext;
+import rules.context.RuleContext;
+import rules.context.ScoreContext;
 import rules.managers.RuleType;
 
 import java.util.HashMap;
@@ -15,6 +15,7 @@ public class StraitRule extends AbstractRule
 {
 	private Integer minNumStraitValues;
 	
+	@SuppressWarnings("unused") // This is automatically called by the ServiceLoader
 	public StraitRule() {
 		this.ruleType = RuleType.STRAIT;
 	}
@@ -38,7 +39,7 @@ public class StraitRule extends AbstractRule
 	}
 	
 	@Override
-	public boolean isValid(IRuleContext validationContext) {
+	public boolean isValid(RuleContext validationContext) {
 		// If you are required to have all dice in a strait, but not all dice are present, the rule is invalid
 		if (this.minNumStraitValues == FULL_SET_OF_DICE && validationContext.getDiceSetMap().size() != FULL_SET_OF_DICE) {
 			return false;
@@ -74,7 +75,7 @@ public class StraitRule extends AbstractRule
 	}
 	
 	@Override
-	public void score(IScoreContext scoreContext) {
+	public void score(ScoreContext scoreContext) {
 		scoreContext.getScore().increaseRoundScore(1000);
 	}
 }

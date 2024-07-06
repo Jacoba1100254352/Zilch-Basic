@@ -43,10 +43,9 @@ public class ConsoleMessage implements IMessage
 	 * Displays the list of available game options for the player to choose from.
 	 *
 	 * @param gameOptions        The list of game options currently available.
-	 * @param numOptionsSelected A flag with values 1 or 2 indicating if an option has been selected for the current roll.
 	 */
 	@Override
-	public void displayGameOptions(Score score, List<GameOption> gameOptions, int numOptionsSelected) {
+	public void displayGameOptions(Score score, List<GameOption> gameOptions) {
 		///   Display Game Options   ///
 		System.out.println("\nAvailable Options:");
 		int optionNumber = 1;

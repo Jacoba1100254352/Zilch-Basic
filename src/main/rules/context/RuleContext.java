@@ -4,31 +4,15 @@ package rules.context;
 import java.util.Map;
 
 
-public class RuleContext implements IRuleContext
+public record RuleContext(Map<Integer, Integer> diceSetMap, Integer value)
 {
-	private final Map<Integer, Integer> diceSetMap;
-	private final Integer value;
-	
-	public RuleContext(Map<Integer, Integer> diceSetMap, Integer value) {
+	public RuleContext {
 		if (diceSetMap == null) {
 			throw new IllegalArgumentException("diceSetMap cannot be null.");
 		}
-		
-		this.diceSetMap = diceSetMap;
-		this.value = value;
 	}
 	
 	public RuleContext(Map<Integer, Integer> diceSetMap) {
 		this(diceSetMap, null);
-	}
-	
-	@Override
-	public Map<Integer, Integer> getDiceSetMap() {
-		return diceSetMap;
-	}
-	
-	@Override
-	public Integer getValue() {
-		return value;
 	}
 }

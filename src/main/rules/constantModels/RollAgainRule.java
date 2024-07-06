@@ -12,4 +12,9 @@ public class RollAgainRule implements IConstantRule
 	public boolean isValid(Integer roundScore, Integer numOptionsSelected) {
 		return roundScore > 0 && numOptionsSelected > 0;
 	}
+	
+	@Override
+	public void applyAction() {
+		//diceManager.rollDice(getDice());
+	}
 }

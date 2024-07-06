@@ -3,7 +3,6 @@ package rules.managers;
 
 import model.entities.GameOption;
 import model.entities.Player;
-import model.managers.ActionManager;
 import rules.models.IRule;
 
 import java.util.List;
@@ -14,9 +13,9 @@ public interface IRuleManager
 {
 	void initializeRules(Map<RuleType, Object> config);
 	
-	List<GameOption> evaluateRules(Player player, int numOptionsSelected);
+	List<GameOption> evaluateRules(Map<Integer, Integer> diceSetMap);
 	
 	IRule getRule(RuleType ruleType);
 	
-	void applyRule(ActionManager actionManager, GameOption option, Player player);
+	void applyRule(Player player, GameOption option);
 }

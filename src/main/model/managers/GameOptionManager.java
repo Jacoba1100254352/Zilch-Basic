@@ -2,11 +2,11 @@ package model.managers;
 
 
 import model.entities.GameOption;
-import model.entities.Player;
 import rules.managers.IRuleManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 public class GameOptionManager
@@ -21,9 +21,9 @@ public class GameOptionManager
 		this.ruleManager = ruleManager;
 	}
 	
-	public void evaluateGameOptions(Player player) {
+	public void evaluateGameOptions(Map<Integer, Integer> diceSetMap) {
 		gameOptions.clear();
-		gameOptions.addAll(ruleManager.evaluateRules(player, isOptionSelected()));
+		gameOptions.addAll(ruleManager.evaluateRules(diceSetMap));
 	}
 	
 	public void applyGameOption(GameOption option) {
@@ -51,9 +51,5 @@ public class GameOptionManager
 	
 	public void setSelectedGameOption(GameOption gameOption) {
 		this.selectedGameOption = gameOption;
-	}
-	
-	public int isOptionSelected() {
-		return (selectedGameOption != null) ? 1 : 0;
 	}
 }

@@ -1,9 +1,11 @@
 package model.managers;
 
+
+import model.entities.Dice;
 import model.entities.Player;
+import rules.constantModels.IConstantRule;
 import rules.managers.IRuleManager;
 import rules.managers.RuleType;
-import rules.models.IRule;
 
 
 public class ActionManager
@@ -20,7 +22,7 @@ public class ActionManager
 	
 	// Game-related actions
 	public void endTurn() {
-		applyRule(RuleType.END_TURN);
+		((IConstantRule) ruleManager.getRule(RuleType.END_TURN)).applyAction();
 	}
 	
 	// Player-related actions
@@ -45,39 +47,31 @@ public class ActionManager
 	}
 	
 	// Dice-related actions
+	private Dice getDice() {
+		return playerManager.getCurrentPlayer().dice();
+	}
+	
+	public void rollAgain() {
+		((IConstantRule) ruleManager.getRule(RuleType.ROLL_AGAIN)).applyAction();
+	}
+	
 	public void rollDice() {
-		Player currentPlayer = getCurrentPlayer();
-		diceManager.rollDice(currentPlayer.dice());
+		diceManager.rollDice(getDice());
 	}
 	
 	public void replenishAllDice() {
-		Player currentPlayer = getCurrentPlayer();
-		diceManager.replenishAllDice(currentPlayer.dice());
+		diceManager.replenishAllDice(getDice());
 	}
 	
 	public void removeDice(int dieValue) {
-		Player currentPlayer = getCurrentPlayer();
-		diceManager.removeDice(currentPlayer.dice(), dieValue);
+		diceManager.removeDice(getDice(), dieValue);
 	}
 	
 	public void removeDice(int dieValue, int numToRemove) {
-		Player currentPlayer = getCurrentPlayer();
-		diceManager.removeDice(currentPlayer.dice(), dieValue, numToRemove);
+		diceManager.removeDice(getDice(), dieValue, numToRemove);
 	}
 	
 	public void removeAllDice() {
-		Player currentPlayer = getCurrentPlayer();
-		diceManager.removeAllDice(currentPlayer.dice());
-	}
-	
-	// Score-related actions
-	public void applyRule(RuleType ruleType) {
-		Player currentPlayer = getCurrentPlayer();
-		IRule rule = ruleManager.getRule(ruleType);
-		if (rule != null) {
-			rule.apply(this, currentPlayer);
-		} else {
-			System.err.println("Rule not found: " + ruleType);
-		}
+		diceManager.removeAllDice(getDice());
 	}
 }

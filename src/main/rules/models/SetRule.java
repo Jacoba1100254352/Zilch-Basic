@@ -1,8 +1,8 @@
 package rules.models;
 
 
-import rules.context.IRuleContext;
-import rules.context.IScoreContext;
+import rules.context.RuleContext;
+import rules.context.ScoreContext;
 import rules.managers.RuleType;
 
 import java.util.HashMap;
@@ -13,6 +13,7 @@ public class SetRule extends AbstractRule
 {
 	private Integer setMin;
 	
+	@SuppressWarnings("unused") // This is automatically called by the ServiceLoader
 	public SetRule() {
 		this.ruleType = RuleType.SET;
 	}
@@ -23,7 +24,7 @@ public class SetRule extends AbstractRule
 	}
 	
 	@Override
-	public boolean isValid(IRuleContext validationContext) {
+	public boolean isValid(RuleContext validationContext) {
 		return validationContext.getDiceSetMap().size() == this.setMin && validationContext.getDiceSetMap().values().stream().allMatch(count -> count == 2);
 	}
 	
@@ -41,7 +42,7 @@ public class SetRule extends AbstractRule
 	
 	// TODO: Might want to make 1000 configurable
 	@Override
-	public void score(IScoreContext scoreContext) {
+	public void score(ScoreContext scoreContext) {
 		scoreContext.getScore().increaseRoundScore(1000);
 	}
 }

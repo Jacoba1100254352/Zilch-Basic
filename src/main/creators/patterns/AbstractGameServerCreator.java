@@ -21,10 +21,9 @@ public abstract class AbstractGameServerCreator
 		IEventDispatcher dispatcher = new SimpleEventDispatcher();
 		IPlayerManager playerManager = new PlayerManager(playerNames);
 		IDiceManager diceManager = new DiceManager();
-		IScoreManager scoreManager = new ScoreManager();
-		ActionManager actionManager = new ActionManager(playerManager, diceManager, scoreManager);
 		IRuleRegistry ruleRegistry = new RuleRegistry();
 		IRuleManager ruleManager = new RuleManager(ruleRegistry);
+		ActionManager actionManager = new ActionManager(playerManager, diceManager, ruleManager);
 		
 		return new GameServer(dispatcher, actionManager, ruleManager, uiManager);
 	}

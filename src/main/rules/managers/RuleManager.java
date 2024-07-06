@@ -3,7 +3,6 @@ package rules.managers;
 
 import model.entities.GameOption;
 import model.entities.Player;
-import model.managers.ActionManager;
 import rules.context.RuleContext;
 import rules.context.ScoreContext;
 import rules.models.IRule;
@@ -27,9 +26,8 @@ public class RuleManager implements IRuleManager
 	}
 	
 	@Override
-	public List<GameOption> evaluateRules(Player player, int numOptionsSelected) {
+	public List<GameOption> evaluateRules(Map<Integer, Integer> diceSetMap) {
 		List<GameOption> gameOptions = new ArrayList<>();
-		Map<Integer, Integer> diceSetMap = player.dice().diceSetMap();
 		
 		for (RuleType ruleType : RuleType.values()) {
 			IRule rule = ruleRegistry.getRule(ruleType);
@@ -49,10 +47,10 @@ public class RuleManager implements IRuleManager
 	}
 	
 	@Override
-	public void applyRule(ActionManager actionManager, GameOption option, Player player) {
+	public void applyRule(Player player, GameOption option) {
 		IRule rule = getRule(option.type());
 		if (rule != null) {
-			rule.score(new ScoreContext(player.score())); // FIXME: This will need to change depending on the rule
+			rule.score(new ScoreContext(player.score(), option.value(), player.dice().diceSetMap().get(option.value())));
 		}
 	}
 }

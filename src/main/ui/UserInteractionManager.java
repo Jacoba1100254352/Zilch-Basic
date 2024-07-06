@@ -65,7 +65,7 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		// Iterate over the default configuration to display options
 		for (Map.Entry<RuleType, Object> entry : defaultConfig.entrySet()) {
 			RuleType ruleType = entry.getKey();
-			boolean isEnabled = readYesNo("Enable " + ruleType + "?");
+			boolean isEnabled = readYesNo("Enable " + ruleType.toString() + "?");
 			if (isEnabled) {
 				selectedConfig.put(ruleType, entry.getValue());
 			}
@@ -127,7 +127,7 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		Score score = currentPlayer.score();
 		List<GameOption> gameOptions = gameOptionManager.getGameOptions();
 		
-		gameplayUI.displayGameOptions(score, gameOptions, gameOptionManager.isOptionSelected());
+		gameplayUI.displayGameOptions(score, gameOptions);
 		gameplayUI.displayMessage("Select an option: ");
 		int choice = inputManager.getInputInt();
 		
@@ -148,8 +148,8 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	}
 	
 	@Override
-	public void displayGameOptions(Score score, List<GameOption> gameOptions, int numOptionsSelected) {
-		gameplayUI.displayGameOptions(score, gameOptions, numOptionsSelected);
+	public void displayGameOptions(Score score, List<GameOption> gameOptions) {
+		gameplayUI.displayGameOptions(score, gameOptions);
 	}
 	
 	@Override

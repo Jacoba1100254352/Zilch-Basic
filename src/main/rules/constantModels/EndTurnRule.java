@@ -22,4 +22,9 @@ public class EndTurnRule implements IConstantRule
 	public boolean isValid(Integer permanentScore, Integer roundScore) {
 		return permanentScore >= this.startingScoreLimit || roundScore >= this.startingScoreLimit;
 	}
+	
+	@Override
+	public void applyAction() {
+	
+	}
 }

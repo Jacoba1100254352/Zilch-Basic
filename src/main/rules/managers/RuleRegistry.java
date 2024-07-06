@@ -1,6 +1,7 @@
 package rules.managers;
 
 
+import rules.constantModels.IConstantRule;
 import rules.models.IRule;
 
 import java.util.EnumMap;
@@ -12,11 +13,21 @@ import java.util.ServiceLoader;
 public class RuleRegistry implements IRuleRegistry
 {
 	private final Map<RuleType, IRule> rules = new EnumMap<>(RuleType.class);
+	private final Map<RuleType, IConstantRule> constantRules = new EnumMap<>(RuleType.class);
 	
 	public RuleRegistry() {
-		ServiceLoader<IRule> loader = ServiceLoader.load(IRule.class);
-		for (IRule rule : loader) {
-			rules.put(RuleType.valueOf(rule.getClass().getSimpleName().toUpperCase()), rule);
+		loadRules(IRule.class);
+		loadRules(IConstantRule.class);
+	}
+	
+	private <T> void loadRules(Class<T> service) {
+		ServiceLoader<T> loader = ServiceLoader.load(service);
+		for (T rule : loader) {
+			if (rule instanceof IRule) {
+				rules.put(((IRule) rule).getRuleType(), (IRule) rule);
+			} else if (rule instanceof IConstantRule) {
+				constantRules.put(((IConstantRule) rule).getRuleType(), (IConstantRule) rule);
+			}
 		}
 	}
 	

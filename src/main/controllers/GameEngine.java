@@ -39,7 +39,7 @@ public class GameEngine
 		}
 		
 		actionManager.rollDice();
-		gameOptionManager.evaluateGameOptions(currentPlayer);
+		gameOptionManager.evaluateGameOptions(currentPlayer.dice().diceSetMap());
 		
 		if (!gameOptionManager.getGameOptions().isEmpty() && gameOptionManager.getSelectedGameOption() != null) {
 			gameOptionManager.applyGameOption(gameOptionManager.getSelectedGameOption());

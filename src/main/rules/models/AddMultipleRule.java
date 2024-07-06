@@ -1,8 +1,8 @@
 package rules.models;
 
 
-import rules.context.IRuleContext;
-import rules.context.IScoreContext;
+import rules.context.RuleContext;
+import rules.context.ScoreContext;
 import rules.managers.RuleType;
 
 import java.util.HashMap;
@@ -16,6 +16,7 @@ public class AddMultipleRule extends AbstractRule
 	private final RuleType ruleType;
 	private Integer value;
 	
+	@SuppressWarnings("unused") // This is automatically called by the ServiceLoader
 	public AddMultipleRule() {
 		this.ruleType = RuleType.ADD_MULTIPLE;
 	}
@@ -26,7 +27,7 @@ public class AddMultipleRule extends AbstractRule
 	}
 	
 	@Override
-	public boolean isValid(IRuleContext validationContext) {
+	public boolean isValid(RuleContext validationContext) {
 		if (validationContext.getValue() == null) {
 			throw new IllegalArgumentException("Value cannot be null.");
 		}
@@ -47,7 +48,7 @@ public class AddMultipleRule extends AbstractRule
 	}
 	
 	@Override
-	public void score(IScoreContext scoreContext) {
+	public void score(ScoreContext scoreContext) {
 		int mScore = calculateMultipleScore(scoreContext.getNumGivenDice(), scoreContext.getDieValue());
 		
 		if (scoreContext.getScore().getScoreFromMultiples() == 0) {

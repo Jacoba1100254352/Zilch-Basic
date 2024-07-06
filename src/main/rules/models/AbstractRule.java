@@ -1,7 +1,7 @@
 package rules.models;
 
 
-import rules.context.IRuleContext;
+import rules.context.RuleContext;
 import rules.managers.RuleType;
 
 import java.util.Map;
@@ -27,6 +27,6 @@ public abstract class AbstractRule implements IRule
 	}
 	
 	@Override
-	public abstract boolean isValid(IRuleContext validationContext);
+	public abstract boolean isValid(RuleContext validationContext);
 }
 

@@ -14,7 +14,7 @@ public interface IMessage
 	// Message display functions
 	void displayWelcomeMessage();
 	
-	void displayGameOptions(Score score, List<GameOption> gameOptions, int numOptionsSelected);
+	void displayGameOptions(Score score, List<GameOption> gameOptions);
 	
 	void displayCurrentScore(String playerName, int roundScore);
 	
