@@ -3,7 +3,7 @@ package model.managers;
 
 import model.entities.Dice;
 import model.entities.Player;
-import rules.constantModels.IConstantRule;
+import rules.constant.IConstantRule;
 import rules.managers.IRuleManager;
 import rules.managers.RuleType;
 

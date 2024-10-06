@@ -2,11 +2,11 @@ package rules.managers;
 
 import model.entities.GameOption;
 import model.entities.Player;
-import rules.constantModels.IConstantRule;
+import rules.constant.IConstantRule;
 import rules.context.RuleContext;
 import rules.context.ScoreContext;
-import rules.variableModels.IRule;
-import rules.variableModels.IVariableRule;
+import rules.variable.IRule;
+import rules.variable.IVariableRule;
 
 import java.util.ArrayList;
 import java.util.List;

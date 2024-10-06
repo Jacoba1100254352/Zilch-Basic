@@ -3,7 +3,7 @@ package rules.managers;
 
 import model.entities.GameOption;
 import model.entities.Player;
-import rules.variableModels.IRule;
+import rules.variable.IRule;
 
 import java.util.List;
 import java.util.Map;

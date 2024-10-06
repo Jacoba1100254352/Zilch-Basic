@@ -1,4 +1,4 @@
-package rules.variableModels;
+package rules.variable;
 
 import rules.managers.RuleType;
 

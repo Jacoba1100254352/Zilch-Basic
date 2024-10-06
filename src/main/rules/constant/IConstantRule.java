@@ -1,6 +1,7 @@
-package rules.constantModels;
+package rules.constant;
 
-import rules.variableModels.IRule;
+
+import rules.variable.IRule;
 
 
 public interface IConstantRule extends IRule

@@ -1,4 +1,4 @@
-package rules.constantModels;
+package rules.constant;
 
 
 import rules.managers.RuleType;

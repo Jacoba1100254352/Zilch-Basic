@@ -1,8 +1,8 @@
 package rules.managers;
 
 
-import rules.constantModels.IConstantRule;
-import rules.variableModels.IRule;
+import rules.constant.IConstantRule;
+import rules.variable.IRule;
 
 import java.util.EnumMap;
 import java.util.HashMap;

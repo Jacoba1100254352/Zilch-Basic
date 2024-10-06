@@ -1,4 +1,4 @@
-package rules.variableModels;
+package rules.variable;
 
 
 import java.util.Map;

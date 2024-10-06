@@ -1,7 +1,7 @@
 package rules.managers;
 
 
-import rules.variableModels.IRule;
+import rules.variable.IRule;
 
 import java.util.Map;
 

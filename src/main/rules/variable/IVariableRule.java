@@ -1,4 +1,4 @@
-package rules.variableModels;
+package rules.variable;
 
 import rules.context.RuleContext;
 import rules.context.ScoreContext;
