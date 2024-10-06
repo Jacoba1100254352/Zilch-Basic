@@ -13,7 +13,7 @@ public interface IRuleManager
 {
 	void initializeRules(Map<RuleType, Object> config);
 	
-	List<GameOption> evaluateRules(Map<Integer, Integer> diceSetMap);
+	List<GameOption> evaluateRules(Map<Integer, Integer> diceSetMap, Integer value);
 	
 	IRule getRule(RuleType ruleType);
 	

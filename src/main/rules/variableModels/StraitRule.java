@@ -11,7 +11,7 @@ import java.util.Map;
 import static model.entities.Dice.FULL_SET_OF_DICE;
 
 
-public class StraitRule extends AbstractRule implements IVariableRule
+public class StraitRule extends AbstractVariableRule
 {
 	private Integer minNumStraitValues;
 	
@@ -41,7 +41,7 @@ public class StraitRule extends AbstractRule implements IVariableRule
 	@Override
 	public boolean isValid(RuleContext validationContext) {
 		// If you are required to have all dice in a strait, but not all dice are present, the rule is invalid
-		if (this.minNumStraitValues == FULL_SET_OF_DICE && validationContext.getDiceSetMap().size() != FULL_SET_OF_DICE) {
+		if (this.minNumStraitValues == FULL_SET_OF_DICE && validationContext.diceSetMap().size() != FULL_SET_OF_DICE) {
 			return false;
 		}
 		
@@ -51,7 +51,7 @@ public class StraitRule extends AbstractRule implements IVariableRule
 		for (int i = 1; i <= FULL_SET_OF_DICE; i++) {
 			// Zero is used instead of != 1, because if the min is lower than the number of dice it might be permitted.
 			// This could change in the future if a rule is added requiring strict strait rules.
-			if (!validationContext.getDiceSetMap().containsKey(i) || validationContext.getDiceSetMap().get(i) == 0) {
+			if (!validationContext.diceSetMap().containsKey(i) || validationContext.diceSetMap().get(i) == 0) {
 				numStraitValues = 0;
 			} else {
 				numStraitValues++;
@@ -76,6 +76,6 @@ public class StraitRule extends AbstractRule implements IVariableRule
 	
 	@Override
 	public void score(ScoreContext scoreContext) {
-		scoreContext.getScore().increaseRoundScore(1000);
+		scoreContext.score().increaseRoundScore(1000);
 	}
 }

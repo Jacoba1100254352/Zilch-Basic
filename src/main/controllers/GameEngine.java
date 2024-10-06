@@ -39,10 +39,12 @@ public class GameEngine
 		}
 		
 		actionManager.rollDice();
-		gameOptionManager.evaluateGameOptions(currentPlayer.dice().diceSetMap());
 		
-		if (!gameOptionManager.getGameOptions().isEmpty() && gameOptionManager.getSelectedGameOption() != null) {
-			gameOptionManager.applyGameOption(gameOptionManager.getSelectedGameOption());
+		Integer value = null; // TODO: Get input from user here
+		gameOptionManager.evaluateGameOptions(currentPlayer.dice().diceSetMap(), value);
+		
+		if (gameOptionManager.isValid()) {
+			gameOptionManager.applyGameOption(currentPlayer);
 		} else {
 			System.out.println("No options available, turn skipped.");
 		}
@@ -55,7 +57,7 @@ public class GameEngine
 	}
 	
 	private void checkGameOver(Player player) {
-		if (canTurnEnd(player)) { // gameStateManager.canTurnEnd(player)
+		if (canTurnEnd(player)) { // gameStateManager.canTurnEnd(player) // TODO: Access from EndTurnRule
 			// gameOver = true;
 			System.out.println(player.name() + " has won the game!");
 			// Assuming you want to notify that a player has won the game
@@ -64,9 +66,5 @@ public class GameEngine
 			
 			eventDispatcher.dispatchEvent(event);
 		}
-	}
-	
-	private boolean canTurnEnd(Player player) {
-		return player.score().getRoundScore() >= 1000 || player.score().getPermanentScore() >= 1000;
 	}
 }

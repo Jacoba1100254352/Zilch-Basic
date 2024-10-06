@@ -2,13 +2,12 @@ package rules.constantModels;
 
 
 import rules.managers.RuleType;
-import rules.variableModels.AbstractRule;
 
 import java.util.HashMap;
 import java.util.Map;
 
 
-public class EndTurnRule extends AbstractRule implements IConstantRule
+public class EndTurnRule extends AbstractConstantRule implements IConstantRule
 {
 	private Integer startingScoreLimit;
 	

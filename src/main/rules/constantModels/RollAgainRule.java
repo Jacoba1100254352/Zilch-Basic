@@ -2,13 +2,12 @@ package rules.constantModels;
 
 
 import rules.managers.RuleType;
-import rules.variableModels.AbstractRule;
 
 import java.util.HashMap;
 import java.util.Map;
 
 
-public class RollAgainRule extends AbstractRule implements IConstantRule
+public class RollAgainRule extends AbstractConstantRule implements IConstantRule
 {
 	@SuppressWarnings("unused") // This is automatically called by the ServiceLoader
 	public RollAgainRule() {
@@ -18,6 +17,16 @@ public class RollAgainRule extends AbstractRule implements IConstantRule
 	@Override
 	public String getDescription() {
 		return "Roll Again";
+	}
+	
+	@Override
+	public boolean isValid(Integer roundScore, Integer numOptionsSelected) {
+		return roundScore > 0 && numOptionsSelected > 0;
+	}
+	
+	@Override
+	public void applyAction() {
+		//diceManager.rollDice(getDice());
 	}
 	
 	@Override
@@ -40,15 +49,5 @@ public class RollAgainRule extends AbstractRule implements IConstantRule
 		Map<RuleType, Object> defaultConfig = new HashMap<>();
 //		defaultConfig.put(ruleType, 1000); // Default value for startingScoreLimit
 		return defaultConfig;
-	}
-	
-	@Override
-	public boolean isValid(Integer roundScore, Integer numOptionsSelected) {
-		return roundScore > 0 && numOptionsSelected > 0;
-	}
-	
-	@Override
-	public void applyAction() {
-		//diceManager.rollDice(getDice());
 	}
 }

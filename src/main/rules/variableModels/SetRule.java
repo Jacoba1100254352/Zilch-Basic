@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class SetRule extends AbstractRule implements IVariableRule
+public class SetRule extends AbstractVariableRule
 {
 	private Integer setMin;
 	
@@ -25,7 +25,7 @@ public class SetRule extends AbstractRule implements IVariableRule
 	
 	@Override
 	public boolean isValid(RuleContext validationContext) {
-		return validationContext.getDiceSetMap().size() == this.setMin && validationContext.getDiceSetMap().values().stream().allMatch(count -> count == 2);
+		return validationContext.diceSetMap().size() == this.setMin && validationContext.diceSetMap().values().stream().allMatch(count -> count == 2);
 	}
 	
 	@Override
@@ -43,6 +43,6 @@ public class SetRule extends AbstractRule implements IVariableRule
 	// TODO: Might want to make 1000 configurable
 	@Override
 	public void score(ScoreContext scoreContext) {
-		scoreContext.getScore().increaseRoundScore(1000);
+		scoreContext.score().increaseRoundScore(1000);
 	}
 }

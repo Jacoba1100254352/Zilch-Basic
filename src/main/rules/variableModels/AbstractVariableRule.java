@@ -1,12 +1,13 @@
 package rules.variableModels;
 
 
+import rules.context.ScoreContext;
 import rules.managers.RuleType;
 
 import java.util.Map;
 
 
-public abstract class AbstractRule implements IRule
+public abstract class AbstractVariableRule implements IVariableRule
 {
 	protected RuleType ruleType;
 	
@@ -24,4 +25,7 @@ public abstract class AbstractRule implements IRule
 	public RuleType getRuleType() {
 		return ruleType;
 	}
+	
+	@Override
+	public abstract void score(ScoreContext scoreContext);
 }

@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class MultipleRule extends AbstractRule implements IVariableRule
+public class MultipleRule extends AbstractVariableRule
 {
 	private Integer minimumMultiples;
 	
@@ -25,11 +25,11 @@ public class MultipleRule extends AbstractRule implements IVariableRule
 	
 	@Override
 	public boolean isValid(RuleContext validationContext) {
-		if (validationContext.getValue() == null) {
+		if (validationContext.value() == null) {
 			throw new IllegalArgumentException("Value cannot be null.");
 		}
 		
-		return validationContext.getDiceSetMap().getOrDefault(validationContext.getValue(), 0) >= this.minimumMultiples;
+		return validationContext.diceSetMap().getOrDefault(validationContext.value(), 0) >= this.minimumMultiples;
 	}
 	
 	@Override
@@ -46,15 +46,15 @@ public class MultipleRule extends AbstractRule implements IVariableRule
 	
 	@Override
 	public void score(ScoreContext scoreContext) {
-		int mScore = calculateMultipleScore(scoreContext.getNumGivenDice(), scoreContext.getDieValue());
+		int mScore = calculateMultipleScore(scoreContext.numGivenDice(), scoreContext.dieValue());
 		
-		if (scoreContext.getScore().getScoreFromMultiples() == 0) {
-			scoreContext.getScore().increaseRoundScore(mScore);
+		if (scoreContext.score().getScoreFromMultiples() == 0) {
+			scoreContext.score().increaseRoundScore(mScore);
 		} else { // Increase the round score by the difference between the new multiple score and the previous multiple score
-			scoreContext.getScore().increaseRoundScore(mScore - scoreContext.getScore().getScoreFromMultiples());
+			scoreContext.score().increaseRoundScore(mScore - scoreContext.score().getScoreFromMultiples());
 		}
 		
-		scoreContext.getScore().setScoreFromMultiples(mScore);
+		scoreContext.score().setScoreFromMultiples(mScore);
 	}
 	
 	private int calculateMultipleScore(int numMultiples, int dieValue) {

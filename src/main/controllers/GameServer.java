@@ -33,7 +33,7 @@ public class GameServer
 		int scoreLimit = ((ReadOnlyConfig) new Config("config.properties")).getScoreLimit();
 		
 		// Initialize the game engine
-		GameOptionManager gameOptionManager = new GameOptionManager(actionManager, ruleManager);
+		GameOptionManager gameOptionManager = new GameOptionManager(ruleManager);
 		GameStateManager gameStateManager = new GameStateManager(gameOptionManager, uiManager, actionManager);
 		this.gameEngine = new GameEngine(eventDispatcher, gameStateManager, actionManager, gameOptionManager);
 		

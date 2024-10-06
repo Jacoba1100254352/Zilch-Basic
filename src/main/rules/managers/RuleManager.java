@@ -26,19 +26,20 @@ public class RuleManager implements IRuleManager
 	}
 	
 	@Override
-	public List<GameOption> evaluateRules(Map<Integer, Integer> diceSetMap) {
+	public List<GameOption> evaluateRules(Map<Integer, Integer> diceSetMap, Integer value) {
 		List<GameOption> gameOptions = new ArrayList<>();
 		
 		for (RuleType ruleType : RuleType.values()) {
 			IRule rule = ruleRegistry.getRule(ruleType);
 			if (rule instanceof IVariableRule variableRule) {
-				if (variableRule.isValid(new RuleContext(diceSetMap))) {
-					gameOptions.add(new GameOption(ruleType, null, rule.getDescription()));
+				if (variableRule.isValid(new RuleContext(diceSetMap, value))) {
+					gameOptions.add(new GameOption(ruleType, value, rule.getDescription()));
 				}
 			}
+			
 			if (rule instanceof IConstantRule constantRule) {
 				if (constantRule.isValid(null, null)) { // Replace with actual values if needed
-					gameOptions.add(new GameOption(ruleType, null, rule.getDescription()));
+					gameOptions.add(new GameOption(ruleType, value, rule.getDescription()));
 				}
 			}
 		}

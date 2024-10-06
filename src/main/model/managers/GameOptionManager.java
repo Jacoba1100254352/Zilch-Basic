@@ -2,6 +2,7 @@ package model.managers;
 
 
 import model.entities.GameOption;
+import model.entities.Player;
 import rules.managers.IRuleManager;
 
 import java.util.ArrayList;
@@ -11,34 +12,27 @@ import java.util.Map;
 
 public class GameOptionManager
 {
-	private final ActionManager actionManager;
 	private final IRuleManager ruleManager;
 	private final List<GameOption> gameOptions = new ArrayList<>();
 	private GameOption selectedGameOption = null;
 	
-	public GameOptionManager(ActionManager actionManager, IRuleManager ruleManager) {
-		this.actionManager = actionManager;
+	public GameOptionManager(IRuleManager ruleManager) {
 		this.ruleManager = ruleManager;
 	}
 	
-	public void evaluateGameOptions(Map<Integer, Integer> diceSetMap) {
-		gameOptions.clear();
-		gameOptions.addAll(ruleManager.evaluateRules(diceSetMap));
+	public boolean isValid() {
+		return !this.gameOptions.isEmpty() && this.selectedGameOption != null;
 	}
 	
-	public void applyGameOption(GameOption option) {
-		System.out.println("Applying game option: " + option.type());
+	public void evaluateGameOptions(Map<Integer, Integer> diceSetMap, Integer value) {
+		gameOptions.clear();
+		gameOptions.addAll(ruleManager.evaluateRules(diceSetMap, value));
+	}
+	
+	public void applyGameOption(Player player) {
+		System.out.println("Applying game option: " + this.selectedGameOption.type());
 		
-		switch (option.type()) {
-			case STRAIT -> actionManager.scoreStraits();
-			case SET -> actionManager.scoreSets();
-			case MULTIPLE -> actionManager.scoreMultiple(option.value());
-			case SINGLE -> actionManager.scoreSingle(option.value());
-			case ROLL_AGAIN -> actionManager.rollDice();
-			case END_TURN -> actionManager.endTurn();
-			default -> System.out.println("Invalid game option.");
-		}
-		// Event dispatch could be triggered here if needed
+		ruleManager.applyRule(player, this.selectedGameOption);
 	}
 	
 	public List<GameOption> getGameOptions() {

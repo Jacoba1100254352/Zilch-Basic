@@ -11,7 +11,7 @@ import java.util.Map;
 
 // FIXME: This class will need to be checked as it needs to be differentiated from MultipleRule
 // FIXME: There needs to be a check that verifies that the MultipleRule is enabled before this class can be enabled
-public class AddMultipleRule extends AbstractRule implements IVariableRule
+public class AddMultipleRule extends AbstractVariableRule
 {
 	private final RuleType ruleType;
 	private Integer value;
@@ -28,11 +28,11 @@ public class AddMultipleRule extends AbstractRule implements IVariableRule
 	
 	@Override
 	public boolean isValid(RuleContext validationContext) {
-		if (validationContext.getValue() == null) {
+		if (validationContext.value() == null) {
 			throw new IllegalArgumentException("Value cannot be null.");
 		}
 		
-		return validationContext.getDiceSetMap().getOrDefault(this.value, 0) >= validationContext.getValue(); // >= this.value
+		return validationContext.diceSetMap().getOrDefault(this.value, 0) >= validationContext.value(); // >= this.value
 	}
 	
 	@Override
@@ -49,15 +49,15 @@ public class AddMultipleRule extends AbstractRule implements IVariableRule
 	
 	@Override
 	public void score(ScoreContext scoreContext) {
-		int mScore = calculateMultipleScore(scoreContext.getNumGivenDice(), scoreContext.getDieValue());
+		int mScore = calculateMultipleScore(scoreContext.numGivenDice(), scoreContext.dieValue());
 		
-		if (scoreContext.getScore().getScoreFromMultiples() == 0) {
-			scoreContext.getScore().increaseRoundScore(mScore);
+		if (scoreContext.score().getScoreFromMultiples() == 0) {
+			scoreContext.score().increaseRoundScore(mScore);
 		} else { // Increase the round score by the difference between the new multiple score and the previous multiple score
-			scoreContext.getScore().increaseRoundScore(mScore - scoreContext.getScore().getScoreFromMultiples());
+			scoreContext.score().increaseRoundScore(mScore - scoreContext.score().getScoreFromMultiples());
 		}
 		
-		scoreContext.getScore().setScoreFromMultiples(mScore);
+		scoreContext.score().setScoreFromMultiples(mScore);
 	}
 	
 	private int calculateMultipleScore(int numMultiples, int dieValue) {

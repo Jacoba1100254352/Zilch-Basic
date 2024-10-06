@@ -1,6 +1,5 @@
 package rules.constantModels;
 
-
 import rules.variableModels.IRule;
 
 

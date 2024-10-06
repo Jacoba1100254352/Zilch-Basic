@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 
-public class SingleRule extends AbstractRule implements IVariableRule
+public class SingleRule extends AbstractVariableRule
 {
 	private Set<Integer> acceptedValues;
 	
@@ -39,11 +39,11 @@ public class SingleRule extends AbstractRule implements IVariableRule
 	
 	@Override
 	public boolean isValid(RuleContext validationContext) {
-		if (validationContext.getValue() == null) {
+		if (validationContext.value() == null) {
 			throw new IllegalArgumentException("Value cannot be null");
 		}
 		
-		return this.acceptedValues.contains(validationContext.getValue()) && validationContext.getDiceSetMap().getOrDefault(validationContext.getValue(), 0) > 0;
+		return this.acceptedValues.contains(validationContext.value()) && validationContext.diceSetMap().getOrDefault(validationContext.value(), 0) > 0;
 	}
 	
 	@Override
@@ -55,11 +55,11 @@ public class SingleRule extends AbstractRule implements IVariableRule
 	
 	@Override
 	public void score(ScoreContext scoreContext) {
-		if (scoreContext.getDieValue() == null) {
+		if (scoreContext.dieValue() == null) {
 			throw new IllegalArgumentException("Value cannot be null");
 		}
 		
-		int singleScore = (scoreContext.getDieValue() == 1) ? 100 : 50;
-		scoreContext.getScore().increaseRoundScore(singleScore);
+		int singleScore = (scoreContext.dieValue() == 1) ? 100 : 50;
+		scoreContext.score().increaseRoundScore(singleScore);
 	}
 }
