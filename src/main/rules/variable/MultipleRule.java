@@ -13,7 +13,7 @@ public class MultipleRule extends AbstractVariableRule
 {
 	private Integer minimumMultiples;
 	
-	@SuppressWarnings("unused") // This is automatically called by the ServiceLoader
+	@SuppressWarnings("unused")
 	public MultipleRule() {
 		this.ruleType = RuleType.MULTIPLE;
 	}
@@ -28,7 +28,6 @@ public class MultipleRule extends AbstractVariableRule
 		if (validationContext.value() == null) {
 			throw new IllegalArgumentException("Value cannot be null.");
 		}
-		
 		return validationContext.diceSetMap().getOrDefault(validationContext.value(), 0) >= this.minimumMultiples;
 	}
 	
@@ -40,7 +39,7 @@ public class MultipleRule extends AbstractVariableRule
 	@Override
 	public Map<RuleType, Object> getDefaultConfig() {
 		Map<RuleType, Object> defaultConfig = new HashMap<>();
-		defaultConfig.put(this.ruleType, 3); // Default value for multipleMin
+		defaultConfig.put(this.ruleType, 3);
 		return defaultConfig;
 	}
 	
@@ -50,7 +49,7 @@ public class MultipleRule extends AbstractVariableRule
 		
 		if (scoreContext.score().getScoreFromMultiples() == 0) {
 			scoreContext.score().increaseRoundScore(mScore);
-		} else { // Increase the round score by the difference between the new multiple score and the previous multiple score
+		} else {
 			scoreContext.score().increaseRoundScore(mScore - scoreContext.score().getScoreFromMultiples());
 		}
 		
@@ -59,7 +58,7 @@ public class MultipleRule extends AbstractVariableRule
 	
 	private int calculateMultipleScore(int numMultiples, int dieValue) {
 		int baseScore = (dieValue == 1) ? 1000 : dieValue * 100;
-		numMultiples -= -3;
+		numMultiples -= 3; // Corrected subtraction
 		return baseScore * (int) Math.pow(2, numMultiples);
 	}
 }

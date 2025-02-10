@@ -2,11 +2,13 @@ package creators.patterns;
 
 
 import controllers.GameServer;
+import rules.managers.RuleType;
 import ui.IMessage;
+import ui.IUserInteraction;
 
 import java.io.IOException;
 import java.util.List;
-
+import java.util.Map;
 
 @SuppressWarnings("unused")
 public class GameBuilder extends AbstractGameServerCreator
@@ -15,12 +17,16 @@ public class GameBuilder extends AbstractGameServerCreator
 	private IMessage uiManager;
 	private String gameID;
 	private int scoreLimit;
+	private IUserInteraction userInteraction;
+	private Map<RuleType, Object> selectedRules;
 	
 	public GameBuilder() {
 		playerNames = null;
 		uiManager = null;
 		gameID = "DefaultGameID";
 		scoreLimit = 1000;
+		userInteraction = null;
+		selectedRules = null;
 	}
 	
 	public GameBuilder setPlayerNames(List<String> playerNames) {
@@ -43,7 +49,20 @@ public class GameBuilder extends AbstractGameServerCreator
 		return this;
 	}
 	
+	public GameBuilder setUserInteraction(IUserInteraction userInteraction) {
+		this.userInteraction = userInteraction;
+		return this;
+	}
+	
+	public GameBuilder setSelectedRules(Map<RuleType, Object> selectedRules) {
+		this.selectedRules = selectedRules;
+		return this;
+	}
+	
 	public GameServer build() throws IOException {
-		return createGameServer(playerNames, uiManager, gameID);
+		if (playerNames == null || uiManager == null || userInteraction == null || selectedRules == null) {
+			throw new IllegalStateException("Missing required fields for building the GameServer.");
+		}
+		return createGameServer(playerNames, uiManager, gameID, scoreLimit, userInteraction, selectedRules);
 	}
 }

@@ -5,6 +5,7 @@ import eventHandling.events.Event;
 import eventHandling.events.GameEventType;
 import eventHandling.listeners.IEventListener;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +30,7 @@ public class SimpleEventDispatcher implements IEventDispatcher
 	}
 	
 	@Override
-	public void dispatchEvent(Event event) {
+	public void dispatchEvent(Event event) throws IOException {
 		List<IEventListener> listenersOfType = listeners.get(event.getType());
 		if (listenersOfType != null) {
 			for (IEventListener listener : listenersOfType) {

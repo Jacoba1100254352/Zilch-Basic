@@ -5,6 +5,8 @@ import eventHandling.events.Event;
 import eventHandling.events.GameEventType;
 import eventHandling.listeners.IEventListener;
 
+import java.io.IOException;
+
 
 public interface IEventDispatcher
 {
@@ -12,5 +14,5 @@ public interface IEventDispatcher
 	
 	void removeListener(GameEventType eventType, IEventListener listener);
 	
-	void dispatchEvent(Event event);
+	void dispatchEvent(Event event) throws IOException;
 }

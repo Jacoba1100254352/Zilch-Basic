@@ -1,5 +1,6 @@
 package controllers;
 
+
 import eventHandling.dispatchers.IEventDispatcher;
 import eventHandling.events.Event;
 import eventHandling.events.EventDataKey;
@@ -44,8 +45,9 @@ public class GameEngine
 		
 		actionManager.rollDice();
 		
-		Integer value = userInteraction.getOptionValue(); // Implement this method in IUserInteraction
-		gameOptionManager.evaluateGameOptions(currentPlayer.dice().diceSetMap(), value);
+		Integer value = userInteraction.getOptionValue();
+		// Use getDiceSetMap() here:
+		gameOptionManager.evaluateGameOptions(currentPlayer.dice().getDiceSetMap(), value);
 		
 		if (gameOptionManager.isValid()) {
 			gameOptionManager.applyGameOption(currentPlayer, null);

@@ -47,7 +47,7 @@ public class GameServer
 		eventDispatcher.addListener(GameEventType.GAME_OVER, gameOverListener);
 	}
 	
-	public void playGame() {
+	public void playGame() throws IOException {
 		uiManager.displayWelcomeMessage();
 		System.out.println("Starting Game with ID: " + gameID);
 		
@@ -84,7 +84,7 @@ public class GameServer
 		} while (actionManager.getCurrentPlayer() != initialPlayer);
 	}
 	
-	private void concludeGame() {
+	private void concludeGame() throws IOException {
 		Player winner = actionManager.getGameEndingPlayer();
 		if (winner == null) {
 			winner = actionManager.findHighestScoringPlayer();

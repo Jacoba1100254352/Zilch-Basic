@@ -1,6 +1,5 @@
 package config;
 
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -22,20 +21,27 @@ public class Config implements ReadOnlyConfig
 		this.filename = filename;
 		properties = new Properties();
 		
-		// Try-with-resources to automatically close the FileInputStream after use
 		try (FileInputStream in = new FileInputStream(filename)) {
 			properties.load(in);
 		} catch (FileNotFoundException e) {
-			System.out.println("Configuration file not found. Creating a new one.");
-			saveConfig(); // Create a new config file with default values
+			System.out.println("Configuration file not found. Creating a new one with default values.");
+			// Set default values
+			this.numPlayers = 3;
+			this.playerNames = Arrays.asList("Alice", "Bob", "Charlie");
+			this.scoreLimit = 5000;
+			properties.setProperty("numPlayers", "3");
+			properties.setProperty("playerNames", "Alice,Bob,Charlie");
+			properties.setProperty("scoreLimit", "5000");
+			saveConfig();
 		} catch (IOException e) {
 			throw new IOException("Error reading configuration file.", e);
 		}
 		
-		// Directly parse the properties since parseInt will throw an error if values are invalid
-		this.numPlayers = Integer.parseInt(properties.getProperty("numPlayers"));
-		this.playerNames = Arrays.asList(properties.getProperty("playerNames").split(","));
-		this.scoreLimit = Integer.parseInt(properties.getProperty("scoreLimit"));
+		if (properties.getProperty("numPlayers") != null) {
+			this.numPlayers = Integer.parseInt(properties.getProperty("numPlayers"));
+			this.playerNames = Arrays.asList(properties.getProperty("playerNames").split(","));
+			this.scoreLimit = Integer.parseInt(properties.getProperty("scoreLimit"));
+		}
 	}
 	
 	@Override

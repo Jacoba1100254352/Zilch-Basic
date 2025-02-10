@@ -18,7 +18,7 @@ public class PlayerManager extends AbstractPlayerManager
 		super.players = playerNames.stream()
 		                           .map(name -> new Player(name, new Dice(new HashMap<>()), new Score()))
 		                           .collect(Collectors.toCollection(Vector::new));
-		super.currentPlayer = players.isEmpty() ? null : players.getFirst();
+		super.currentPlayer = players.isEmpty() ? null : players.get(0);
 	}
 	
 	@Override

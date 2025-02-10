@@ -9,14 +9,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-// FIXME: This class will need to be checked as it needs to be differentiated from MultipleRule
-// FIXME: There needs to be a check that verifies that the MultipleRule is enabled before this class can be enabled
 public class AddMultipleRule extends AbstractVariableRule
 {
 	private final RuleType ruleType;
 	private Integer value;
 	
-	@SuppressWarnings("unused") // This is automatically called by the ServiceLoader
+	@SuppressWarnings("unused")
 	public AddMultipleRule() {
 		this.ruleType = RuleType.ADD_MULTIPLE;
 	}
@@ -31,8 +29,7 @@ public class AddMultipleRule extends AbstractVariableRule
 		if (validationContext.value() == null) {
 			throw new IllegalArgumentException("Value cannot be null.");
 		}
-		
-		return validationContext.diceSetMap().getOrDefault(this.value, 0) >= validationContext.value(); // >= this.value
+		return validationContext.diceSetMap().getOrDefault(this.value, 0) >= validationContext.value();
 	}
 	
 	@Override
@@ -43,7 +40,7 @@ public class AddMultipleRule extends AbstractVariableRule
 	@Override
 	public Map<RuleType, Object> getDefaultConfig() {
 		Map<RuleType, Object> defaultConfig = new HashMap<>();
-		defaultConfig.put(ruleType, 3); // Default value for addMultipleMin
+		defaultConfig.put(ruleType, 3);
 		return defaultConfig;
 	}
 	
@@ -53,7 +50,7 @@ public class AddMultipleRule extends AbstractVariableRule
 		
 		if (scoreContext.score().getScoreFromMultiples() == 0) {
 			scoreContext.score().increaseRoundScore(mScore);
-		} else { // Increase the round score by the difference between the new multiple score and the previous multiple score
+		} else {
 			scoreContext.score().increaseRoundScore(mScore - scoreContext.score().getScoreFromMultiples());
 		}
 		
@@ -62,7 +59,7 @@ public class AddMultipleRule extends AbstractVariableRule
 	
 	private int calculateMultipleScore(int numMultiples, int dieValue) {
 		int baseScore = (dieValue == 1) ? 1000 : dieValue * 100;
-		numMultiples -= -3;
+		numMultiples -= 3; // Corrected subtraction (subtract 3 instead of adding 3)
 		return baseScore * (int) Math.pow(2, numMultiples);
 	}
 }

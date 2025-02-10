@@ -14,11 +14,7 @@ public class SingleRule extends AbstractVariableRule
 {
 	private Set<Integer> acceptedValues;
 	
-	@SuppressWarnings("unused") // This is automatically called by the ServiceLoader
-	public SingleRule() {
-		this.ruleType = RuleType.SINGLE;
-	}
-	
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void setConfigValue(Object value) {
 		this.acceptedValues = (Set<Integer>) value;
@@ -29,7 +25,9 @@ public class SingleRule extends AbstractVariableRule
 		if (!config.containsKey(this.ruleType)) {
 			config.put(this.ruleType, getDefaultConfig().get(this.ruleType));
 		}
-		this.acceptedValues = (Set<Integer>) config.get(this.ruleType);
+		@SuppressWarnings("unchecked")
+		Set<Integer> values = (Set<Integer>) config.get(this.ruleType);
+		this.acceptedValues = values;
 	}
 	
 	@Override
@@ -43,13 +41,14 @@ public class SingleRule extends AbstractVariableRule
 			throw new IllegalArgumentException("Value cannot be null");
 		}
 		
-		return this.acceptedValues.contains(validationContext.value()) && validationContext.diceSetMap().getOrDefault(validationContext.value(), 0) > 0;
+		return this.acceptedValues.contains(validationContext.value()) &&
+				validationContext.diceSetMap().getOrDefault(validationContext.value(), 0) > 0;
 	}
 	
 	@Override
 	public Map<RuleType, Object> getDefaultConfig() {
 		Map<RuleType, Object> defaultConfig = new HashMap<>();
-		defaultConfig.put(this.ruleType, Set.of(1, 5)); // Default values for singleValues
+		defaultConfig.put(this.ruleType, Set.of(1, 5));
 		return defaultConfig;
 	}
 	
