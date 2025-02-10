@@ -1,11 +1,15 @@
 package model.managers;
 
 
+import config.Config;
+import config.ReadOnlyConfig;
 import model.entities.Dice;
 import model.entities.Player;
 import rules.constant.IConstantRule;
 import rules.managers.IRuleManager;
 import rules.managers.RuleType;
+
+import java.io.IOException;
 
 
 public class ActionManager
@@ -13,6 +17,7 @@ public class ActionManager
 	private final IPlayerManager playerManager;
 	private final IDiceManager diceManager;
 	private final IRuleManager ruleManager;
+	private Player gameEndingPlayer;
 	
 	public ActionManager(IPlayerManager playerManager, IDiceManager diceManager, IRuleManager ruleManager) {
 		this.playerManager = playerManager;
@@ -39,11 +44,19 @@ public class ActionManager
 	}
 	
 	public Player getGameEndingPlayer() {
-		return playerManager.getGameEndingPlayer();
+		return gameEndingPlayer;
 	}
 	
 	public void setGameEndingPlayer(Player player) {
-		playerManager.setGameEndingPlayer(player);
+		this.gameEndingPlayer = player;
+	}
+	
+	public boolean canEndGame(Player player) throws IOException {
+		return player.score().getPermanentScore() >= new Config("config.properties").getScoreLimit();
+	}
+	
+	public boolean isGameOver() {
+		return gameEndingPlayer != null;
 	}
 	
 	// Dice-related actions

@@ -2,6 +2,7 @@ package config;
 
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -20,10 +21,18 @@ public class Config implements ReadOnlyConfig
 	public Config(String filename) throws IOException {
 		this.filename = filename;
 		properties = new Properties();
-		FileInputStream in = new FileInputStream(filename);
-		properties.load(in);
-		in.close();
 		
+		// Try-with-resources to automatically close the FileInputStream after use
+		try (FileInputStream in = new FileInputStream(filename)) {
+			properties.load(in);
+		} catch (FileNotFoundException e) {
+			System.out.println("Configuration file not found. Creating a new one.");
+			saveConfig(); // Create a new config file with default values
+		} catch (IOException e) {
+			throw new IOException("Error reading configuration file.", e);
+		}
+		
+		// Directly parse the properties since parseInt will throw an error if values are invalid
 		this.numPlayers = Integer.parseInt(properties.getProperty("numPlayers"));
 		this.playerNames = Arrays.asList(properties.getProperty("playerNames").split(","));
 		this.scoreLimit = Integer.parseInt(properties.getProperty("scoreLimit"));
@@ -60,8 +69,8 @@ public class Config implements ReadOnlyConfig
 	}
 	
 	public void saveConfig() throws IOException {
-		FileOutputStream out = new FileOutputStream(filename);
-		properties.store(out, null);
-		out.close();
+		try (FileOutputStream out = new FileOutputStream(filename)) {
+			properties.store(out, null);
+		}
 	}
 }

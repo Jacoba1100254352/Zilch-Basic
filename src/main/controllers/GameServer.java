@@ -1,8 +1,5 @@
 package controllers;
 
-
-import config.Config;
-import config.ReadOnlyConfig;
 import eventHandling.dispatchers.IEventDispatcher;
 import eventHandling.events.Event;
 import eventHandling.events.EventDataKey;
@@ -13,6 +10,7 @@ import model.managers.ActionManager;
 import model.managers.GameOptionManager;
 import rules.managers.IRuleManager;
 import ui.IMessage;
+import ui.IUserInteraction;
 
 import java.io.IOException;
 
@@ -23,44 +21,48 @@ public class GameServer
 	private final IMessage uiManager;
 	private final ActionManager actionManager;
 	private final IEventDispatcher eventDispatcher;
+	private final String gameID;
 	
 	public GameServer(
-			IEventDispatcher eventDispatcher, ActionManager actionManager, IRuleManager ruleManager, IMessage uiManager
-	) throws IOException {
+			IEventDispatcher eventDispatcher,
+			ActionManager actionManager,
+			IRuleManager ruleManager,
+			IMessage uiManager,
+			int scoreLimit,
+			IUserInteraction userInteraction,
+			String gameID
+	) {
 		this.uiManager = uiManager;
 		this.actionManager = actionManager;
 		this.eventDispatcher = eventDispatcher;
-		int scoreLimit = ((ReadOnlyConfig) new Config("config.properties")).getScoreLimit();
+		this.gameID = gameID;
 		
 		// Initialize the game engine
 		GameOptionManager gameOptionManager = new GameOptionManager(ruleManager);
 		GameStateManager gameStateManager = new GameStateManager(gameOptionManager, uiManager, actionManager);
-		this.gameEngine = new GameEngine(eventDispatcher, gameStateManager, actionManager, gameOptionManager);
+		this.gameEngine = new GameEngine(eventDispatcher, gameStateManager, actionManager, gameOptionManager, userInteraction);
 		
 		// Add a GameOverListener to the event dispatcher
 		GameOverListener gameOverListener = new GameOverListener(scoreLimit, this, actionManager, uiManager);
-		eventDispatcher.addListener(GameEventType.SCORE_UPDATED, gameOverListener);
-		eventDispatcher.addListener(GameEventType.GAME_STATE_CHANGED, gameOverListener); // NOTE: Game Over
+		eventDispatcher.addListener(GameEventType.GAME_OVER, gameOverListener);
 	}
 	
 	public void playGame() {
-		playGame(false);
-	}
-	
-	public void playGame(boolean isTest) {
 		uiManager.displayWelcomeMessage();
-		// TODO: Rule Initialization sequence here
-		gameEngine.initializeRules();
+		System.out.println("Starting Game with ID: " + gameID);
 		
 		while (!gameEngine.isGameOver()) {
-			playTurn(actionManager.getCurrentPlayer());
-			if (isTest) break; // For testing purposes to prevent infinite loops
+			try {
+				playTurn(actionManager.getCurrentPlayer());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		concludeGame();
 		System.out.println("Game has ended.");
 	}
 	
-	private void playTurn(Player player) {
+	private void playTurn(Player player) throws IOException {
 		uiManager.displayCurrentScore(player.name(), player.score().getRoundScore());
 		gameEngine.processGameTurn();
 		
@@ -74,7 +76,7 @@ public class GameServer
 		}
 	}
 	
-	public void handleLastTurns() {
+	public void handleLastTurns() throws IOException {
 		Player initialPlayer = actionManager.getCurrentPlayer();
 		do {
 			playTurn(actionManager.getCurrentPlayer());
@@ -83,14 +85,12 @@ public class GameServer
 	}
 	
 	private void concludeGame() {
-		Event gameOverEvent = new Event(GameEventType.GAME_OVER);
-		Player gameEndingPlayer = actionManager.getGameEndingPlayer();
-		if (gameEndingPlayer != null) {
-			gameOverEvent.setData(EventDataKey.WINNER, gameEndingPlayer);
-		} else {
-			Player highestScoringPlayer = actionManager.findHighestScoringPlayer();
-			gameOverEvent.setData(EventDataKey.WINNER, highestScoringPlayer);
+		Player winner = actionManager.getGameEndingPlayer();
+		if (winner == null) {
+			winner = actionManager.findHighestScoringPlayer();
 		}
+		Event gameOverEvent = new Event(GameEventType.GAME_OVER);
+		gameOverEvent.setData(EventDataKey.WINNER, winner);
 		eventDispatcher.dispatchEvent(gameOverEvent);
 	}
 }

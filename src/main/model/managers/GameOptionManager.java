@@ -29,10 +29,14 @@ public class GameOptionManager
 		gameOptions.addAll(ruleManager.evaluateRules(diceSetMap, value));
 	}
 	
-	public void applyGameOption(Player player) {
+	public void applyGameOption(Player player, GameOption gameOption) {
 		System.out.println("Applying game option: " + this.selectedGameOption.type());
 		
-		ruleManager.applyRule(player, this.selectedGameOption);
+		if (gameOption == null) {
+			ruleManager.applyRule(player, this.selectedGameOption);
+		} else {
+			ruleManager.applyRule(player, gameOption);
+		}
 	}
 	
 	public List<GameOption> getGameOptions() {

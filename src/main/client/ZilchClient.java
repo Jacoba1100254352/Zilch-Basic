@@ -1,17 +1,19 @@
 package client;
 
-
 import config.Config;
 import config.ReadOnlyConfig;
 import controllers.GameServer;
 import creators.core.GameCreator;
 import creators.core.GameIDManager;
+import rules.managers.RuleType;
+import ui.ConsoleMessage;
 import ui.IMessage;
 import ui.IUserInteraction;
 import ui.UserInteractionManager;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 
 public class ZilchClient
@@ -27,14 +29,14 @@ public class ZilchClient
 			Config config = new Config("config.properties");
 			GameIDManager gameIDManager = new GameIDManager();
 			IUserInteraction userSetup = new UserInteractionManager();
+			IMessage uiManager = new ConsoleMessage();
 			
 			if (args.length > 0 && args[0].equals("readConfig")) {
-				ReadOnlyConfig readOnlyConfig = config;
 				
 				// Use configuration values
-				numPlayers = readOnlyConfig.getNumPlayers();
-				playerNames = readOnlyConfig.getPlayerNames();
-				scoreLimit = readOnlyConfig.getScoreLimit();
+				numPlayers = config.getNumPlayers();
+				playerNames = config.getPlayerNames();
+				scoreLimit = config.getScoreLimit();
 				
 				if (numPlayers != playerNames.size()) {
 					System.out.println("Invalid configuration: numPlayers does not match length of playerNames");
@@ -56,14 +58,20 @@ public class ZilchClient
 				
 				System.out.println("Configuration saved to config.properties");
 			} else {
-				throw new IOException("Usage: java ZilchClient [readConfig|writeConfig]");
+				System.out.println("Usage: java ZilchClient [readConfig|writeConfig]");
+				return;
 			}
+			
 			// Generate unique gameID
 			String gameID = gameIDManager.generateGameID();
 			
-			// Create game server
-			IMessage uiManager = new UserInteractionManager();
-			GameServer gameServer = new GameCreator().createSimpleGameServer(playerNames, uiManager, gameID);
+			// Get user input for rules
+			Map<RuleType, Object> selectedRules = userSetup.selectRules();
+			
+			// Create game server with the selected rules
+			GameServer gameServer = new GameCreator().createSimpleGameServer(
+					playerNames, uiManager, gameID, scoreLimit, userSetup, selectedRules
+			);
 			
 			// Play Game
 			gameServer.playGame();

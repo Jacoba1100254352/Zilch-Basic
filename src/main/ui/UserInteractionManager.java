@@ -6,7 +6,6 @@ import model.entities.GameOption;
 import model.entities.Player;
 import model.entities.Score;
 import model.managers.GameOptionManager;
-import rules.managers.IRuleManager;
 import rules.managers.RuleRegistry;
 import rules.managers.RuleType;
 
@@ -53,7 +52,7 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	}
 	
 	@Override
-	public void selectRules(IRuleManager ruleManager) {
+	public Map<RuleType, Object> selectRules() {
 		RuleRegistry ruleRegistry = new RuleRegistry();
 		Map<RuleType, Object> defaultConfig = ruleRegistry.getDefaultConfig();
 		Map<RuleType, Object> selectedConfig = new EnumMap<>(RuleType.class);
@@ -65,17 +64,13 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		// Iterate over the default configuration to display options
 		for (Map.Entry<RuleType, Object> entry : defaultConfig.entrySet()) {
 			RuleType ruleType = entry.getKey();
-			boolean isEnabled = readYesNo("Enable " + ruleType.toString() + "?");
+			boolean isEnabled = readYesNo("Enable " + ruleType.toString() + "? ");
 			if (isEnabled) {
 				selectedConfig.put(ruleType, entry.getValue());
 			}
 		}
 		
-		// Initialize the rules with the selected configuration
-		ruleManager.initializeRules(selectedConfig);
-		
-		System.out.println("Rules have been initialized. Starting the game...");
-		// Continue with the game setup or start the gameplay loop
+		return selectedConfig;
 	}
 	
 	@Override
@@ -123,6 +118,12 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		return limit;
 	}
 	
+	@Override
+	public Integer getOptionValue() {
+		System.out.print("Enter the value for your option: ");
+		return inputManager.getInputInt();
+	}
+	
 	public void handleGameOptions(Player currentPlayer, GameOptionManager gameOptionManager) {
 		Score score = currentPlayer.score();
 		List<GameOption> gameOptions = gameOptionManager.getGameOptions();
@@ -138,7 +139,7 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		
 		GameOption selectedOption = gameOptions.get(choice - 1);
 		gameOptionManager.setSelectedGameOption(selectedOption);
-		gameOptionManager.applyGameOption(selectedOption);
+		gameOptionManager.applyGameOption(currentPlayer, selectedOption);
 	}
 	
 	// Facade methods for the ConsoleMessage

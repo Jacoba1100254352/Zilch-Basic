@@ -1,9 +1,10 @@
 package ui;
 
 
-import rules.managers.IRuleManager;
+import rules.managers.RuleType;
 
 import java.util.List;
+import java.util.Map;
 
 
 public interface IUserInteraction
@@ -14,5 +15,7 @@ public interface IUserInteraction
 	
 	int getValidScoreLimit();
 	
-	void selectRules(IRuleManager ruleManager); // Map<RuleType, Boolean>
+	Map<RuleType, Object> selectRules();
+	
+	Integer getOptionValue();
 }

@@ -8,6 +8,8 @@ import model.entities.Player;
 import model.managers.ActionManager;
 import ui.IMessage;
 
+import java.io.IOException;
+
 import static eventHandling.events.GameEventType.GAME_OVER;
 import static eventHandling.events.GameEventType.SCORE_UPDATED;
 
@@ -28,7 +30,7 @@ public class GameOverListener implements IEventListener
 	}
 	
 	@Override
-	public void handleEvent(Event event) {
+	public void handleEvent(Event event) throws IOException {
 		if (event.getType() == GAME_OVER) {
 			Player winner = (Player) event.getData(EventDataKey.WINNER);
 			uiManager.announceWinner(winner, winner.score().getPermanentScore());
