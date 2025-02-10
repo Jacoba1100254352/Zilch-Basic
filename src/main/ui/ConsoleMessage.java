@@ -2,7 +2,6 @@ package ui;
 
 
 import config.Config;
-import config.ReadOnlyConfig;
 import model.entities.Dice;
 import model.entities.GameOption;
 import model.entities.Player;
@@ -10,6 +9,7 @@ import model.entities.Score;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Scanner;
 import java.util.StringJoiner;
 import java.util.stream.IntStream;
 
@@ -17,15 +17,22 @@ import java.util.stream.IntStream;
 public class ConsoleMessage implements IMessage
 {
 	private final int scoreLimit;
+	private final Scanner scanner; // We'll use this to wait for user input
 	
 	public ConsoleMessage() throws IOException {
+		// Load the score limit from config
 		scoreLimit = new Config("config.properties").getScoreLimit();
+		scanner = new Scanner(System.in);
 	}
 	
 	@Override
 	public void displayWelcomeMessage() {
+		// Optionally clear the screen (or not)
 		clear();
 		System.out.println(getWelcomeMessage());
+		// Wait for user acknowledgment before proceeding.
+		System.out.print("Press enter to continue...");
+		scanner.nextLine();
 	}
 	
 	@Override
@@ -48,6 +55,7 @@ public class ConsoleMessage implements IMessage
 	
 	@Override
 	public void displayCurrentScore(String playerName, int roundScore) {
+		// Optionally clear the screen (or not)
 		clear();
 		System.out.println(playerName + "'s current score: " + roundScore);
 	}
@@ -72,7 +80,11 @@ public class ConsoleMessage implements IMessage
 	@Override
 	public void displayAndWait(String message) {
 		System.out.print(message);
-		pauseAndContinue(() -> {}); // Simply pause without throwing an exception
+		// Wait for user input before continuing.
+		pauseAndContinue(() -> {
+			System.out.print("Press enter to continue...");
+			scanner.nextLine();
+		});
 	}
 	
 	@Override
@@ -100,15 +112,17 @@ public class ConsoleMessage implements IMessage
 	
 	@Override
 	public void clear() {
-		for (int i = 0; i < 50; ++i) {
-			System.out.println();
-		}
+		// If you prefer not to clear the screen at all, simply do nothing.
+		// (Alternatively, you could print a smaller number of blank lines.)
+		// for (int i = 0; i < 50; ++i) {
+		//     System.out.println();
+		// }
 	}
 	
 	@Override
 	public void pauseAndContinue(Runnable waitFunction) {
+		// Run the provided wait function but DO NOT clear the screen afterward.
 		waitFunction.run();
-		clear();
 	}
 	
 	private String getWelcomeMessage() {

@@ -11,6 +11,7 @@ public class Dice
 	
 	public Dice(Map<Integer, Integer> diceSetMap) {
 		this.diceSetMap = diceSetMap;
+		this.numDiceInPlay = FULL_SET_OF_DICE;
 	}
 	
 	public Map<Integer, Integer> getDiceSetMap() {
@@ -31,6 +32,7 @@ public class Dice
 	}
 	
 	public void calculateNumDiceInPlay() {
+		// Recalculate the number of dice in play based on the current diceSetMap values.
 		numDiceInPlay = diceSetMap.values().stream().mapToInt(Integer::intValue).sum();
 	}
 }

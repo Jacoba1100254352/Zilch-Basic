@@ -120,7 +120,7 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	
 	@Override
 	public Integer getOptionValue() {
-		System.out.print("Enter the value for your option: ");
+		System.out.print("Enter a die value to use for scoring: ");
 		return inputManager.getInputInt();
 	}
 	
@@ -128,12 +128,14 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		Score score = currentPlayer.score();
 		List<GameOption> gameOptions = gameOptionManager.getGameOptions();
 		
+		// Display the list of scoring options.
 		gameplayUI.displayGameOptions(score, gameOptions);
-		gameplayUI.displayMessage("Select an option: ");
+		// Prompt the user to choose one.
+		System.out.print("Select an option (enter the option number): ");
 		int choice = inputManager.getInputInt();
 		
 		while (choice < 1 || choice > gameOptions.size()) {
-			gameplayUI.displayMessage("Invalid choice. Please select a valid option: ");
+			System.out.print("Invalid choice. Please select a valid option: ");
 			choice = inputManager.getInputInt();
 		}
 		
