@@ -1,4 +1,6 @@
 package models;
 
-public record Player(String name, Dice dice, Score score) {
+
+public record Player(String name, Dice dice, Score score)
+{
 }
