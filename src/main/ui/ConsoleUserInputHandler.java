@@ -4,6 +4,7 @@ package ui;
 import managers.GameCoordinator;
 import models.GameOption;
 import models.Score;
+import ruleManagers.RuleDescriptor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -167,11 +168,69 @@ public class ConsoleUserInputHandler implements UserInputHandler
 	/**
 	 * Updates the permanent score of the player based on the round score.
 	 */
-	private void updatePermanentScore() {
-		Score score = gameCoordinator.getPlayerManager().getCurrentPlayer().score();
-		if (score.getRoundScore() + score.getPermanentScore() >= 1000) {
-			score.increasePermanentScore(score.getRoundScore());
-			score.setRoundScore(0);
-		}
-	}
+        private void updatePermanentScore() {
+                Score score = gameCoordinator.getPlayerManager().getCurrentPlayer().score();
+                if (score.getRoundScore() + score.getPermanentScore() >= 1000) {
+                        score.increasePermanentScore(score.getRoundScore());
+                        score.setRoundScore(0);
+                }
+        }
+
+        @Override
+        public List<String> selectEnabledRules(List<RuleDescriptor> availableRules) {
+                if (availableRules.isEmpty()) {
+                        return List.of();
+                }
+
+                boolean[] selections = new boolean[availableRules.size()];
+                for (int i = 0; i < availableRules.size(); i++) {
+                        selections[i] = availableRules.get(i).enabled();
+                }
+
+                while (true) {
+                        gameCoordinator.getGameplayUI().displayAvailableRules(remapDescriptors(availableRules, selections));
+                        gameCoordinator.getGameplayUI()
+                                      .displayMessage("Enter rule numbers to toggle (comma separated), or press Enter to continue: ");
+                        String input = scanner.nextLine().trim();
+
+                        if (input.isBlank()) {
+                                List<String> selectedIds = new ArrayList<>();
+                                for (int i = 0; i < selections.length; i++) {
+                                        if (selections[i]) {
+                                                selectedIds.add(availableRules.get(i).id());
+                                        }
+                                }
+                                if (selectedIds.isEmpty()) {
+                                        gameCoordinator.getGameplayUI().displayMessage("At least one rule must remain enabled.\n");
+                                        continue;
+                                }
+                                return selectedIds;
+                        }
+
+                        try {
+                                String[] tokens = input.split("[,\\s]+");
+                                for (String token : tokens) {
+                                        if (token.isBlank()) {
+                                                continue;
+                                        }
+                                        int index = Integer.parseInt(token);
+                                        if (index < 1 || index > selections.length) {
+                                                throw new NumberFormatException();
+                                        }
+                                        selections[index - 1] = !selections[index - 1];
+                                }
+                        } catch (NumberFormatException e) {
+                                gameCoordinator.getGameplayUI().displayMessage("Invalid selection. Please use the numbers shown.\n");
+                        }
+                }
+        }
+
+        private List<RuleDescriptor> remapDescriptors(List<RuleDescriptor> availableRules, boolean[] selections) {
+                List<RuleDescriptor> updated = new ArrayList<>(availableRules.size());
+                for (int i = 0; i < availableRules.size(); i++) {
+                        RuleDescriptor descriptor = availableRules.get(i);
+                        updated.add(new RuleDescriptor(descriptor.id(), descriptor.name(), selections[i]));
+                }
+                return updated;
+        }
 }

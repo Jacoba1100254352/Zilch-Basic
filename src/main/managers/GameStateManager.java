@@ -42,7 +42,7 @@ public class GameStateManager
 		gameCoordinator.getPlayerManager().replenishAllDice();
 		
 		// Reevaluate game options
-		gameCoordinator.getGameOptionManager().setPreviouslySelectedMultipleValue(null);
+                gameCoordinator.getRuleManager().resetTurnState();
 	}
 	
 	public void handleFirstRollBust() {

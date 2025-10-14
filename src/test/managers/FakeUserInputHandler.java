@@ -2,6 +2,7 @@ package managers;
 
 
 import models.Score;
+import ruleManagers.RuleDescriptor;
 import ui.UserInputHandler;
 
 import java.util.List;
@@ -47,7 +48,12 @@ public class FakeUserInputHandler implements UserInputHandler
 	}
 	
 	@Override
-	public void pauseAndContinue() {
-		// Do nothing—no real console I/O
-	}
+        public void pauseAndContinue() {
+                // Do nothing—no real console I/O
+        }
+
+        @Override
+        public List<String> selectEnabledRules(List<RuleDescriptor> availableRules) {
+                return availableRules.stream().map(RuleDescriptor::id).toList();
+        }
 }

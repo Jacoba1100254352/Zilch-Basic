@@ -51,16 +51,20 @@ public class GameCoordinator
 		// Display the welcome message and instructions
 		gameplayUI.clear();
 		gameplayUI.displayWelcomeMessage();
-		userInputHandler.pauseAndContinue();
-		
-		// Get the score limit and player names from the user
-		int scoreLimit = userInputHandler.getValidScoreLimit();
-		List<String> playerNames = userInputHandler.getPlayerNames();
-		
-		// Clear the screen to start the game
-		gameplayUI.clear();
-		
-		// Initialize the PlayerManager with the obtained player names and score limit
+                userInputHandler.pauseAndContinue();
+
+                // Get the score limit and player names from the user
+                int scoreLimit = userInputHandler.getValidScoreLimit();
+                List<String> playerNames = userInputHandler.getPlayerNames();
+
+                // Allow players to configure which scoring rules are active
+                List<String> enabledRules = userInputHandler.selectEnabledRules(ruleManager.getAvailableRuleDescriptors());
+                ruleManager.configureActiveRules(enabledRules);
+
+                // Clear the screen to start the game
+                gameplayUI.clear();
+
+                // Initialize the PlayerManager with the obtained player names and score limit
 		this.playerManager = new PlayerManager(playerNames, scoreLimit);
 		this.players = playerManager.getPlayers(); // Store the list of players
 	}

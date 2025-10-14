@@ -6,6 +6,7 @@ import models.Dice;
 import models.GameOption;
 import models.Player;
 import models.Score;
+import ruleManagers.RuleDescriptor;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -42,10 +43,10 @@ public class GameplayUI
 	 *
 	 * @param gameOptions The list of game options currently available.
 	 */
-	public void displayGameOptions(List<GameOption> gameOptions) {
-		// Create local score variable
-		Score score = gameCoordinator.getPlayerManager().getCurrentPlayer().score();
-		
+        public void displayGameOptions(List<GameOption> gameOptions) {
+                // Create local score variable
+                Score score = gameCoordinator.getPlayerManager().getCurrentPlayer().score();
+
 		///   Display Game Options   ///
 		System.out.println("\nAvailable Options:");
 		int optionNumber = 1;
@@ -70,8 +71,20 @@ public class GameplayUI
 		// Option to end turn if the score exceeds 1000.
 		if (score.getPermanentScore() >= 1000 || score.getRoundScore() >= 1000) {
 			System.out.printf("%d. End Turn\n", optionNumber);
-		}
-	}
+                }
+        }
+
+        /**
+         * Displays the available scoring rules and whether they are currently enabled.
+         */
+        public void displayAvailableRules(List<RuleDescriptor> descriptors) {
+                System.out.println("\nRule Configuration:");
+                for (int i = 0; i < descriptors.size(); i++) {
+                        RuleDescriptor descriptor = descriptors.get(i);
+                        String marker = descriptor.enabled() ? "[x]" : "[ ]";
+                        System.out.printf("%d. %s %s%n", i + 1, marker, descriptor.name());
+                }
+        }
 	
 	/**
 	 * Displays the current dice configuration for the player.

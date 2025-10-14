@@ -1,6 +1,8 @@
 package ui;
 
 
+import ruleManagers.RuleDescriptor;
+
 import java.util.List;
 
 
@@ -23,11 +25,19 @@ public interface UserInputHandler
 	/**
 	 * Prompts the player to pick one of the current game options (or end turn, reroll, etc.).
 	 */
-	void inputGameOption();
-	
-	/**
-	 * Pauses until the user presses Enter (in console mode),
-	 * or does nothing in test mode.
-	 */
-	void pauseAndContinue();
+        void inputGameOption();
+
+        /**
+         * Pauses until the user presses Enter (in console mode),
+         * or does nothing in test mode.
+         */
+        void pauseAndContinue();
+
+        /**
+         * Allows the player to choose which scoring rules are active for the game.
+         *
+         * @param availableRules descriptors of the rules that can be enabled.
+         * @return the identifiers of the rules that should remain enabled.
+         */
+        List<String> selectEnabledRules(List<RuleDescriptor> availableRules);
 }
