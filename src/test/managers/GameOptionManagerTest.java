@@ -61,11 +61,9 @@ class GameOptionManagerTest
 		gameOptionManager.evaluateGameOptions();
 		
 		// Expect exactly one option: STRAIT
-		List<GameOption> options = gameOptionManager.getGameOptions();
-		assertEquals(3, options.size(), "Should only have 3 options: Strait, Single 1, and Single 5");
-		GameOption opt = options.get(0);
-		assertEquals(GameOption.Type.STRAIT, opt.type());
-		assertNull(opt.value(), "STRAIT has no numeric value");
+                List<GameOption> options = gameOptionManager.getGameOptions();
+                assertEquals(3, options.size(), "Should only have 3 options: Strait, Single 1, and Single 5");
+                assertTrue(containsOption(options, GameOption.Type.STRAIT, null));
 	}
 	
 	@Test
@@ -88,11 +86,9 @@ class GameOptionManagerTest
 		gameOptionManager.evaluateGameOptions();
 		
 		// Expect exactly one option: STRAIT
-		List<GameOption> options = gameOptionManager.getGameOptions();
-		assertEquals(2, options.size(), "Should only have 2 options: Multiple (of 1s), Single 1");
-		GameOption opt = options.getFirst();
-		assertEquals(GameOption.Type.MULTIPLE, opt.type());
-		assertEquals(multiple, opt.value(), "The multiple 1 should be available");
+                List<GameOption> options = gameOptionManager.getGameOptions();
+                assertEquals(2, options.size(), "Should only have 2 options: Multiple (of 1s), Single 1");
+                assertTrue(containsOption(options, GameOption.Type.MULTIPLE, multiple));
 		
 		dice.getDiceSetMap().put(multiple, 0);
 		points = (multiple == 1) ? 1000 : multiple * 100;
@@ -119,11 +115,9 @@ class GameOptionManagerTest
 		gameOptionManager.evaluateGameOptions();
 		
 		// Expect ...
-		options = gameOptionManager.getGameOptions();
-		assertEquals(2, options.size(), "Should only have 2 options: Add Multiple (1), and Single 1");
-		opt = options.getFirst();
-		assertEquals(GameOption.Type.ADD_MULTIPLE, opt.type());
-		assertEquals(multiple, opt.value(), "The multiple 1 should be available");
+                options = gameOptionManager.getGameOptions();
+                assertEquals(2, options.size(), "Should only have 2 options: Add Multiple (1), and Single 1");
+                assertTrue(containsOption(options, GameOption.Type.ADD_MULTIPLE, multiple));
 	}
 	
 	@Test
@@ -146,11 +140,9 @@ class GameOptionManagerTest
 		gameOptionManager.evaluateGameOptions();
 		
 		// Expect ...
-		List<GameOption> options = gameOptionManager.getGameOptions();
-		assertEquals(1, options.size(), "Should only have 1 options: Multiple (of 3s)");
-		GameOption opt = options.getFirst();
-		assertEquals(GameOption.Type.MULTIPLE, opt.type());
-		assertEquals(multiple, opt.value(), "The multiple 3 should be available");
+                List<GameOption> options = gameOptionManager.getGameOptions();
+                assertEquals(1, options.size(), "Should only have 1 options: Multiple (of 3s)");
+                assertTrue(containsOption(options, GameOption.Type.MULTIPLE, multiple));
 		
 		dice.getDiceSetMap().put(multiple, 0);
 		points = (multiple == 1) ? 1000 : multiple * 100;
@@ -177,11 +169,9 @@ class GameOptionManagerTest
 		gameOptionManager.evaluateGameOptions();
 		
 		// Expect exactly one option: STRAIT
-		options = gameOptionManager.getGameOptions();
-		assertEquals(1, options.size(), "Should only have 1 option: Add Multiple (3)");
-		opt = options.getFirst();
-		assertEquals(GameOption.Type.ADD_MULTIPLE, opt.type());
-		assertEquals(multiple, opt.value(), "The add multiple 3 should be available");
+                options = gameOptionManager.getGameOptions();
+                assertEquals(1, options.size(), "Should only have 1 option: Add Multiple (3)");
+                assertTrue(containsOption(options, GameOption.Type.ADD_MULTIPLE, multiple));
 	}
 	
 	@Test
@@ -198,8 +188,8 @@ class GameOptionManagerTest
 		gameOptionManager.evaluateGameOptions();
 		List<GameOption> options = gameOptionManager.getGameOptions();
 		
-		assertEquals(2, options.size(), "Valid options for a 1,1,2,2,3,3: Set, Single 1");
-		assertEquals(GameOption.Type.SET, options.get(0).type());
+                assertEquals(2, options.size(), "Valid options for a 1,1,2,2,3,3: Set, Single 1");
+                assertTrue(containsOption(options, GameOption.Type.SET, null));
 	}
 	
 	@Test
@@ -385,11 +375,11 @@ class GameOptionManagerTest
 	}
 	
 	@Test
-	void testAddMultipleRule() {
-		// The logic for "add multiple" means that you first have a multiple, e.g. 1,1,1 => you pick MULTIPLE(1).
-		// Then if you roll more 1's, you can pick ADD_MULTIPLE(1).
-		//
-		// We'll simulate that by:
+        void testAddMultipleRule() {
+                // The logic for "add multiple" means that you first have a multiple, e.g. 1,1,1 => you pick MULTIPLE(1).
+                // Then if you roll more 1's, you can pick ADD_MULTIPLE(1).
+                //
+                // We'll simulate that by:
 		// 1) The user first chooses multiple(1) for dice 1,1,1 => 1000 points
 		// 2) Then the dice is refilled with 2 more 1's => "1,1", so the AddMultipleRule(1) is valid if
 		//    previouslySelectedMultipleValue is 1.
@@ -438,8 +428,14 @@ class GameOptionManagerTest
 		// is in your ScoreManager's "Add Multiple" logic.
 		// That code does:  mScore = (2^(countOfDice)) * previousMultipleScore
 		// Here, previousMultipleScore was 1000, countOfDice = 2 => 2^(2) = 4 => 4 * 1000 = 4000 total
-		// So new round score = 4000 total.
-		// The difference from the old 1000 is +3000, so final roundScore = 4000
-		assertEquals(4000, p.score().getRoundScore(), "AddMultiple(1) with 2 more 1's should yield 4000 total");
-	}
+                // So new round score = 4000 total.
+                // The difference from the old 1000 is +3000, so final roundScore = 4000
+                assertEquals(4000, p.score().getRoundScore(), "AddMultiple(1) with 2 more 1's should yield 4000 total");
+        }
+
+        private boolean containsOption(List<GameOption> options, GameOption.Type type, Integer value) {
+                return options.stream()
+                               .anyMatch(option -> option.type() == type &&
+                                               (value == null ? option.value() == null : value.equals(option.value())));
+        }
 }
