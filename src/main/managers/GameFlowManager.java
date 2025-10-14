@@ -110,8 +110,9 @@ public class GameFlowManager
 	private void handleDiceRoll(Player player) {
 		// Reset the number of dice to 6 if all had been used in previous rolls
 		if (player.dice().getNumDiceInPlay() == 0) {
-			player.dice().setNumDiceInPlay(FULL_SET_OF_DICE);
-			gameCoordinator.getPlayerManager().getCurrentPlayer().score().setScoreFromMultiples(0);
+                        player.dice().setNumDiceInPlay(FULL_SET_OF_DICE);
+                        gameCoordinator.getPlayerManager().getCurrentPlayer().score().setScoreFromMultiples(0);
+                        gameCoordinator.getPlayerManager().getCurrentPlayer().score().setScoreFromMultiplesDieValue(0);
 			gameCoordinator.getGameOptionManager().setPreviouslySelectedMultipleValue(null);
 		}
 		

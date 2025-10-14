@@ -92,6 +92,7 @@ class ScoreManagerTest
         diceMap.put(3, 4); // 4 threes
         dice.setDiceSetMap(diceMap);
         score.setScoreFromMultiples(0);
+        score.setScoreFromMultiplesDieValue(0);
         score.setRoundScore(0);
         
         scoreManager.scoreMultiple(3);
@@ -102,6 +103,7 @@ class ScoreManagerTest
         diceMap.put(3, 5);
         dice.setDiceSetMap(diceMap);
         score.setScoreFromMultiples(0);
+        score.setScoreFromMultiplesDieValue(0);
         score.setRoundScore(0);
         
         scoreManager.scoreMultiple(3);
@@ -112,6 +114,7 @@ class ScoreManagerTest
         diceMap.put(3, 6);
         dice.setDiceSetMap(diceMap);
         score.setScoreFromMultiples(0);
+        score.setScoreFromMultiplesDieValue(0);
         score.setRoundScore(0);
         
         scoreManager.scoreMultiple(3);
@@ -139,7 +142,31 @@ class ScoreManagerTest
         wrongScore = (3 * 100) * (int) Math.pow(2, 3); // 300 * 8 = 2400
         assertNotEquals(wrongScore, score.getRoundScore(), "Scoring additional multiples should not add incorrect score");
     }
-    
+
+    @Test
+    @DisplayName("Score multiple resets when die value changes")
+    void scoreMultipleResetsBetweenValues() {
+        Map<Integer, Integer> diceMap = new HashMap<>();
+        diceMap.put(3, 3);
+        dice.setDiceSetMap(diceMap);
+        score.setRoundScore(0);
+        score.setScoreFromMultiples(0);
+        score.setScoreFromMultiplesDieValue(0);
+
+        scoreManager.scoreMultiple(3);
+        assertEquals(300, score.getRoundScore(), "Three 3s should add 300 points");
+        assertEquals(3, score.getScoreFromMultiplesDieValue(), "Multiples should track the die value that was scored");
+
+        diceMap.clear();
+        diceMap.put(6, 3);
+        dice.setDiceSetMap(diceMap);
+
+        scoreManager.scoreMultiple(6);
+        assertEquals(900, score.getRoundScore(), "Scoring a new triple should add its base value instead of doubling the previous multiple");
+        assertEquals(600, score.getScoreFromMultiples(), "Score from multiples should reflect the new triple's total");
+        assertEquals(6, score.getScoreFromMultiplesDieValue(), "Multiples should track the latest die value");
+    }
+
     @Test
     @DisplayName("Positive: Score Add Multiple")
     void scoreAddMultiplePass() {
@@ -149,6 +176,7 @@ class ScoreManagerTest
         dice.setDiceSetMap(diceMap);
         score.setRoundScore(0);
         score.setScoreFromMultiples(0);
+        score.setScoreFromMultiplesDieValue(0);
         
         // Score the initial multiple
         scoreManager.scoreMultiple(3);
@@ -195,6 +223,7 @@ class ScoreManagerTest
         dice.setDiceSetMap(diceMap);
         score.setRoundScore(0);
         score.setScoreFromMultiples(0);
+        score.setScoreFromMultiplesDieValue(0);
         
         // Score the initial multiple
         scoreManager.scoreMultiple(1);
@@ -224,6 +253,7 @@ class ScoreManagerTest
         dice.setDiceSetMap(diceMap);
         score.setRoundScore(0);
         score.setScoreFromMultiples(0);
+        score.setScoreFromMultiplesDieValue(0);
         
         // Score the initial multiple
         scoreManager.scoreMultiple(3);

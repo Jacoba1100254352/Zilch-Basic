@@ -35,7 +35,8 @@ public class GameStateManager
 		gameCoordinator.getGameOptionManager().setSelectedGameOption(null); // Reset the current game option
 		
 		// Initialize Score
-		gameCoordinator.getPlayerManager().getCurrentPlayer().score().setScoreFromMultiples(0);
+                gameCoordinator.getPlayerManager().getCurrentPlayer().score().setScoreFromMultiples(0);
+                gameCoordinator.getPlayerManager().getCurrentPlayer().score().setScoreFromMultiplesDieValue(0);
 		gameCoordinator.getPlayerManager().getCurrentPlayer().score().setRoundScore(0);
 		
 		// Initialize Dice

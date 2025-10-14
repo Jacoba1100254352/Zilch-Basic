@@ -23,7 +23,7 @@ public class PlayerManager
 		this.diceManager = new DiceManager(this);
 		this.scoreManager = new ScoreManager(this);
 		this.players = playerNames.stream()
-		                          .map(playerName -> new Player(playerName, new Dice(new HashMap<>()), new Score(scoreLimit, 0, 0, 0)))
+                                      .map(playerName -> new Player(playerName, new Dice(new HashMap<>()), new Score(scoreLimit, 0, 0, 0, 0)))
 		                          .collect(Collectors.toCollection(Vector::new));
 		this.currentPlayer = players.isEmpty() ? null : players.firstElement();
 	}

@@ -6,14 +6,16 @@ public class Score
 	private final int scoreLimit;
 	private int permanentScore;
 	private int roundScore;
-	private int scoreFromMultiples;
-	
-	public Score(int scoreLimit, int permanentScore, int roundScore, int scoreFromMultiples) {
-		this.scoreLimit = scoreLimit;
-		this.permanentScore = permanentScore;
-		this.roundScore = roundScore;
-		this.scoreFromMultiples = scoreFromMultiples;
-	}
+        private int scoreFromMultiples;
+        private int scoreFromMultiplesDieValue;
+
+        public Score(int scoreLimit, int permanentScore, int roundScore, int scoreFromMultiples, int scoreFromMultiplesDieValue) {
+                this.scoreLimit = scoreLimit;
+                this.permanentScore = permanentScore;
+                this.roundScore = roundScore;
+                this.scoreFromMultiples = scoreFromMultiples;
+                this.scoreFromMultiplesDieValue = scoreFromMultiplesDieValue;
+        }
 	
 	
 	///   Getters and Setters   ///
@@ -42,11 +44,19 @@ public class Score
 		this.roundScore += score;
 	}
 	
-	public int getScoreFromMultiples() {
-		return this.scoreFromMultiples;
-	}
-	
-	public void setScoreFromMultiples(int score) {
-		this.scoreFromMultiples = score;
-	}
+        public int getScoreFromMultiples() {
+                return this.scoreFromMultiples;
+        }
+
+        public void setScoreFromMultiples(int score) {
+                this.scoreFromMultiples = score;
+        }
+
+        public int getScoreFromMultiplesDieValue() {
+                return this.scoreFromMultiplesDieValue;
+        }
+
+        public void setScoreFromMultiplesDieValue(int dieValue) {
+                this.scoreFromMultiplesDieValue = dieValue;
+        }
 }

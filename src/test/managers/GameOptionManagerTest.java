@@ -92,7 +92,8 @@ class GameOptionManagerTest
 		
 		dice.getDiceSetMap().put(multiple, 0);
 		points = (multiple == 1) ? 1000 : multiple * 100;
-		playerManager.getCurrentPlayer().score().setScoreFromMultiples(points);
+                playerManager.getCurrentPlayer().score().setScoreFromMultiples(points);
+                playerManager.getCurrentPlayer().score().setScoreFromMultiplesDieValue(multiple);
 		playerManager.getCurrentPlayer().score().setRoundScore(points);
 		gameOptionManager.setPreviouslySelectedMultipleValue(multiple);
 		dice.calculateNumDiceInPlay();
@@ -146,7 +147,8 @@ class GameOptionManagerTest
 		
 		dice.getDiceSetMap().put(multiple, 0);
 		points = (multiple == 1) ? 1000 : multiple * 100;
-		playerManager.getCurrentPlayer().score().setScoreFromMultiples(points);
+                playerManager.getCurrentPlayer().score().setScoreFromMultiples(points);
+                playerManager.getCurrentPlayer().score().setScoreFromMultiplesDieValue(multiple);
 		playerManager.getCurrentPlayer().score().setRoundScore(points);
 		gameOptionManager.setPreviouslySelectedMultipleValue(multiple);
 		dice.calculateNumDiceInPlay();
