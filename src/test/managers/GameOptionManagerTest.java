@@ -7,11 +7,13 @@ import models.GameOption;
 import models.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ruleManagers.rules.StraitRuleStrategy;
 import ui.ConsoleUserInputHandler;
 import ui.UserInputHandler;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static models.Dice.FULL_SET_OF_DICE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,13 +22,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class GameOptionManagerTest
 {
 	
-	private GameOptionManager gameOptionManager;
-	private PlayerManager playerManager;
+        private GameOptionManager gameOptionManager;
+        private PlayerManager playerManager;
+        private GameCoordinator gameCoordinator;
 	
 	@BeforeEach
 	void setUp() {
 		// 1) Create the real GameCoordinator (which includes real RuleManager, etc.).
-		GameCoordinator gameCoordinator = new GameCoordinator();
+                gameCoordinator = new GameCoordinator();
 		
 		// 2) We don't actually need console input for these tests, so you
 		//    could attach a "fake" user input handler or just leave it null
@@ -45,10 +48,10 @@ class GameOptionManagerTest
 	}
 	
 	@Test
-	void testEvaluateGameOptions_Strait() {
-		// Give the player a dice set corresponding to a perfect strait (1..6).
-		Player p = playerManager.getCurrentPlayer();
-		Dice dice = p.dice();
+        void testEvaluateGameOptions_Strait() {
+                // Give the player a dice set corresponding to a perfect strait (1..6).
+                Player p = playerManager.getCurrentPlayer();
+                Dice dice = p.dice();
 		
 		// Clear whatever might be there, then set each face to 1
 		dice.getDiceSetMap().clear();
@@ -63,10 +66,29 @@ class GameOptionManagerTest
 		// Expect exactly one option: STRAIT
 		List<GameOption> options = gameOptionManager.getGameOptions();
 		assertEquals(3, options.size(), "Should only have 3 options: Strait, Single 1, and Single 5");
-		GameOption opt = options.get(0);
-		assertEquals(GameOption.Type.STRAIT, opt.type());
-		assertNull(opt.value(), "STRAIT has no numeric value");
-	}
+                GameOption opt = options.get(0);
+                assertEquals(GameOption.Type.STRAIT, opt.type());
+                assertNull(opt.value(), "STRAIT has no numeric value");
+        }
+
+        @Test
+        void testDisabledRuleIsNotOffered() {
+                Player p = playerManager.getCurrentPlayer();
+                Dice dice = p.dice();
+                dice.getDiceSetMap().clear();
+                for (int face = 1; face <= FULL_SET_OF_DICE; face++) {
+                        dice.getDiceSetMap().put(face, 1);
+                }
+                dice.calculateNumDiceInPlay();
+
+                gameCoordinator.getRuleManager().setRuleEnabled(StraitRuleStrategy.ID, false);
+
+                gameOptionManager.evaluateGameOptions();
+
+                assertTrue(gameOptionManager.getGameOptions()
+                                           .stream()
+                                           .noneMatch(option -> option.type() == GameOption.Type.STRAIT));
+        }
 	
 	@Test
 	void testEvaluateGameOptions_AddMultiple_1() {
@@ -90,8 +112,8 @@ class GameOptionManagerTest
 		// Expect exactly one option: STRAIT
 		List<GameOption> options = gameOptionManager.getGameOptions();
 		assertEquals(2, options.size(), "Should only have 2 options: Multiple (of 1s), Single 1");
-		GameOption opt = options.getFirst();
-		assertEquals(GameOption.Type.MULTIPLE, opt.type());
+                GameOption opt = options.getFirst();
+                assertEquals(GameOption.Type.MULTIPLE, opt.type());
 		assertEquals(multiple, opt.value(), "The multiple 1 should be available");
 		
 		dice.getDiceSetMap().put(multiple, 0);
@@ -121,8 +143,8 @@ class GameOptionManagerTest
 		// Expect ...
 		options = gameOptionManager.getGameOptions();
 		assertEquals(2, options.size(), "Should only have 2 options: Add Multiple (1), and Single 1");
-		opt = options.getFirst();
-		assertEquals(GameOption.Type.ADD_MULTIPLE, opt.type());
+                opt = options.getFirst();
+                assertEquals(GameOption.Type.ADD_MULTIPLE, opt.type());
 		assertEquals(multiple, opt.value(), "The multiple 1 should be available");
 	}
 	
@@ -179,8 +201,8 @@ class GameOptionManagerTest
 		// Expect exactly one option: STRAIT
 		options = gameOptionManager.getGameOptions();
 		assertEquals(1, options.size(), "Should only have 1 option: Add Multiple (3)");
-		opt = options.getFirst();
-		assertEquals(GameOption.Type.ADD_MULTIPLE, opt.type());
+                opt = options.getFirst();
+                assertEquals(GameOption.Type.ADD_MULTIPLE, opt.type());
 		assertEquals(multiple, opt.value(), "The add multiple 3 should be available");
 	}
 	
@@ -254,7 +276,7 @@ class GameOptionManagerTest
 		// Confirm we have it
 		assertFalse(gameOptionManager.getGameOptions().isEmpty());
 		// Pick the strait
-		gameOptionManager.setSelectedGameOption(new GameOption(GameOption.Type.STRAIT, null));
+                gameOptionManager.setSelectedGameOption(findOption(GameOption.Type.STRAIT, null));
 		// Should be valid
 		assertTrue(gameOptionManager.isValidMove());
 		
@@ -284,7 +306,7 @@ class GameOptionManagerTest
 		gameOptionManager.evaluateGameOptions();
 		assertFalse(gameOptionManager.getGameOptions().isEmpty());
 		// We'll pick the SET option
-		gameOptionManager.setSelectedGameOption(new GameOption(GameOption.Type.SET, null));
+                gameOptionManager.setSelectedGameOption(findOption(GameOption.Type.SET, null));
 		assertTrue(gameOptionManager.isValidMove());
 		
 		gameOptionManager.processMove();
@@ -309,7 +331,7 @@ class GameOptionManagerTest
 		assertTrue(foundMultiple3, "Should have MULTIPLE(3) among the options");
 		
 		// Pick the MULTIPLE(3) option
-		gameOptionManager.setSelectedGameOption(new GameOption(GameOption.Type.MULTIPLE, 3));
+                gameOptionManager.setSelectedGameOption(findOption(GameOption.Type.MULTIPLE, 3));
 		assertTrue(gameOptionManager.isValidMove());
 		
 		// processMove => calls scoreMultiple(3)
@@ -335,7 +357,7 @@ class GameOptionManagerTest
 		
 		gameOptionManager.evaluateGameOptions();
 		// Should have SINGLE(5)
-		gameOptionManager.setSelectedGameOption(new GameOption(GameOption.Type.SINGLE, 5));
+                gameOptionManager.setSelectedGameOption(findOption(GameOption.Type.SINGLE, 5));
 		assertTrue(gameOptionManager.isValidMove());
 		
 		gameOptionManager.processMove();
@@ -372,7 +394,7 @@ class GameOptionManagerTest
 		// Evaluate => we might not get MULTIPLE(3)
 		gameOptionManager.evaluateGameOptions();
 		// But let's forcibly pick MULTIPLE(3)
-		gameOptionManager.setSelectedGameOption(new GameOption(GameOption.Type.MULTIPLE, 3));
+                gameOptionManager.setSelectedGameOption(new GameOption("multiple", GameOption.Type.MULTIPLE, 3));
 		
 		// That won't be in the list => isValidMove() = false
 		assertFalse(gameOptionManager.isValidMove());
@@ -385,11 +407,11 @@ class GameOptionManagerTest
 	}
 	
 	@Test
-	void testAddMultipleRule() {
-		// The logic for "add multiple" means that you first have a multiple, e.g. 1,1,1 => you pick MULTIPLE(1).
-		// Then if you roll more 1's, you can pick ADD_MULTIPLE(1).
-		//
-		// We'll simulate that by:
+        void testAddMultipleRule() {
+                // The logic for "add multiple" means that you first have a multiple, e.g. 1,1,1 => you pick MULTIPLE(1).
+                // Then if you roll more 1's, you can pick ADD_MULTIPLE(1).
+                //
+                // We'll simulate that by:
 		// 1) The user first chooses multiple(1) for dice 1,1,1 => 1000 points
 		// 2) Then the dice is refilled with 2 more 1's => "1,1", so the AddMultipleRule(1) is valid if
 		//    previouslySelectedMultipleValue is 1.
@@ -405,7 +427,7 @@ class GameOptionManagerTest
 		// Evaluate => MULTIPLE(1)
 		gameOptionManager.evaluateGameOptions();
 		// pick MULTIPLE(1)
-		gameOptionManager.setSelectedGameOption(new GameOption(GameOption.Type.MULTIPLE, 1));
+                gameOptionManager.setSelectedGameOption(findOption(GameOption.Type.MULTIPLE, 1));
 		// process => should do 1000 points, eliminate dice
 		gameOptionManager.processMove();
 		// Now the player's round score is 1000
@@ -427,7 +449,7 @@ class GameOptionManagerTest
 		assertTrue(foundAddMultiple, "We should have an ADD_MULTIPLE(1) now that previouslySelectedMultipleValue is 1 and we rolled more 1s.");
 		
 		// Choose it
-		gameOptionManager.setSelectedGameOption(new GameOption(GameOption.Type.ADD_MULTIPLE, 1));
+                gameOptionManager.setSelectedGameOption(findOption(GameOption.Type.ADD_MULTIPLE, 1));
 		assertTrue(gameOptionManager.isValidMove());
 		
 		// process => that triggers "scoreMultiple(1)" again, but with the "add multiple" logic.
@@ -438,8 +460,18 @@ class GameOptionManagerTest
 		// is in your ScoreManager's "Add Multiple" logic.
 		// That code does:  mScore = (2^(countOfDice)) * previousMultipleScore
 		// Here, previousMultipleScore was 1000, countOfDice = 2 => 2^(2) = 4 => 4 * 1000 = 4000 total
-		// So new round score = 4000 total.
-		// The difference from the old 1000 is +3000, so final roundScore = 4000
-		assertEquals(4000, p.score().getRoundScore(), "AddMultiple(1) with 2 more 1's should yield 4000 total");
-	}
+                // So new round score = 4000 total.
+                // The difference from the old 1000 is +3000, so final roundScore = 4000
+                assertEquals(4000, p.score().getRoundScore(), "AddMultiple(1) with 2 more 1's should yield 4000 total");
+        }
+
+        private GameOption findOption(GameOption.Type type, Integer value)
+        {
+                return gameOptionManager.getGameOptions()
+                                        .stream()
+                                        .filter(option -> option.type() == type && Objects.equals(option.value(), value))
+                                        .findFirst()
+                                        .orElseThrow(() -> new AssertionError(
+                                                "Expected to find option %s with value %s".formatted(type, value)));
+        }
 }

@@ -127,7 +127,8 @@ public class GameFlowManager
 		gameCoordinator.getGameOptionManager().evaluateGameOptions();
 		
 		// Handle bust scenarios if no options are available and no option has been selected yet
-		if (!gameCoordinator.getRuleManager().isOptionAvailable() && !gameCoordinator.getGameOptionManager().isOptionSelectedForCurrentRoll()) {
+                if (!gameCoordinator.getRuleManager().hasAvailableOptions()
+                                && !gameCoordinator.getGameOptionManager().isOptionSelectedForCurrentRoll()) {
 			handleBustScenarios();
 			return false;
 		}

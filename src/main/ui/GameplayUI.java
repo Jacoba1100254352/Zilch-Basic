@@ -51,17 +51,19 @@ public class GameplayUI
 		int optionNumber = 1;
 		
 		// Display options
-		for (GameOption option : gameOptions) {
-			// Switch case to determine the description of each game option
-			String optionDescription = switch (option.type()) {
-				case STRAIT -> "Score a Strait";
-				case SET -> "Score a Set";
-				case MULTIPLE -> "Score Multiple " + option.value();
-				case ADD_MULTIPLE -> "Score Add Multiple " + option.value();
-				case SINGLE -> "Score Single " + option.value();
-			};
-			System.out.printf("%d. %s\n", optionNumber++, optionDescription);
-		}
+                for (GameOption option : gameOptions) {
+                        String optionDescription = option.description();
+                        if (optionDescription == null || optionDescription.isBlank()) {
+                                optionDescription = switch (option.type()) {
+                                        case STRAIT -> "Score a Strait";
+                                        case SET -> "Score a Set";
+                                        case MULTIPLE -> "Score Multiple " + option.value();
+                                        case ADD_MULTIPLE -> "Score Add Multiple " + option.value();
+                                        case SINGLE -> "Score Single " + option.value();
+                                };
+                        }
+                        System.out.printf("%d. %s\n", optionNumber++, optionDescription);
+                }
 		
 		// Option to roll again if a score has been made and an option selected in the current roll.
 		if (score.getRoundScore() > 0 && gameCoordinator.getGameOptionManager().isOptionSelectedForCurrentRoll()) {
