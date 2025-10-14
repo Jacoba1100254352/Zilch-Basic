@@ -20,13 +20,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class GameOptionManagerTest
 {
 	
-	private GameOptionManager gameOptionManager;
-	private PlayerManager playerManager;
+        private GameCoordinator gameCoordinator;
+        private GameOptionManager gameOptionManager;
+        private PlayerManager playerManager;
 	
 	@BeforeEach
 	void setUp() {
 		// 1) Create the real GameCoordinator (which includes real RuleManager, etc.).
-		GameCoordinator gameCoordinator = new GameCoordinator();
+                gameCoordinator = new GameCoordinator();
 		
 		// 2) We don't actually need console input for these tests, so you
 		//    could attach a "fake" user input handler or just leave it null
@@ -41,7 +42,7 @@ class GameOptionManagerTest
 		gameCoordinator.setPlayerManager(playerManager);
 		
 		// 4) Extract the already-constructed GameOptionManager from GameCoordinator.
-		gameOptionManager = gameCoordinator.getGameOptionManager();
+                gameOptionManager = gameCoordinator.getGameOptionManager();
 	}
 	
 	@Test
@@ -98,7 +99,7 @@ class GameOptionManagerTest
 		points = (multiple == 1) ? 1000 : multiple * 100;
 		playerManager.getCurrentPlayer().score().setScoreFromMultiples(points);
 		playerManager.getCurrentPlayer().score().setRoundScore(points);
-		gameOptionManager.setPreviouslySelectedMultipleValue(multiple);
+                gameCoordinator.getRuleManager().setPreviouslySelectedMultipleValue(multiple);
 		dice.calculateNumDiceInPlay();
 		
 		// Evaluate the options
@@ -156,7 +157,7 @@ class GameOptionManagerTest
 		points = (multiple == 1) ? 1000 : multiple * 100;
 		playerManager.getCurrentPlayer().score().setScoreFromMultiples(points);
 		playerManager.getCurrentPlayer().score().setRoundScore(points);
-		gameOptionManager.setPreviouslySelectedMultipleValue(multiple);
+                gameCoordinator.getRuleManager().setPreviouslySelectedMultipleValue(multiple);
 		dice.calculateNumDiceInPlay();
 		
 		// Evaluate the options
@@ -411,7 +412,7 @@ class GameOptionManagerTest
 		// Now the player's round score is 1000
 		assertEquals(1000, p.score().getRoundScore());
 		// Also previouslySelectedMultipleValue is 1
-		assertEquals(1, gameOptionManager.getPreviouslySelectedMultipleValue());
+                assertEquals(1, gameCoordinator.getRuleManager().getPreviouslySelectedMultipleValue());
 		
 		// Suppose the next roll yields 1,1 => so we set that in the dice
 		map.clear();

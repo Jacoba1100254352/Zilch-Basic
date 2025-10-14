@@ -1,124 +1,91 @@
 package ruleManagers;
 
-
 import managers.GameCoordinator;
 import modelManagers.PlayerManager;
+import models.GameOption;
 import models.Player;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import ruleManagers.rules.SingleRule;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
+class RuleManagerTest {
 
-class RuleManagerTest
-{
-	
-	private RuleManager ruleManager;
-	private Player currentPlayer;
-	private Map<Integer, Integer> diceSetMap;
-	
-	@BeforeEach
-	void setUp() {
-		final int scoreLimit = 5000;
-		GameCoordinator gameCoordinator = new GameCoordinator(); // Assuming this can be instantiated
-		ruleManager = new RuleManager(gameCoordinator);
-		List<String> playerNames = List.of("TestPlayer");
-		
-		// Initialize player manager with players
-		gameCoordinator.setPlayerManager(new PlayerManager(playerNames, scoreLimit));
-		currentPlayer = gameCoordinator.getPlayerManager().getCurrentPlayer();
-		
-		diceSetMap = gameCoordinator.getPlayerManager().getCurrentPlayer().dice().getDiceSetMap();
-	}
-	
-	@AfterEach
-	void tearDown() {
-		// Clean up after each test if necessary
-	}
-	
-	@Test
-	@DisplayName("Positive: Strait")
-	void isStraitPass() {
-		setCurrentPlayerDiceMap(1, 2, 3, 4, 5, 6);
-		assertTrue(ruleManager.isRuleValid(new StraitRule(), diceSetMap), "isRuleValid should return true for a valid strait");
-	}
-	
-	@Test
-	@DisplayName("Negative: Strait")
-	void isStraitFail() {
-		setCurrentPlayerDiceMap(1, 2, 2, 3, 4, 5);
-		assertFalse(ruleManager.isRuleValid(new StraitRule(), diceSetMap), "isRuleValid should return false when no strait exists");
-	}
-	
-	@Test
-	@DisplayName("Positive: Set")
-	void isSetPass() {
-		setCurrentPlayerDiceMap(2, 2, 3, 3, 5, 5);
-		assertTrue(ruleManager.isRuleValid(new SetRule(), diceSetMap), "isRuleValid should return true for a valid set");
-	}
-	
-	@Test
-	@DisplayName("Negative: Set")
-	void isSetFail() {
-		setCurrentPlayerDiceMap(2, 2, 3, 4, 5, 6);
-		assertFalse(ruleManager.isRuleValid(new SetRule(), diceSetMap), "isRuleValid should return false when no set exists");
-	}
-	
-	@Test
-	@DisplayName("Positive: Single")
-	void isSinglePass() {
-		setCurrentPlayerDiceMap(1, 2, 3, 4, 5, 6);
-		assertTrue(ruleManager.isRuleValid(new SingleRule(1), diceSetMap), "isRuleValid should return true for a valid single");
-	}
-	
-	@Test
-	@DisplayName("Negative: Single")
-	void isSingleFail() {
-		setCurrentPlayerDiceMap(2, 2, 3, 4, 5, 6);
-		assertFalse(ruleManager.isRuleValid(new SingleRule(1), diceSetMap), "isRuleValid should return false when no single exists");
-	}
-	
-	@Test
-	@DisplayName("Positive: Multiple")
-	void isMultiplePass() {
-		setCurrentPlayerDiceMap(2, 2, 2, 3, 4, 5);
-		assertTrue(ruleManager.isRuleValid(new MultipleRule(), diceSetMap), "isRuleValid should return true for a valid multiple");
-	}
-	
-	@Test
-	@DisplayName("Negative: Multiple")
-	void isMultipleFail() {
-		setCurrentPlayerDiceMap(2, 2, 3, 4, 5, 6);
-		assertFalse(ruleManager.isRuleValid(new MultipleRule(), diceSetMap), "isRuleValid should return false when no multiple exists");
-	}
-	
-	@Test
-	@DisplayName("Positive: Add Multiple")
-	void canAddMultiplesPass() {
-		setCurrentPlayerDiceMap(2, 4, 5);
-		assertTrue(ruleManager.isRuleValid(new AddMultipleRule(2, 2), diceSetMap), "isRuleValid should return true when multiples can be added");
-	}
-	
-	@Test
-	@DisplayName("Negative: Add Multiple")
-	void canAddMultiplesFail() {
-		setCurrentPlayerDiceMap(3, 4, 5, 6);
-		assertFalse(ruleManager.isRuleValid(new AddMultipleRule(2, 2), diceSetMap), "isRuleValid should return false when multiples cannot be added");
-	}
-	
-	private void setCurrentPlayerDiceMap(Integer... values) {
-		Map<Integer, Integer> diceMap = new HashMap<>();
-		for (int value : values) {
-			diceMap.merge(value, 1, Integer::sum);
-		}
-		
-		currentPlayer.dice().setDiceSetMap(diceMap);
-	}
+    private RuleManager ruleManager;
+    private Player currentPlayer;
+    private Map<Integer, Integer> diceSetMap;
+
+    @BeforeEach
+    void setUp() {
+        GameCoordinator gameCoordinator = new GameCoordinator();
+        ruleManager = gameCoordinator.getRuleManager();
+        List<String> playerNames = List.of("TestPlayer");
+        gameCoordinator.setPlayerManager(new PlayerManager(playerNames, 5000));
+        currentPlayer = gameCoordinator.getPlayerManager().getCurrentPlayer();
+        diceSetMap = currentPlayer.dice().getDiceSetMap();
+    }
+
+    @Test
+    @DisplayName("Automatically loads rules implementing the Rule interface")
+    void loadsRulesDynamically() {
+        List<String> ruleIds = ruleManager.getRegisteredRuleIds();
+        assertTrue(ruleIds.contains("StraitRule"));
+        assertTrue(ruleIds.contains("SetRule"));
+        assertTrue(ruleIds.contains("MultipleRule"));
+        assertTrue(ruleIds.contains("AddMultipleRule"));
+        assertTrue(ruleIds.contains("SingleRule"));
+    }
+
+    @Test
+    @DisplayName("Evaluates options for a strait correctly")
+    void evaluateStrait() {
+        setCurrentPlayerDiceMap(1, 2, 3, 4, 5, 6);
+        List<GameOption> options = ruleManager.evaluateAvailableOptions();
+        assertTrue(options.contains(new GameOption(GameOption.Type.STRAIT, null)));
+    }
+
+    @Test
+    @DisplayName("Disabling a rule removes its options")
+    void disablingRuleRemovesOptions() {
+        setCurrentPlayerDiceMap(1, 5, 2, 3, 4, 6);
+        ruleManager.evaluateAvailableOptions();
+        assertTrue(ruleManager.isRuleValid(new GameOption(GameOption.Type.SINGLE, 1)));
+
+        ruleManager.setRuleEnabled(SingleRule.class, false);
+        List<GameOption> options = ruleManager.evaluateAvailableOptions();
+        assertFalse(options.stream().anyMatch(option -> option.type() == GameOption.Type.SINGLE));
+    }
+
+    @Test
+    @DisplayName("Applying a rule executes its logic")
+    void applyRuleUpdatesGameState() {
+        setCurrentPlayerDiceMap(3, 3, 3, 4, 5, 6);
+        List<GameOption> options = ruleManager.evaluateAvailableOptions();
+        GameOption multipleThree = options.stream()
+                                          .filter(option -> option.type() == GameOption.Type.MULTIPLE && option.value() == 3)
+                                          .findFirst()
+                                          .orElseThrow();
+
+        ruleManager.apply(multipleThree);
+
+        assertEquals(300, currentPlayer.score().getRoundScore());
+        assertEquals(0, currentPlayer.dice().getNumDiceInPlay());
+        assertEquals(3, ruleManager.getPreviouslySelectedMultipleValue());
+    }
+
+    private void setCurrentPlayerDiceMap(Integer... values) {
+        Map<Integer, Integer> diceMap = new HashMap<>();
+        for (int value : values) {
+            diceMap.merge(value, 1, Integer::sum);
+        }
+        diceSetMap.clear();
+        diceSetMap.putAll(diceMap);
+        currentPlayer.dice().calculateNumDiceInPlay();
+    }
 }

@@ -32,7 +32,7 @@ public class GameStateManager
 		reroll = true;
 		continueTurn = true; // Set to false when desiring to continue to the next player
 		
-		gameCoordinator.getGameOptionManager().setSelectedGameOption(null); // Reset the current game option
+                gameCoordinator.getGameOptionManager().setSelectedGameOption(null); // Reset the current game option
 		
 		// Initialize Score
 		gameCoordinator.getPlayerManager().getCurrentPlayer().score().setScoreFromMultiples(0);
@@ -41,8 +41,8 @@ public class GameStateManager
 		// Initialize Dice
 		gameCoordinator.getPlayerManager().replenishAllDice();
 		
-		// Reevaluate game options
-		gameCoordinator.getGameOptionManager().setPreviouslySelectedMultipleValue(null);
+                // Reevaluate game options
+                gameCoordinator.getRuleManager().clearPreviouslySelectedMultipleValue();
 	}
 	
 	public void handleFirstRollBust() {
