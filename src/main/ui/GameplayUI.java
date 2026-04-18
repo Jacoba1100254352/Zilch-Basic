@@ -86,11 +86,10 @@ public class GameplayUI
 	/**
 	 * Displays information about the current high score in the game.
 	 *
-	 * @param currentPlayer            The player currently playing.
-	 * @param highestScoringPlayerName The name of the player with the highest score.
+	 * @param currentPlayer The player currently playing.
 	 */
-	public void displayHighScoreInfo(Player currentPlayer, String highestScoringPlayerName) {
-		System.out.print(generateHighScoreMessage(currentPlayer, highestScoringPlayerName));
+	public void displayHighScoreInfo(Player currentPlayer) {
+		System.out.print(generateHighScoreMessage(currentPlayer));
 	}
 	
 	/**
@@ -183,27 +182,23 @@ public class GameplayUI
 	}
 	
 	// Generates a message about the current high score in the game.
-	private String generateHighScoreMessage(Player currentPlayer, String highestScoringPlayerName) {
+	private String generateHighScoreMessage(Player currentPlayer) {
 		StringBuilder message = new StringBuilder();
 		Score score = currentPlayer.score();
+		Player highestScoringPlayer = gameCoordinator.getPlayerManager().findHighestScoringPlayer();
+		int highestScore = highestScoringPlayer.score().getPermanentScore();
+		int currentPotentialTotal = score.getPermanentScore() + score.getRoundScore();
 		
-		// Compare player's permanent score with score limit.
-		if (score.getPermanentScore() < score.getScoreLimit()) {
-			message.append(currentPlayer.name()).append("'s current round score: ").append(score.getRoundScore());
-		}
-		// Message for players trailing the highest scorer.
-		else if (!highestScoringPlayerName.equals(currentPlayer.name()) && score.getPermanentScore() > score.getRoundScore()) {
-			message.append("\n\nYour current score of ").append(score.getRoundScore())
-			       .append(" is ").append(score.getPermanentScore() - score.getRoundScore())
-			       .append(" less than ").append(highestScoringPlayerName)
-			       .append("'s High Score of ").append(score.getPermanentScore())
+		if (currentPotentialTotal < highestScore) {
+			message.append("\n\nYour current score of ").append(currentPotentialTotal)
+			       .append(" is ").append(highestScore - currentPotentialTotal)
+			       .append(" less than ").append(highestScoringPlayer.name())
+			       .append("'s High Score of ").append(highestScore)
 			       .append(". Keep going! :)");
 		}
-		// Message for players currently tied with the highest scorer.
-		else if (!highestScoringPlayerName.equals(currentPlayer.name())) {
+		else if (!highestScoringPlayer.name().equals(currentPlayer.name()) && currentPotentialTotal == highestScore) {
 			message.append("You are currently tied with the highest scoring player!");
 		}
-		// Message for the highest scoring player.
 		else {
 			message.append("You are currently the highest scoring player.");
 		}

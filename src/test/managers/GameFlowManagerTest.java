@@ -11,6 +11,7 @@ import ui.ConsoleUserInputHandler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -160,5 +161,20 @@ class GameFlowManagerTest
 		
 		// Check if the round score remains unchanged (as we're not processing any score changes)
 		assertEquals(800, player.score().getRoundScore(), "Round score should remain unchanged after reroll");
+	}
+	
+	@Test
+	@DisplayName("Hot Dice Preserve Multiple Chain")
+	void hotDicePreserveMultipleChain() throws Exception {
+		player.dice().setNumDiceInPlay(0);
+		player.score().setScoreFromMultiples(300);
+		gameCoordinator.getGameOptionManager().setPreviouslySelectedMultipleValue(3);
+		
+		Method handleDiceRoll = GameFlowManager.class.getDeclaredMethod("handleDiceRoll", Player.class);
+		handleDiceRoll.setAccessible(true);
+		handleDiceRoll.invoke(gameFlowManager, player);
+		
+		assertEquals(300, player.score().getScoreFromMultiples(), "Hot dice should not reset the multiple chain");
+		assertEquals(3, gameCoordinator.getGameOptionManager().getPreviouslySelectedMultipleValue(), "Hot dice should preserve the previously selected multiple");
 	}
 }

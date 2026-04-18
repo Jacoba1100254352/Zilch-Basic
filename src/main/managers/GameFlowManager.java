@@ -32,8 +32,8 @@ public class GameFlowManager
 	public void playTurn(Player player, String gameEndingPlayerName) {
 		do {
 			// Handle end-game scenario display
-			if (gameEndingPlayerName != null) { // NOTE: This might be unreachable
-				gameCoordinator.getGameplayUI().displayHighScoreInfo(player, gameEndingPlayerName);
+			if (gameEndingPlayerName != null) {
+				gameCoordinator.getGameplayUI().displayHighScoreInfo(player);
 			}
 			
 			// Handle dice rolling logic
@@ -108,11 +108,9 @@ public class GameFlowManager
 	
 	// Handles the dice rolling logic during a player's turn.
 	private void handleDiceRoll(Player player) {
-		// Reset the number of dice to 6 if all had been used in previous rolls
+		// Hot dice keep the same turn alive, including any multiple chain.
 		if (player.dice().getNumDiceInPlay() == 0) {
 			player.dice().setNumDiceInPlay(FULL_SET_OF_DICE);
-			gameCoordinator.getPlayerManager().getCurrentPlayer().score().setScoreFromMultiples(0);
-			gameCoordinator.getGameOptionManager().setPreviouslySelectedMultipleValue(null);
 		}
 		
 		// Roll dice and update game state

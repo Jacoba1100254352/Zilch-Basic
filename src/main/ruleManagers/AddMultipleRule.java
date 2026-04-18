@@ -25,11 +25,10 @@ public class AddMultipleRule implements Rule
 	
 	@Override
 	public boolean isValid(Map<Integer, Integer> diceSetMap) {
-		int numDiceInPlay = diceSetMap.values().stream().mapToInt(Integer::intValue).sum();// .stream().reduce(0, Integer::sum);
 		if (value == null && previouslySelectedMultipleValue == null) {
 			return false;
 		} else if (value != null) {
-			return value.equals(previouslySelectedMultipleValue) && numDiceInPlay <= 3 && diceSetMap.getOrDefault(value, 0) > 0;
+			return value.equals(previouslySelectedMultipleValue) && diceSetMap.getOrDefault(value, 0) > 0;
 		} else {
 			return diceSetMap.getOrDefault(previouslySelectedMultipleValue, 0) > 0;
 		}

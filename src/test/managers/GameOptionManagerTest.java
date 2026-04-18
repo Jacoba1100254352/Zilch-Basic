@@ -442,4 +442,29 @@ class GameOptionManagerTest
 		// The difference from the old 1000 is +3000, so final roundScore = 4000
 		assertEquals(4000, p.score().getRoundScore(), "AddMultiple(1) with 2 more 1's should yield 4000 total");
 	}
+	
+	@Test
+	void testEvaluateGameOptions_AddMultipleAfterHotDice() {
+		Player p = playerManager.getCurrentPlayer();
+		Map<Integer, Integer> map = p.dice().getDiceSetMap();
+		
+		p.score().setScoreFromMultiples(300);
+		p.score().setRoundScore(300);
+		gameOptionManager.setPreviouslySelectedMultipleValue(3);
+		
+		map.clear();
+		map.put(1, 1);
+		map.put(2, 1);
+		map.put(3, 1);
+		map.put(4, 1);
+		map.put(5, 1);
+		map.put(6, 1);
+		p.dice().calculateNumDiceInPlay();
+		
+		gameOptionManager.evaluateGameOptions();
+		
+		boolean hasAddMultiple3 = gameOptionManager.getGameOptions().stream()
+		                                           .anyMatch(option -> option.type() == GameOption.Type.ADD_MULTIPLE && option.value() == 3);
+		assertTrue(hasAddMultiple3, "A hot-dice reroll should still allow extending an earlier multiple in the same turn");
+	}
 }
