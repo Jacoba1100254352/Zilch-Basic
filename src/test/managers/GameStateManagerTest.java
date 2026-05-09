@@ -88,20 +88,43 @@ class GameStateManagerTest
 	@Test
 	@DisplayName("Positive: Set Continue Turn")
 	void setContinueTurnPass() {
-		currentPlayer.score().setRoundScore(1000); // Set the score to a value that allows turn to be ended
-		
-		gameStateManager.setReroll(true);
-		assertTrue(gameStateManager.getReroll(), "Continue turn should be true when set to true");
-		
-		gameStateManager.setReroll(false);
-		assertFalse(gameStateManager.getReroll(), "Continue turn should be false when set to false and round score is 1000 or more");
+		currentPlayer.score().setRoundScore(1000);
+		gameStateManager.setContinueTurn(false);
+		assertFalse(gameStateManager.getContinueTurn(), "Players who have reached the entry threshold should be allowed to end the turn");
 	}
 	
-/*	@Test
+	@Test
 	@DisplayName("Negative: Set Continue Turn, Insufficient Score")
 	void setContinueTurnFail() {
-		currentPlayer.score().setRoundScore(500); // Set the score below the threshold that allows turn to be ended
-		gameStateManager.setReroll(false);
-		assertTrue(gameStateManager.getReroll(), "Continue turn should remain true if round score is below 1000");
-	}*/
+		currentPlayer.score().setRoundScore(500);
+		gameStateManager.setContinueTurn(false);
+		assertTrue(gameStateManager.getContinueTurn(), "Players below the threshold should be forced to keep playing");
+	}
+	
+	@Test
+	@DisplayName("Can Roll Again Requires Points And A Prior Selection")
+		void canRollAgainRequiresPointsAndSelection() {
+			currentPlayer.score().setRoundScore(50);
+			assertFalse(gameStateManager.canRollAgain(), "Scoring alone should not unlock rerolls before a scoring option is selected");
+			
+			GameCoordinator coordinator = new GameCoordinator();
+			coordinator.setUserInputHandler(new FakeUserInputHandler(coordinator));
+			coordinator.setPlayerManager(new PlayerManager(List.of("TestPlayer"), 5000));
+		coordinator.getPlayerManager().getCurrentPlayer().score().setRoundScore(50);
+		coordinator.getGameOptionManager().setOptionSelectedForCurrentRoll(true);
+		assertTrue(coordinator.getGameStateManager().canRollAgain(), "Once a scoring option is selected, a positive round score should allow rerolling");
+	}
+	
+	@Test
+	@DisplayName("Can End Turn Checks Round Or Permanent Score")
+	void canEndTurnChecksRoundOrPermanentScore() {
+		assertFalse(gameStateManager.canEndTurn(), "Players should not be able to bank before reaching the threshold");
+		
+		currentPlayer.score().setRoundScore(1000);
+		assertTrue(gameStateManager.canEndTurn(), "A large enough round score should unlock banking");
+		
+		currentPlayer.score().setRoundScore(0);
+		currentPlayer.score().increasePermanentScore(1200);
+		assertTrue(gameStateManager.canEndTurn(), "Players already in the game should be able to bank smaller follow-up turns");
+	}
 }
