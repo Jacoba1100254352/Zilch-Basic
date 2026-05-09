@@ -95,8 +95,8 @@ public class ConsoleUserInputHandler implements UserInputHandler
 		// a 'scanner' field right here.
 		while (true) {
 			try {
-				// Retrieve current game options
-				List<GameOption> gameOptions = gameCoordinator
+					// Retrieve current game options
+					List<GameOption> gameOptions = gameCoordinator
 						.getGameOptionManager()
 						.getGameOptions();
 				boolean canRollAgain = gameCoordinator.getGameStateManager().canRollAgain();
