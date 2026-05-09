@@ -99,6 +99,10 @@ public class ConsoleUserInputHandler implements UserInputHandler
 				List<GameOption> gameOptions = gameCoordinator
 						.getGameOptionManager()
 						.getGameOptions();
+				boolean canRollAgain = gameCoordinator.getGameStateManager().canRollAgain();
+				boolean canEndTurn = gameCoordinator.getGameStateManager().canEndTurn();
+				int rollAgainChoice = gameOptions.size() + 1;
+				int endTurnChoice = gameOptions.size() + (canRollAgain ? 2 : 1);
 				
 				// Display them
 				gameCoordinator.getGameplayUI().displayGameOptions(gameOptions);
@@ -119,18 +123,17 @@ public class ConsoleUserInputHandler implements UserInputHandler
 					// Clear after user entry
 					gameCoordinator.getGameplayUI().clear();
 					break; // done
-				} else if (choice == gameOptions.size() + 1
-						&& gameCoordinator.getGameOptionManager().isOptionSelectedForCurrentRoll()) {
-					// "Roll again"
-					gameCoordinator.getGameStateManager().setReroll(true);
+					} else if (canRollAgain && choice == rollAgainChoice) {
+						// "Roll again"
+						gameCoordinator.getGameStateManager().setReroll(true);
 					
 					// Clear after user entry
 					gameCoordinator.getGameplayUI().clear();
 					break; // done
-				} else if (choice == gameOptions.size() + 2) {
-					// "End turn"
-					gameCoordinator.getGameStateManager().setReroll(false);
-					gameCoordinator.getGameStateManager().setContinueTurn(false);
+					} else if (canEndTurn && choice == endTurnChoice) {
+						// "End turn"
+						gameCoordinator.getGameStateManager().setReroll(false);
+						gameCoordinator.getGameStateManager().setContinueTurn(false);
 					
 					// Update player's permanent score at the end of their turn
 					updatePermanentScore();

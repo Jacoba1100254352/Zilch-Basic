@@ -2,6 +2,7 @@ package managers;
 
 
 import models.Player;
+import models.Score;
 import ui.GameplayUI;
 
 
@@ -73,6 +74,16 @@ public class GameStateManager
 		continueTurn = false;
 	}
 	
+	public boolean canRollAgain() {
+		Score score = gameCoordinator.getPlayerManager().getCurrentPlayer().score();
+		return score.getRoundScore() > 0 && gameCoordinator.getGameOptionManager().isOptionSelectedForCurrentRoll();
+	}
+	
+	public boolean canEndTurn() {
+		Score score = gameCoordinator.getPlayerManager().getCurrentPlayer().score();
+		return score.getPermanentScore() >= 1000 || score.getRoundScore() >= 1000;
+	}
+	
 	
 	///   Getters and Setters   ///
 	
@@ -97,12 +108,9 @@ public class GameStateManager
 	}
 	
 	public void setContinueTurn(boolean continueTurn) {
-		int permanentScore = gameCoordinator.getPlayerManager().getCurrentPlayer().score().getPermanentScore();
-		int roundScore = gameCoordinator.getPlayerManager().getCurrentPlayer().score().getRoundScore();
-		
 		if (this.isBust) {
 			this.continueTurn = false;
-		} else if (permanentScore + roundScore >= 1000) {
+		} else if (canEndTurn()) {
 			this.continueTurn = continueTurn;
 		} else {
 			this.continueTurn = true;

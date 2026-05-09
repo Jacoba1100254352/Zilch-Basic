@@ -43,9 +43,6 @@ public class GameplayUI
 	 * @param gameOptions The list of game options currently available.
 	 */
 	public void displayGameOptions(List<GameOption> gameOptions) {
-		// Create local score variable
-		Score score = gameCoordinator.getPlayerManager().getCurrentPlayer().score();
-		
 		///   Display Game Options   ///
 		System.out.println("\nAvailable Options:");
 		int optionNumber = 1;
@@ -64,11 +61,11 @@ public class GameplayUI
 		}
 		
 		// Option to roll again if a score has been made and an option selected in the current roll.
-		if (score.getRoundScore() > 0 && gameCoordinator.getGameOptionManager().isOptionSelectedForCurrentRoll()) {
+		if (gameCoordinator.getGameStateManager().canRollAgain()) {
 			System.out.printf("%d. Roll again\n", optionNumber++);
 		}
 		// Option to end turn if the score exceeds 1000.
-		if (score.getPermanentScore() >= 1000 || score.getRoundScore() >= 1000) {
+		if (gameCoordinator.getGameStateManager().canEndTurn()) {
 			System.out.printf("%d. End Turn\n", optionNumber);
 		}
 	}
