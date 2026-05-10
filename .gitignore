@@ -1,5 +1,6 @@
 ### IntelliJ IDEA ###
 .idea
+*.iml
 out/
 .run/main-classes/
 .run/test-classes/

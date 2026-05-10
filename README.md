@@ -29,6 +29,19 @@ To run tests:
 ./gradlew test
 ```
 
+## IntelliJ Setup
+
+Open the folder as a Gradle project and reload Gradle after checkout. Do not
+copy the `gradle/` wrapper folder into `lib/`; `gradle/` is build tooling, while
+dependencies are resolved from `build.gradle`.
+
+Expected directory markings:
+
+- `src/main`: Sources Root
+- `src/test`: Test Sources Root
+- `build`, `out`, `.gradle`: Excluded
+- `lib`: regular folder for legacy local jars, not a Resources Root
+
 ## Architecture Map
 
 The diagram below shows how the main classes connect at runtime.

@@ -27,6 +27,7 @@ dependencies {
 
 application {
 	mainClass = "client.ZilchClient"
+	applicationName = "zilch-basic"
 }
 
 sourceSets {
