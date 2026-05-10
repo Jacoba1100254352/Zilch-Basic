@@ -2,64 +2,75 @@ package rules.managers;
 
 
 import model.entities.GameOption;
-import model.entities.Player;
-import rules.constant.IConstantRule;
-import rules.context.ScoreContext;
+import rules.context.RuleContext;
 import rules.variable.IRule;
-import rules.variable.IVariableRule;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 
+/**
+ * Facade over the rule registry that evaluates active rules for a turn and
+ * delegates option application back to the owning rule strategy.
+ */
 public class RuleManager implements IRuleManager
 {
 	private final IRuleRegistry ruleRegistry;
-	
+
+	/**
+	 * Creates the rule manager facade over the supplied registry.
+	 */
 	public RuleManager(IRuleRegistry ruleRegistry) {
 		this.ruleRegistry = ruleRegistry;
 	}
-	
+
 	@Override
+	/**
+	 * Activates the selected rules for the current game instance.
+	 */
 	public void initializeRules(Map<RuleType, Object> config) {
 		ruleRegistry.configureRules(config);
 	}
-	
+
 	@Override
-	public List<GameOption> evaluateRules(Map<Integer, Integer> diceSetMap, Integer value) {
+	/**
+	 * Evaluates the current roll against every active rule and returns the
+	 * combined list of scoring options.
+	 */
+	public List<GameOption> evaluateRules(RuleContext context) {
 		List<GameOption> gameOptions = new ArrayList<>();
-		
-		for (RuleType ruleType : RuleType.values()) {
-			IRule rule = ruleRegistry.getRule(ruleType);
-			if (rule instanceof IVariableRule variableRule) {
-				if (variableRule.isValid(new rules.context.RuleContext(diceSetMap, value))) {
-					gameOptions.add(new GameOption(ruleType, value, rule.getDescription()));
-				}
-			}
-			
-			if (rule instanceof IConstantRule constantRule) {
-				if (constantRule.isValid(null, null)) {
-					gameOptions.add(new GameOption(ruleType, value, rule.getDescription()));
-				}
-			}
+		for (IRule rule : ruleRegistry.getActiveRules()) {
+			gameOptions.addAll(rule.evaluate(context));
 		}
 		return gameOptions;
 	}
-	
+
 	@Override
+	/**
+	 * Returns the discovered rule associated with the supplied id.
+	 */
 	public IRule getRule(RuleType ruleType) {
 		return ruleRegistry.getRule(ruleType);
 	}
-	
+
 	@Override
-	public void applyRule(Player player, GameOption option) {
+	/**
+	 * Applies the selected option by delegating to the rule that created it.
+	 */
+	public void applyRule(RuleContext context, GameOption option) {
 		IRule rule = getRule(option.type());
-		if (rule instanceof IVariableRule variableRule) {
-			Integer count = player.dice().getDiceSetMap().get(option.value());
-			variableRule.score(new ScoreContext(player.score(), option.value(), count));
-		} else if (rule instanceof IConstantRule constantRule) {
-			constantRule.applyAction();
+		if (rule == null) {
+			throw new IllegalArgumentException("No rule found for option type " + option.type());
 		}
+		rule.apply(context, option);
+	}
+
+	@Override
+	/**
+	 * Returns all rules discovered by the underlying registry.
+	 */
+	public List<IRule> getAvailableRules() {
+		return ruleRegistry.getAvailableRules();
 	}
 }

@@ -1,64 +1,41 @@
 package rules.variable;
 
 
+import model.entities.GameOption;
 import rules.context.RuleContext;
-import rules.context.ScoreContext;
 import rules.managers.RuleType;
 
-import java.util.HashMap;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 
 public class SingleRule extends AbstractVariableRule
 {
-	private Set<Integer> acceptedValues;
-	
+	private Set<Integer> acceptedValues = Set.of(1, 5);
+
+	public SingleRule() {
+		super(RuleType.SINGLE, "Single", "Score a single scoring die.");
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void setConfigValue(Object value) {
-		this.acceptedValues = (Set<Integer>) value;
+		this.acceptedValues = Set.copyOf((Set<Integer>) value);
 	}
-	
+
 	@Override
-	public void configure(Map<RuleType, Object> config) {
-		if (!config.containsKey(this.ruleType)) {
-			config.put(this.ruleType, getDefaultConfig().get(this.ruleType));
-		}
-		@SuppressWarnings("unchecked")
-		Set<Integer> values = (Set<Integer>) config.get(this.ruleType);
-		this.acceptedValues = values;
+	public Object getDefaultConfig() {
+		return Set.of(1, 5);
 	}
-	
+
 	@Override
-	public String getDescription() {
-		return "Single Rule";
-	}
-	
-	@Override
-	public boolean isValid(RuleContext validationContext) {
-		if (validationContext.value() == null) {
-			throw new IllegalArgumentException("Value cannot be null");
-		}
-		
-		return this.acceptedValues.contains(validationContext.value()) &&
-				validationContext.diceSetMap().getOrDefault(validationContext.value(), 0) > 0;
-	}
-	
-	@Override
-	public Map<RuleType, Object> getDefaultConfig() {
-		Map<RuleType, Object> defaultConfig = new HashMap<>();
-		defaultConfig.put(this.ruleType, Set.of(1, 5));
-		return defaultConfig;
-	}
-	
-	@Override
-	public void score(ScoreContext scoreContext) {
-		if (scoreContext.dieValue() == null) {
-			throw new IllegalArgumentException("Value cannot be null");
-		}
-		
-		int singleScore = (scoreContext.dieValue() == 1) ? 100 : 50;
-		scoreContext.score().increaseRoundScore(singleScore);
+	public List<GameOption> evaluate(RuleContext context) {
+		return acceptedValues.stream()
+		                     .filter(value -> context.diceSetMap().getOrDefault(value, 0) > 0)
+		                     .sorted(Comparator.naturalOrder())
+		                     .map(value -> buildOption(value, value == 1 ? 100 : 50, Map.of(value, 1)))
+		                     .toList();
 	}
 }

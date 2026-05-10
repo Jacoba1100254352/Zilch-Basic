@@ -5,86 +5,121 @@ import model.entities.Dice;
 import model.entities.GameOption;
 import model.entities.Player;
 import model.entities.Score;
-import model.managers.GameOptionManager;
 import rules.managers.RuleRegistry;
 import rules.managers.RuleType;
+import rules.variable.IRule;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+
 /**
- * Manages user interactions during the game, handling inputs for player details and game decisions,
- * and delegating display responsibilities to ConsoleMessage.
+ * Coordinates setup and gameplay input while delegating all actual rendering
+ * to the configured message UI implementation.
  */
 public class UserInteractionManager implements IMessage, IUserInteraction
 {
 	private final IMessage gameplayUI;
 	private final IInputManager inputManager;
-	
+
+	/**
+	 * Creates a user interaction manager with the default console UI and input
+	 * implementations.
+	 */
 	@SuppressWarnings("unused")
 	public UserInteractionManager() throws IOException {
 		this(new ConsoleMessage(), new ConsoleInputManager());
 	}
-	
+
+	/**
+	 * Creates a user interaction manager that delegates rendering and input to
+	 * the supplied collaborators.
+	 */
 	public UserInteractionManager(IMessage gameplayUI, IInputManager inputManager) {
 		this.gameplayUI = gameplayUI;
 		this.inputManager = inputManager;
 	}
-	
+
+	/**
+	 * Runs the initial setup prompts needed before the game is created.
+	 */
 	public void runGameSetup() {
 		gameplayUI.displayWelcomeMessage();
 		int numPlayers = getNumberOfPlayers();
-		List<String> playerNames = getPlayerNames(numPlayers);
-		// Additional setup steps can be added here if needed
+		getPlayerNames(numPlayers);
 	}
-	
+
+	/**
+	 * Shared yes/no prompt helper used during setup and turn decisions.
+	 */
 	private boolean readYesNo(String message) {
 		gameplayUI.displayMessage(message);
-		String input = inputManager.getInputString().toLowerCase();
-		while (!input.equals("yes") && !input.equals("no")) {
-			gameplayUI.displayMessage("Invalid input. Please enter 'yes' or 'no': ");
-			input = inputManager.getInputString().toLowerCase();
+		String input = inputManager.getInputString().trim().toLowerCase();
+		while (!input.equals("yes") && !input.equals("no") && !input.equals("y") && !input.equals("n")) {
+			gameplayUI.displayMessage("Invalid input. Please enter 'yes' or 'no' [y/n]: ");
+			input = inputManager.getInputString().trim().toLowerCase();
 		}
-		return input.equals("yes");
+		return input.equals("yes") || input.equals("y");
 	}
-	
+
+	/**
+	 * Presents the discovered selectable rules and returns the subset enabled by
+	 * the user along with each rule's default configuration.
+	 */
 	@Override
 	public Map<RuleType, Object> selectRules() {
 		RuleRegistry ruleRegistry = new RuleRegistry();
-		Map<RuleType, Object> defaultConfig = ruleRegistry.getDefaultConfig();
-		Map<RuleType, Object> selectedConfig = new EnumMap<>(RuleType.class);
-		
-		System.out.println("Please select the rules you want to enable (yes/no):");
-		
+		List<IRule> selectableRules = ruleRegistry.getAvailableRules()
+		                                          .stream()
+		                                          .filter(IRule::isSelectableAtSetup)
+		                                          .toList();
+		Map<RuleType, Object> selectedConfig = new LinkedHashMap<>();
+
 		gameplayUI.displayRulesMenu();
-		
-		// Iterate over the default configuration to display options
-		for (Map.Entry<RuleType, Object> entry : defaultConfig.entrySet()) {
-			RuleType ruleType = entry.getKey();
-			boolean isEnabled = readYesNo("Enable " + ruleType.toString() + "? ");
-			if (isEnabled) {
-				selectedConfig.put(ruleType, entry.getValue());
+
+		while (selectedConfig.isEmpty()) {
+			selectedConfig.clear();
+
+			for (IRule rule : selectableRules) {
+				boolean isEnabled = readYesNo(
+						"Enable " + rule.getDisplayName() + " (" + rule.getDescription() + ")? "
+				);
+				if (isEnabled) {
+					selectedConfig.put(rule.getRuleType(), rule.getDefaultConfig());
+				}
+			}
+
+			if (selectedConfig.isEmpty()) {
+				gameplayUI.displayMessage(
+						"At least one scoring rule must be enabled. Please choose again.\n"
+				);
 			}
 		}
-		
+
 		return selectedConfig;
 	}
-	
+
+	/**
+	 * Prompts for the player count and enforces the supported range.
+	 */
 	@Override
 	public int getNumberOfPlayers() {
 		gameplayUI.displayMessage("Enter the number of players (1-6): ");
 		int numPlayers = inputManager.getInputInt();
-		// Validate the number of players
+		// Validate the number of players.
 		while (numPlayers < 1 || numPlayers > 6) {
 			gameplayUI.displayMessage("Invalid number. Please enter a number between 1 and 6: ");
 			numPlayers = inputManager.getInputInt();
 		}
 		return numPlayers;
 	}
-	
+
+	/**
+	 * Collects each player's display name in turn order.
+	 */
 	@Override
 	public List<String> getPlayerNames(int numPlayers) {
 		List<String> names = new ArrayList<>();
@@ -94,17 +129,20 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		}
 		return names;
 	}
-	
+
+	/**
+	 * Prompts for the score limit and keeps asking until a valid minimum is met.
+	 */
 	@Override
 	public int getValidScoreLimit() {
-		final int MIN_SCORE_LIMIT = 1000; // This is a hardcoded minimum score limit (No configuration)
+		final int minScoreLimit = 1000; // Hardcoded minimum score limit.
 		int limit;
-		
+
 		while (true) {
 			try {
-				displayMessage("\nEnter the score limit (minimum " + MIN_SCORE_LIMIT + "): ");
+				displayMessage("\nEnter the score limit (minimum " + minScoreLimit + "): ");
 				limit = inputManager.getInputInt();
-				if (limit < MIN_SCORE_LIMIT) {
+				if (limit < minScoreLimit) {
 					displayMessage("Invalid score limit. Score limit must be at least 1000. Please try again.");
 				} else {
 					break;
@@ -117,95 +155,142 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		}
 		return limit;
 	}
-	
+
+	/**
+	 * Lets the user choose one of the rule-generated options for the current roll.
+	 */
 	@Override
-	public Integer getOptionValue() {
-		System.out.print("Enter a die value to use for scoring: ");
-		return inputManager.getInputInt();
-	}
-	
-	public void handleGameOptions(Player currentPlayer, GameOptionManager gameOptionManager) {
+	public GameOption chooseGameOption(Player currentPlayer, List<GameOption> gameOptions) {
 		Score score = currentPlayer.score();
-		List<GameOption> gameOptions = gameOptionManager.getGameOptions();
-		
 		// Display the list of scoring options.
 		gameplayUI.displayGameOptions(score, gameOptions);
 		// Prompt the user to choose one.
-		System.out.print("Select an option (enter the option number): ");
+		gameplayUI.displayMessage("Select an option (enter the option number): ");
 		int choice = inputManager.getInputInt();
-		
+
 		while (choice < 1 || choice > gameOptions.size()) {
-			System.out.print("Invalid choice. Please select a valid option: ");
+			gameplayUI.displayMessage("Invalid choice. Please select a valid option: ");
 			choice = inputManager.getInputInt();
 		}
-		
-		GameOption selectedOption = gameOptions.get(choice - 1);
-		gameOptionManager.setSelectedGameOption(selectedOption);
-		gameOptionManager.applyGameOption(currentPlayer, selectedOption);
+
+		return gameOptions.get(choice - 1);
 	}
-	
-	// Facade methods for the ConsoleMessage
+
+	/**
+	 * Asks whether the user wants to continue the turn or bank the current round
+	 * score. If the player has not opened yet, the turn must continue.
+	 */
+	@Override
+	public boolean shouldRollAgain(Player currentPlayer, boolean canBankPoints) {
+		if (!canBankPoints) {
+			gameplayUI.displayMessage(
+					currentPlayer.name() + " cannot bank points yet. You need 1000 points to open.\n"
+			);
+			return true;
+		}
+		return readYesNo("Roll again? Enter 'yes' to continue or 'no' to bank this turn: ");
+	}
+
+	/**
+	 * Facade method that forwards the welcome message to the underlying UI.
+	 */
 	@Override
 	public void displayWelcomeMessage() {
 		gameplayUI.displayWelcomeMessage();
 	}
-	
+
+	/**
+	 * Facade method that forwards option rendering to the underlying UI.
+	 */
 	@Override
 	public void displayGameOptions(Score score, List<GameOption> gameOptions) {
 		gameplayUI.displayGameOptions(score, gameOptions);
 	}
-	
+
+	/**
+	 * Facade method that forwards the current score display to the underlying UI.
+	 */
 	@Override
 	public void displayCurrentScore(String playerName, int roundScore) {
 		gameplayUI.displayCurrentScore(playerName, roundScore);
 	}
-	
+
+	/**
+	 * Facade method that forwards dice rendering to the underlying UI.
+	 */
 	@Override
 	public void displayDice(Dice dice) {
 		gameplayUI.displayDice(dice);
 	}
-	
+
+	/**
+	 * Facade method that forwards high-score messaging to the underlying UI.
+	 */
 	@Override
 	public void displayHighScoreInfo(Player currentPlayer, String highestScoringPlayerName) {
 		gameplayUI.displayHighScoreInfo(currentPlayer, highestScoringPlayerName);
 	}
-	
+
+	/**
+	 * Facade method that forwards plain text output to the underlying UI.
+	 */
 	@Override
 	public void displayMessage(String message) {
 		gameplayUI.displayMessage(message);
 	}
-	
+
+	/**
+	 * Facade method that shows a message and waits for acknowledgement.
+	 */
 	@Override
 	public void displayAndWait(String message) {
 		gameplayUI.displayMessage(message);
 		gameplayUI.pauseAndContinue(inputManager.waitForEnterKey());
 	}
-	
+
+	/**
+	 * Facade method that forwards the last-round message to the underlying UI.
+	 */
 	@Override
 	public void displayLastRoundMessage(Player gameEndingPlayer, Runnable waitFunction) {
 		gameplayUI.displayLastRoundMessage(gameEndingPlayer, waitFunction);
 	}
-	
+
+	/**
+	 * Facade method that forwards tie announcements to the underlying UI.
+	 */
 	@Override
 	public void announceTie(List<Player> tiedPlayers, int score) {
 		gameplayUI.announceTie(tiedPlayers, score);
 	}
-	
+
+	/**
+	 * Facade method that forwards winner announcements to the underlying UI.
+	 */
 	@Override
 	public void announceWinner(Player winner, int score) {
 		gameplayUI.announceWinner(winner, score);
 	}
-	
+
+	/**
+	 * Facade method that forwards the rules menu display to the underlying UI.
+	 */
 	@Override
 	public void displayRulesMenu() {
 		gameplayUI.displayRulesMenu();
 	}
-	
+
+	/**
+	 * Facade method that clears the underlying UI when supported.
+	 */
 	@Override
 	public void clear() {
 		gameplayUI.clear();
 	}
-	
+
+	/**
+	 * Facade method that pauses through the underlying UI implementation.
+	 */
 	@Override
 	public void pauseAndContinue(Runnable waitFunction) {
 		gameplayUI.pauseAndContinue(waitFunction);

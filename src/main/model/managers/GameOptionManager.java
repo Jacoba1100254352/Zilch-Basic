@@ -2,51 +2,74 @@ package model.managers;
 
 
 import model.entities.GameOption;
-import model.entities.Player;
+import rules.context.RuleContext;
 import rules.managers.IRuleManager;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
+/**
+ * Stores the currently available scoring options for a turn and remembers the
+ * option chosen by the player until it is applied.
+ */
 public class GameOptionManager
 {
 	private final IRuleManager ruleManager;
 	private final List<GameOption> gameOptions = new ArrayList<>();
-	private GameOption selectedGameOption = null;
-	
+	private GameOption selectedGameOption;
+
+	/**
+	 * Creates an option manager backed by the supplied rule manager.
+	 */
 	public GameOptionManager(IRuleManager ruleManager) {
 		this.ruleManager = ruleManager;
 	}
-	
+
+	/**
+	 * Returns whether a concrete option has been selected for application.
+	 */
 	public boolean isValid() {
-		return !this.gameOptions.isEmpty() && this.selectedGameOption != null;
+		return this.selectedGameOption != null;
 	}
-	
-	public void evaluateGameOptions(Map<Integer, Integer> diceSetMap, Integer value) {
+
+	/**
+	 * Rebuilds the turn's option list from the active rule set.
+	 */
+	public void evaluateGameOptions(RuleContext ruleContext) {
 		gameOptions.clear();
-		gameOptions.addAll(ruleManager.evaluateRules(diceSetMap, value));
+		gameOptions.addAll(ruleManager.evaluateRules(ruleContext));
 	}
-	
-	public void applyGameOption(Player player, GameOption gameOption) {
-		System.out.println("Applying game option: " + this.selectedGameOption.type());
-		
-		if (gameOption == null) {
-			ruleManager.applyRule(player, this.selectedGameOption);
-		} else {
-			ruleManager.applyRule(player, gameOption);
+
+	/**
+	 * Applies either the provided option or the previously selected option.
+	 */
+	public void applyGameOption(RuleContext ruleContext, GameOption gameOption) {
+		GameOption optionToApply = gameOption == null ? this.selectedGameOption : gameOption;
+		if (optionToApply == null) {
+			throw new IllegalStateException("No game option has been selected.");
 		}
+		this.selectedGameOption = optionToApply;
+		ruleManager.applyRule(ruleContext, optionToApply);
 	}
-	
+
+	/**
+	 * Returns a defensive copy of the current turn's generated options.
+	 */
 	public List<GameOption> getGameOptions() {
 		return new ArrayList<>(gameOptions);
 	}
-	
+
+	/**
+	 * Returns the option currently selected by the player, if any.
+	 */
 	public GameOption getSelectedGameOption() {
 		return selectedGameOption;
 	}
-	
+
+	/**
+	 * Stores the option selected by the player for later application.
+	 */
 	public void setSelectedGameOption(GameOption gameOption) {
 		this.selectedGameOption = gameOption;
 	}

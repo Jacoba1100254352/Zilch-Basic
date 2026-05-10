@@ -1,43 +1,42 @@
 package creators.patterns;
 
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import controllers.GameServer;
 import org.junit.jupiter.api.Test;
+import rules.managers.RuleType;
+import support.TestDoubles.RecordingMessage;
+import support.TestDoubles.ScriptedUserInteraction;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 class GameBuilderTest
 {
-	
-	@BeforeEach
-	void setUp() {
-	}
-	
-	@AfterEach
-	void tearDown() {
-	}
-	
 	@Test
-	void createGameServer() {
+	void buildThrowsWhenRequiredFieldsAreMissing() {
+		GameBuilder builder = new GameBuilder();
+
+		assertThrows(IllegalStateException.class, builder::build);
 	}
-	
+
 	@Test
-	void setPlayerNames() {
-	}
-	
-	@Test
-	void setUiManager() {
-	}
-	
-	@Test
-	void setGameID() {
-	}
-	
-	@Test
-	void setScoreLimit() {
-	}
-	
-	@Test
-	void build() {
+	void buildCreatesGameServerWhenRequiredFieldsArePresent() throws IOException {
+		RecordingMessage uiManager = new RecordingMessage();
+		ScriptedUserInteraction userInteraction = new ScriptedUserInteraction();
+
+		GameServer gameServer = new GameBuilder()
+				.setPlayerNames(List.of("Alice", "Bob"))
+				.setUiManager(uiManager)
+				.setUserInteraction(userInteraction)
+				.setSelectedRules(Map.of(RuleType.SINGLE, Set.of(1, 5)))
+				.build();
+
+		assertNotNull(gameServer);
 	}
 }

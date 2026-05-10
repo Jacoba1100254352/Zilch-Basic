@@ -1,23 +1,15 @@
 package controllers;
 
 
+import controllers.state.GamePhase;
+import controllers.state.TurnContext;
+
+import java.io.IOException;
+
+
 public interface IGameStateManager
 {
-	void initializeRollCycle();
-	
-	void handleFirstRollBust();
-	
-	void handleBust();
-	
-	boolean isBust();
-	
-	void setBust(boolean bust);
-	
-	boolean getReroll();
-	
-	void setReroll(boolean reroll);
-	
-	boolean getContinueTurn();
-	
-	void setContinueTurn(boolean continueTurn);
+	GamePhase getCurrentPhase();
+
+	void processTurn(TurnContext turnContext) throws IOException;
 }

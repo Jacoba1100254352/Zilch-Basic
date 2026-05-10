@@ -15,6 +15,10 @@ import ui.IUserInteraction;
 import java.io.IOException;
 
 
+/**
+ * Top-level game coordinator. It owns the game loop, the event dispatcher,
+ * and the final-round orchestration once a player crosses the score limit.
+ */
 public class GameServer
 {
 	private final GameEngine gameEngine;
@@ -22,7 +26,7 @@ public class GameServer
 	private final ActionManager actionManager;
 	private final IEventDispatcher eventDispatcher;
 	private final String gameID;
-	
+
 	public GameServer(
 			IEventDispatcher eventDispatcher,
 			ActionManager actionManager,
@@ -36,59 +40,70 @@ public class GameServer
 		this.actionManager = actionManager;
 		this.eventDispatcher = eventDispatcher;
 		this.gameID = gameID;
-		
-		// Initialize the game engine
+
 		GameOptionManager gameOptionManager = new GameOptionManager(ruleManager);
-		GameStateManager gameStateManager = new GameStateManager(gameOptionManager, uiManager, actionManager);
-		this.gameEngine = new GameEngine(eventDispatcher, gameStateManager, actionManager, gameOptionManager, userInteraction);
-		
-		// Add a GameOverListener to the event dispatcher
+		GameStateManager gameStateManager = new GameStateManager(
+				gameOptionManager,
+				uiManager,
+				actionManager,
+				userInteraction
+		);
+		this.gameEngine = new GameEngine(gameStateManager, actionManager);
+
 		GameOverListener gameOverListener = new GameOverListener(scoreLimit, this, actionManager, uiManager);
 		eventDispatcher.addListener(GameEventType.GAME_OVER, gameOverListener);
+		eventDispatcher.addListener(GameEventType.SCORE_UPDATED, gameOverListener);
 	}
-	
+
+	/**
+	 * Runs the main game loop until the final-round flow marks the game as over.
+	 */
 	public void playGame() throws IOException {
 		uiManager.displayWelcomeMessage();
-		System.out.println("Starting Game with ID: " + gameID);
-		
+		System.out.println("Starting game with ID: " + gameID);
+
 		while (!gameEngine.isGameOver()) {
-			try {
-				playTurn(actionManager.getCurrentPlayer());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			playTurn(actionManager.getCurrentPlayer());
 		}
+
 		concludeGame();
 		System.out.println("Game has ended.");
 	}
-	
+
+	/**
+	 * Plays a single turn, then broadcasts the resulting score update.
+	 */
 	private void playTurn(Player player) throws IOException {
-		uiManager.displayCurrentScore(player.name(), player.score().getRoundScore());
 		gameEngine.processGameTurn();
-		
-		// Dispatch a scoreUpdated event instead of directly checking for game over
+
 		Event scoreUpdatedEvent = new Event(GameEventType.SCORE_UPDATED);
 		scoreUpdatedEvent.setData(EventDataKey.PLAYER, player);
 		eventDispatcher.dispatchEvent(scoreUpdatedEvent);
-		
+
 		if (!gameEngine.isGameOver()) {
 			actionManager.switchToNextPlayer();
 		}
 	}
-	
+
+	/**
+	 * Grants one final turn to every player after the player who triggered the
+	 * score limit, preserving turn order.
+	 */
 	public void handleLastTurns() throws IOException {
-		Player initialPlayer = actionManager.getCurrentPlayer();
-		do {
+		Player gameEndingPlayer = actionManager.getCurrentPlayer();
+		actionManager.switchToNextPlayer();
+
+		while (actionManager.getCurrentPlayer() != gameEndingPlayer) {
 			playTurn(actionManager.getCurrentPlayer());
 			actionManager.switchToNextPlayer();
-		} while (actionManager.getCurrentPlayer() != initialPlayer);
-	}
-	
-	private void concludeGame() throws IOException {
-		Player winner = actionManager.getGameEndingPlayer();
-		if (winner == null) {
-			winner = actionManager.findHighestScoringPlayer();
 		}
+	}
+
+	/**
+	 * Dispatches the final game-over event once the winner is known.
+	 */
+	private void concludeGame() throws IOException {
+		Player winner = actionManager.findHighestScoringPlayer();
 		Event gameOverEvent = new Event(GameEventType.GAME_OVER);
 		gameOverEvent.setData(EventDataKey.WINNER, winner);
 		eventDispatcher.dispatchEvent(gameOverEvent);

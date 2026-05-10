@@ -1,65 +1,68 @@
 package rules.variable;
 
 
+import model.entities.GameOption;
 import rules.context.RuleContext;
-import rules.context.ScoreContext;
 import rules.managers.RuleType;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 
 public class AddMultipleRule extends AbstractVariableRule
 {
-	private final RuleType ruleType;
-	private Integer value;
-	
-	@SuppressWarnings("unused")
+	private Integer minimumAdditionalDice = 1;
+
 	public AddMultipleRule() {
-		this.ruleType = RuleType.ADD_MULTIPLE;
+		super(RuleType.ADD_MULTIPLE, "Add Multiple", "Extend a previously scored multiple in the same turn.");
 	}
-	
-	@Override
-	public String getDescription() {
-		return "Add Multiple Rule";
-	}
-	
-	@Override
-	public boolean isValid(RuleContext validationContext) {
-		if (validationContext.value() == null) {
-			throw new IllegalArgumentException("Value cannot be null.");
-		}
-		return validationContext.diceSetMap().getOrDefault(this.value, 0) >= validationContext.value();
-	}
-	
+
 	@Override
 	protected void setConfigValue(Object value) {
-		this.value = (Integer) value;
+		this.minimumAdditionalDice = (Integer) value;
 	}
-	
+
 	@Override
-	public Map<RuleType, Object> getDefaultConfig() {
-		Map<RuleType, Object> defaultConfig = new HashMap<>();
-		defaultConfig.put(ruleType, 3);
-		return defaultConfig;
+	public Object getDefaultConfig() {
+		return 1;
 	}
-	
+
 	@Override
-	public void score(ScoreContext scoreContext) {
-		int mScore = calculateMultipleScore(scoreContext.numGivenDice(), scoreContext.dieValue());
-		
-		if (scoreContext.score().getScoreFromMultiples() == 0) {
-			scoreContext.score().increaseRoundScore(mScore);
-		} else {
-			scoreContext.score().increaseRoundScore(mScore - scoreContext.score().getScoreFromMultiples());
+	public List<GameOption> evaluate(RuleContext context) {
+		List<GameOption> options = new ArrayList<>();
+
+		for (Map.Entry<Integer, Integer> scoredEntry : context.scoredMultiples().entrySet()) {
+			int dieValue = scoredEntry.getKey();
+			int previousCount = scoredEntry.getValue();
+			int currentCount = context.diceSetMap().getOrDefault(dieValue, 0);
+
+			if (previousCount < 3 || currentCount < minimumAdditionalDice) {
+				continue;
+			}
+
+			int totalCount = previousCount + currentCount;
+			int incrementalScore = calculateMultipleScore(totalCount, dieValue) - calculateMultipleScore(previousCount, dieValue);
+			options.add(buildOption(dieValue, incrementalScore, Map.of(dieValue, currentCount)));
 		}
-		
-		scoreContext.score().setScoreFromMultiples(mScore);
+
+		options.sort(Comparator.comparing(GameOption::selectedValue));
+		return options;
 	}
-	
+
+	@Override
+	protected void afterApply(RuleContext context, GameOption option) {
+		Integer dieValue = option.selectedValue();
+		if (dieValue == null) {
+			return;
+		}
+		int consumedCount = option.consumedDice().getOrDefault(dieValue, 0);
+		context.scoredMultiples().put(dieValue, context.scoredMultiples().getOrDefault(dieValue, 0) + consumedCount);
+	}
+
 	private int calculateMultipleScore(int numMultiples, int dieValue) {
 		int baseScore = (dieValue == 1) ? 1000 : dieValue * 100;
-		numMultiples -= 3; // Corrected subtraction (subtract 3 instead of adding 3)
-		return baseScore * (int) Math.pow(2, numMultiples);
+		return baseScore * (int) Math.pow(2, numMultiples - 3);
 	}
 }

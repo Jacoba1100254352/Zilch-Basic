@@ -1,73 +1,47 @@
 package controllers;
 
 
-import eventHandling.dispatchers.IEventDispatcher;
-import eventHandling.events.Event;
-import eventHandling.events.EventDataKey;
-import eventHandling.events.GameEventType;
+import controllers.state.TurnContext;
 import model.entities.Player;
 import model.managers.ActionManager;
-import model.managers.GameOptionManager;
-import ui.IUserInteraction;
 
 import java.io.IOException;
 
 
+/**
+ * Thin application service that hands the current player to the turn state
+ * machine and exposes the game-over check used by the server loop.
+ */
 public class GameEngine
 {
 	private final GameStateManager gameStateManager;
-	private final IEventDispatcher eventDispatcher;
-	private final GameOptionManager gameOptionManager;
 	private final ActionManager actionManager;
-	private final IUserInteraction userInteraction;
-	
-	public GameEngine(
-			IEventDispatcher eventDispatcher, GameStateManager gameStateManager, ActionManager actionManager,
-			GameOptionManager gameOptionManager, IUserInteraction userInteraction
-	) {
-		this.eventDispatcher = eventDispatcher;
-		this.actionManager = actionManager;
-		this.gameOptionManager = gameOptionManager;
+
+	/**
+	 * Creates the game engine that delegates per-turn work to the state machine.
+	 */
+	public GameEngine(GameStateManager gameStateManager, ActionManager actionManager) {
 		this.gameStateManager = gameStateManager;
-		this.userInteraction = userInteraction;
+		this.actionManager = actionManager;
 	}
-	
-	public void initializeRules() {
-		gameStateManager.initializeRules();
-	}
-	
+
+	/**
+	 * Executes a full turn for the current player.
+	 */
 	public void processGameTurn() throws IOException {
 		Player currentPlayer = actionManager.getCurrentPlayer();
 		if (currentPlayer == null) {
 			System.out.println("No current player available.");
 			return;
 		}
-		
-		actionManager.rollDice();
-		
-		Integer value = userInteraction.getOptionValue();
-		// Use getDiceSetMap() here:
-		gameOptionManager.evaluateGameOptions(currentPlayer.dice().getDiceSetMap(), value);
-		
-		if (gameOptionManager.isValid()) {
-			gameOptionManager.applyGameOption(currentPlayer, null);
-		} else {
-			System.out.println("No options available, turn skipped.");
-		}
-		
-		checkGameOver(currentPlayer);
+
+		gameStateManager.processTurn(new TurnContext(currentPlayer));
 	}
-	
+
+	/**
+	 * Returns whether the game has entered its terminal phase.
+	 */
 	public boolean isGameOver() {
 		return actionManager.isGameOver();
-	}
-	
-	private void checkGameOver(Player player) throws IOException {
-		if (actionManager.canEndGame(player)) {
-			System.out.println(player.name() + " has won the game!");
-			Event event = new Event(GameEventType.GAME_OVER);
-			event.setData(EventDataKey.WINNER, player);
-			eventDispatcher.dispatchEvent(event);
-		}
 	}
 }

@@ -4,19 +4,27 @@ package ui;
 import java.util.Scanner;
 
 
+/**
+ * Console-backed input reader used by the text UI.
+ */
 public class ConsoleInputManager implements IInputManager
 {
 	private final Scanner scanner;
 	
+	/**
+	 * Creates a new scanner that reads from standard input.
+	 */
 	public ConsoleInputManager() {
 		this.scanner = new Scanner(System.in);
 	}
 	
+	/** {@inheritDoc} */
 	@Override
 	public String getInputString() {
 		return scanner.nextLine();
 	}
 	
+	/** {@inheritDoc} */
 	@Override
 	public int getInputInt() {
 		while (!scanner.hasNextInt()) {
@@ -28,6 +36,7 @@ public class ConsoleInputManager implements IInputManager
 		return result;
 	}
 	
+	/** {@inheritDoc} */
 	@Override
 	public Runnable waitForEnterKey() {
 		return () -> {

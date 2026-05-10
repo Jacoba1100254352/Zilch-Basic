@@ -2,10 +2,10 @@ package rules.variable;
 
 
 import rules.context.RuleContext;
-import rules.context.ScoreContext;
 import rules.managers.RuleType;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static model.entities.Dice.FULL_SET_OF_DICE;
@@ -13,69 +13,46 @@ import static model.entities.Dice.FULL_SET_OF_DICE;
 
 public class StraitRule extends AbstractVariableRule
 {
-	private Integer minNumStraitValues;
-	
-	@SuppressWarnings("unused") // This is automatically called by the ServiceLoader
+	private Integer minNumStraitValues = FULL_SET_OF_DICE;
+
 	public StraitRule() {
-		this.ruleType = RuleType.STRAIT;
+		super(RuleType.STRAIT, "Strait", "Score a straight sequence of dice.");
 	}
-	
+
 	@Override
 	protected void setConfigValue(Object value) {
 		this.minNumStraitValues = (Integer) value;
 	}
-	
+
 	@Override
-	public void configure(Map<RuleType, Object> config) {
-		if (!config.containsKey(this.ruleType)) {
-			config.put(this.ruleType, getDefaultConfig().get(this.ruleType));
-		}
-		this.minNumStraitValues = (Integer) config.get(this.ruleType);
+	public Object getDefaultConfig() {
+		return FULL_SET_OF_DICE;
 	}
-	
+
 	@Override
-	public String getDescription() {
-		return "Strait Rule";
-	}
-	
-	@Override
-	public boolean isValid(RuleContext validationContext) {
-		// If you are required to have all dice in a strait, but not all dice are present, the rule is invalid
-		if (this.minNumStraitValues == FULL_SET_OF_DICE && validationContext.diceSetMap().size() != FULL_SET_OF_DICE) {
-			return false;
+	public List<model.entities.GameOption> evaluate(RuleContext context) {
+		Map<Integer, Integer> consumedDice = findStraight(context.diceSetMap());
+		if (consumedDice.size() < minNumStraitValues) {
+			return List.of();
 		}
-		
-		// The number of strait values found so far
-		int numStraitValues = 0;
-		
-		for (int i = 1; i <= FULL_SET_OF_DICE; i++) {
-			// Zero is used instead of != 1, because if the min is lower than the number of dice it might be permitted.
-			// This could change in the future if a rule is added requiring strict strait rules.
-			if (!validationContext.diceSetMap().containsKey(i) || validationContext.diceSetMap().get(i) == 0) {
-				numStraitValues = 0;
+		return List.of(buildOption(null, 1000, consumedDice));
+	}
+
+	private Map<Integer, Integer> findStraight(Map<Integer, Integer> diceSetMap) {
+		Map<Integer, Integer> longestStraight = new LinkedHashMap<>();
+		Map<Integer, Integer> currentStraight = new LinkedHashMap<>();
+
+		for (int value = 1; value <= FULL_SET_OF_DICE; value++) {
+			if (diceSetMap.getOrDefault(value, 0) > 0) {
+				currentStraight.put(value, 1);
+				if (currentStraight.size() > longestStraight.size()) {
+					longestStraight = new LinkedHashMap<>(currentStraight);
+				}
 			} else {
-				numStraitValues++;
-			}
-			
-			// If the number of strait values has reached the minimum required, the rule is valid
-			if (numStraitValues >= this.minNumStraitValues) {
-				return true;
+				currentStraight.clear();
 			}
 		}
-		
-		// If the loop finishes without returning true, the rule is invalid
-		return false;
-	}
-	
-	@Override
-	public Map<RuleType, Object> getDefaultConfig() {
-		Map<RuleType, Object> defaultConfig = new HashMap<>();
-		defaultConfig.put(this.ruleType, 6); // Default value for numStraitValues
-		return defaultConfig;
-	}
-	
-	@Override
-	public void score(ScoreContext scoreContext) {
-		scoreContext.score().increaseRoundScore(1000);
+
+		return longestStraight;
 	}
 }

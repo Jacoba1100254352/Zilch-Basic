@@ -14,6 +14,10 @@ import static eventHandling.events.GameEventType.GAME_OVER;
 import static eventHandling.events.GameEventType.SCORE_UPDATED;
 
 
+/**
+ * Handles score-limit transitions into the final round and announces the
+ * winner once the game-over event is dispatched.
+ */
 public class GameOverListener implements IEventListener
 {
 	private final int scoreLimit;
@@ -21,28 +25,39 @@ public class GameOverListener implements IEventListener
 	private final IMessage uiManager;
 	private final ActionManager actionManager;
 	private Player gameEndingPlayer;
-	
+
+	/**
+	 * Creates the listener that watches for score updates and final game-over events.
+	 */
 	public GameOverListener(int scoreLimit, GameServer gameServer, ActionManager actionManager, IMessage uiManager) {
 		this.scoreLimit = scoreLimit;
 		this.gameServer = gameServer;
 		this.uiManager = uiManager;
 		this.actionManager = actionManager;
 	}
-	
+
 	@Override
+	/**
+	 * Starts the final-round flow when a player reaches the score limit and
+	 * prints the winner when the game concludes.
+	 */
 	public void handleEvent(Event event) throws IOException {
 		if (event.getType() == GAME_OVER) {
 			Player winner = (Player) event.getData(EventDataKey.WINNER);
-			uiManager.announceWinner(winner, winner.score().getPermanentScore());
-		} else if (event.getType() == SCORE_UPDATED) {
+			if (winner != null) {
+				uiManager.announceWinner(winner, winner.score().getPermanentScore());
+			}
+			return;
+		}
+
+		if (event.getType() == SCORE_UPDATED) {
 			Player player = (Player) event.getData(EventDataKey.PLAYER);
-			if (player.score().getPermanentScore() >= scoreLimit) {
-				System.out.println(player.name() + " has won the game!");
+			if (player != null && player.score().getPermanentScore() >= scoreLimit && gameEndingPlayer == null) {
+				gameEndingPlayer = player;
 				actionManager.setGameEndingPlayer(player);
-				if (gameEndingPlayer == null) {
-					gameEndingPlayer = player;
-					gameServer.handleLastTurns(); // replace false with isTest if available
-				}
+				uiManager.displayLastRoundMessage(player, () -> {
+				});
+				gameServer.handleLastTurns();
 			}
 		}
 	}

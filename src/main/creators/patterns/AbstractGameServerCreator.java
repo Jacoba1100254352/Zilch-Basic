@@ -4,8 +4,16 @@ package creators.patterns;
 import controllers.GameServer;
 import eventHandling.dispatchers.IEventDispatcher;
 import eventHandling.dispatchers.SimpleEventDispatcher;
-import model.managers.*;
-import rules.managers.*;
+import model.managers.ActionManager;
+import model.managers.DiceManager;
+import model.managers.IDiceManager;
+import model.managers.IPlayerManager;
+import model.managers.PlayerManager;
+import rules.managers.IRuleManager;
+import rules.managers.IRuleRegistry;
+import rules.managers.RuleManager;
+import rules.managers.RuleRegistry;
+import rules.managers.RuleType;
 import ui.IMessage;
 import ui.IUserInteraction;
 
@@ -29,12 +37,10 @@ public abstract class AbstractGameServerCreator
 		IDiceManager diceManager = new DiceManager();
 		IRuleRegistry ruleRegistry = new RuleRegistry();
 		IRuleManager ruleManager = new RuleManager(ruleRegistry);
-		
-		// Initialize the rules with the selected configuration
+
 		ruleManager.initializeRules(selectedRules);
-		
-		ActionManager actionManager = new ActionManager(playerManager, diceManager, ruleManager);
-		
+
+		ActionManager actionManager = new ActionManager(playerManager, diceManager, scoreLimit);
 		return new GameServer(dispatcher, actionManager, ruleManager, uiManager, scoreLimit, userInteraction, gameID);
 	}
 }

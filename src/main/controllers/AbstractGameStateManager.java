@@ -1,81 +1,57 @@
 package controllers;
 
 
-import model.entities.Player;
-import model.managers.ActionManager;
-import model.managers.GameOptionManager;
-import ui.IMessage;
+import controllers.state.GamePhase;
+import controllers.state.GameTurnState;
+import controllers.state.TurnContext;
+
+import java.io.IOException;
+import java.util.Map;
 
 
+/**
+ * Base implementation for the turn state machine. Concrete subclasses provide
+ * the state map, while this class owns the transition loop.
+ */
 public abstract class AbstractGameStateManager implements IGameStateManager
 {
-	protected GameOptionManager gameOptionManager;
-	protected IMessage uiManager;
-	protected ActionManager actionManager;
-	
-	protected boolean reroll;
-	protected boolean continueTurn;
-	protected boolean isBust;
-	
-	public AbstractGameStateManager(GameOptionManager gameOptionManager, IMessage uiManager, ActionManager actionManager) {
-		this.gameOptionManager = gameOptionManager;
-		this.uiManager = uiManager;
-		this.actionManager = actionManager;
-		
-		this.reroll = false;
-		this.continueTurn = true;
-		this.isBust = false;
+	private final Map<GamePhase, GameTurnState> states;
+	protected GamePhase currentPhase;
+
+	/**
+	 * Creates a state manager backed by the supplied phase-to-state map.
+	 */
+	protected AbstractGameStateManager(Map<GamePhase, GameTurnState> states) {
+		this.states = states;
+		this.currentPhase = GamePhase.START_TURN;
 	}
-	
+
 	@Override
-	public void initializeRollCycle() {
-		isBust = false;
-		reroll = true;
-		continueTurn = true;
-		gameOptionManager.setSelectedGameOption(null);
-		Player currentPlayer = actionManager.getCurrentPlayer();
-		currentPlayer.score().setScoreFromMultiples(0);
-		currentPlayer.score().setRoundScore(0);
-		actionManager.replenishAllDice();
+	/**
+	 * Returns the phase currently being processed by the turn state machine.
+	 */
+	public GamePhase getCurrentPhase() {
+		return currentPhase;
 	}
-	
+
 	@Override
-	public abstract void handleFirstRollBust();
-	
-	@Override
-	public abstract void handleBust();
-	
-	@Override
-	public boolean isBust() {
-		return isBust;
-	}
-	
-	@Override
-	public void setBust(boolean bust) {
-		this.isBust = bust;
-	}
-	
-	@Override
-	public boolean getReroll() {
-		return reroll;
-	}
-	
-	@Override
-	public void setReroll(boolean reroll) {
-		this.reroll = reroll;
-	}
-	
-	@Override
-	public boolean getContinueTurn() {
-		return continueTurn;
-	}
-	
-	@Override
-	public void setContinueTurn(boolean continueTurn) {
-		if (this.isBust) {
-			this.continueTurn = false;
-		} else {
-			this.continueTurn = continueTurn;
+	/**
+	 * Runs the current player's turn from {@code START_TURN} until the
+	 * terminal {@code END_TURN} phase is reached.
+	 */
+	public void processTurn(TurnContext turnContext) throws IOException {
+		currentPhase = GamePhase.START_TURN;
+		while (currentPhase != GamePhase.END_TURN) {
+			GameTurnState state = states.get(currentPhase);
+			if (state == null) {
+				throw new IllegalStateException("No state registered for phase " + currentPhase);
+			}
+			currentPhase = state.handle(turnContext);
+		}
+
+		GameTurnState endTurnState = states.get(GamePhase.END_TURN);
+		if (endTurnState != null) {
+			endTurnState.handle(turnContext);
 		}
 	}
 }
