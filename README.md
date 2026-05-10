@@ -1,11 +1,33 @@
 # Zilch Basic
 
-Text-based Zilch implementation built around:
+LibGDX desktop Zilch implementation built around:
 
 - dynamic rule discovery
 - an explicit turn state machine
 - a simple in-process event system
 - creator/builder/factory wiring for bootstrapping a game
+- a visual, event-loop friendly play surface backed by the same core rules
+
+The current `main` path launches the LibGDX visual game. The previous console
+menu path is preserved as `client.ZilchCliClient` and on the `cli-menu` branch.
+
+## Running
+
+```bash
+./gradlew run
+```
+
+To run the preserved console flow from this branch:
+
+```bash
+./gradlew run --args='cli'
+```
+
+To run tests:
+
+```bash
+./gradlew test
+```
 
 ## Architecture Map
 
@@ -14,8 +36,11 @@ The diagram below shows how the main classes connect at runtime.
 ```mermaid
 flowchart LR
     ZC["ZilchClient"]
+    ZCLI["ZilchCliClient"]
 
     subgraph UI["UI / Setup"]
+        GDX["ZilchGdxGame"]
+        VGS["VisualGameSession"]
         UIM["UserInteractionManager"]
         CM["ConsoleMessage"]
         CIM["ConsoleInputManager"]
@@ -55,6 +80,7 @@ flowchart LR
         AMR["AddMultipleRule"]
         SER["SetRule"]
         STR["StraitRule"]
+        FBR["FirstRollBustRule"]
     end
 
     subgraph Model["Game Data / Managers"]
@@ -74,9 +100,16 @@ flowchart LR
         GOL["GameOverListener"]
     end
 
-    ZC --> UIM
-    ZC --> GC
-    ZC --> GID
+    ZC --> GDX
+    ZCLI --> UIM
+    ZCLI --> GC
+    ZCLI --> GID
+
+    GDX --> VGS
+    VGS --> ACT
+    VGS --> GOM
+    VGS --> PM
+    VGS --> DM
 
     UIM --> CM
     UIM --> CIM
@@ -126,6 +159,7 @@ flowchart LR
     IR --> AMR
     IR --> SER
     IR --> STR
+    IR --> FBR
     RM --> GO
 
     ST --> ACT
@@ -167,6 +201,8 @@ stateDiagram-v2
 
 ## Key Notes
 
+- `ZilchClient` now starts the LibGDX desktop interface. `ZilchCliClient` keeps the older interactive console menu available.
+- `VisualGameSession` adapts the existing game rules to button-driven UI actions without blocking the LibGDX render loop.
 - `RuleScanner` discovers concrete rule classes under `rules.variable`, so a new rule that implements the expected template can be loaded automatically.
 - `RuleRegistry` separates discovered rules from active rules, and `UserInteractionManager` uses that discovered list to build setup options.
 - Some setup options are game variants rather than scoring options, such as `First-Roll Bust`, which can award 50 points and reroll on a no-score opening roll.
@@ -177,5 +213,4 @@ stateDiagram-v2
 ## TODO
 
 - Add more specialized listeners if more game events become meaningful.
-- Add packaging / build tooling so tests can run without a custom launcher.
 - Continue cleanup and documentation polishing.

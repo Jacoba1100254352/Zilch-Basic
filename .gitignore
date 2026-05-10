@@ -25,6 +25,10 @@ bin/
 /nbdist/
 /.nb-gradle/
 
+### Gradle ###
+.gradle/
+build/
+
 ### VS Code ###
 .vscode/
 
