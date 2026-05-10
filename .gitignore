@@ -1,6 +1,8 @@
 ### IntelliJ IDEA ###
 .idea
 out/
+.run/main-classes/
+.run/test-classes/
 !src/main/**/out/
 !src/test/**/out/
 

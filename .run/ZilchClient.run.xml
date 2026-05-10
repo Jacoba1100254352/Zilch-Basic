@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ZilchClient" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="client.ZilchClient" />
+    <module name="Zilch Basic" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
