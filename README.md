@@ -155,7 +155,8 @@ stateDiagram-v2
     [*] --> START_TURN
     START_TURN --> ROLL_DICE
     ROLL_DICE --> EVALUATE_OPTIONS
-    EVALUATE_OPTIONS --> END_TURN: bust
+    EVALUATE_OPTIONS --> ROLL_DICE: first-roll bust / +50 points
+    EVALUATE_OPTIONS --> END_TURN: later bust
     EVALUATE_OPTIONS --> SELECT_OPTION: options found
     SELECT_OPTION --> APPLY_OPTION
     APPLY_OPTION --> DECIDE_TURN
@@ -168,6 +169,7 @@ stateDiagram-v2
 
 - `RuleScanner` discovers concrete rule classes under `rules.variable`, so a new rule that implements the expected template can be loaded automatically.
 - `RuleRegistry` separates discovered rules from active rules, and `UserInteractionManager` uses that discovered list to build setup options.
+- Some setup options are game variants rather than scoring options, such as `First-Roll Bust`, which can award 50 points and reroll on a no-score opening roll.
 - `TurnContext` is the mutable turn-local object passed across the entire state machine.
 - `GameServer` owns the outer game loop, while `GameEngine` owns a single turn.
 - `GameOverListener` bridges the event system back into gameplay by triggering the final-round flow.

@@ -25,6 +25,10 @@ public interface IRule
 		return true;
 	}
 
+	default boolean isScoringRule() {
+		return true;
+	}
+
 	void configure(Object configValue);
 
 	Object getDefaultConfig();

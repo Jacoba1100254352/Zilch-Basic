@@ -139,5 +139,10 @@ class GameOptionManagerTest
 		public List<IRule> getAvailableRules() {
 			return List.of();
 		}
+
+		@Override
+		public boolean isRuleActive(RuleType ruleType) {
+			return false;
+		}
 	}
 }

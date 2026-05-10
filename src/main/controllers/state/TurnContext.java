@@ -3,6 +3,7 @@ package controllers.state;
 
 import model.entities.GameOption;
 import model.entities.Player;
+import model.entities.Dice;
 import rules.context.RuleContext;
 
 import java.util.HashMap;
@@ -69,6 +70,16 @@ public class TurnContext
 	 */
 	public boolean isBusted() {
 		return busted;
+	}
+
+	/**
+	 * Returns whether no scoring choice has been applied yet in this turn.
+	 */
+	public boolean isFirstRoll() {
+		return selectedOption == null &&
+				scoredMultiples.isEmpty() &&
+				player.score().getRoundScore() == 0 &&
+				player.dice().getNumDiceInPlay() == Dice.FULL_SET_OF_DICE;
 	}
 
 	/**

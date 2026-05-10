@@ -73,4 +73,14 @@ public class RuleManager implements IRuleManager
 	public List<IRule> getAvailableRules() {
 		return ruleRegistry.getAvailableRules();
 	}
+
+	@Override
+	/**
+	 * Returns whether the supplied rule is active for the current game.
+	 */
+	public boolean isRuleActive(RuleType ruleType) {
+		return ruleRegistry.getActiveRules()
+		                   .stream()
+		                   .anyMatch(rule -> rule.getRuleType().equals(ruleType));
+	}
 }

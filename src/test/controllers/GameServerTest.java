@@ -52,6 +52,7 @@ class GameServerTest
 		StubPlayerManager playerManager = new StubPlayerManager(List.of(alice, bob));
 		SequencedDiceManager diceManager = new SequencedDiceManager()
 				.queueRoll(Map.of(1, 1, 2, 5))
+				.queueRoll(Map.of(2, 6))
 				.queueRoll(Map.of(2, 6));
 		ActionManager actionManager = new ActionManager(playerManager, diceManager, 100);
 		IRuleManager ruleManager = configuredRuleManager();
@@ -86,6 +87,8 @@ class GameServerTest
 				TestDoubles.player("Charlie")
 		));
 		SequencedDiceManager diceManager = new SequencedDiceManager()
+				.queueRoll(Map.of(2, 2, 3, 2, 4, 1, 6, 1))
+				.queueRoll(Map.of(2, 2, 3, 2, 4, 1, 6, 1))
 				.queueRoll(Map.of(2, 2, 3, 2, 4, 1, 6, 1))
 				.queueRoll(Map.of(2, 2, 3, 2, 4, 1, 6, 1));
 		ActionManager actionManager = new ActionManager(playerManager, diceManager, 5000);

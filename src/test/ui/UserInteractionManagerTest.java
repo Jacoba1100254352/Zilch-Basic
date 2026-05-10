@@ -14,6 +14,7 @@ import support.TestDoubles.RecordingMessage;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -61,6 +62,19 @@ class UserInteractionManagerTest
 		Map<RuleType, Object> selectedRules = userInteractionManager.selectRules();
 
 		assertEquals(1, selectedRules.size());
+		assertTrue(gameplayUI.messageCalls.contains("At least one scoring rule must be enabled. Please choose again.\n"));
+	}
+
+	@Test
+	void selectRulesDoesNotAllowOnlyNonScoringGameVariants() {
+		List<IRule> selectableRules = selectableRules();
+		queueRuleSelections(selectableRules, Set.of(RuleType.FIRST_ROLL_BUST));
+		queueRuleSelections(selectableRules, Set.of(RuleType.SINGLE));
+
+		Map<RuleType, Object> selectedRules = userInteractionManager.selectRules();
+
+		assertEquals(1, selectedRules.size());
+		assertTrue(selectedRules.containsKey(RuleType.SINGLE));
 		assertTrue(gameplayUI.messageCalls.contains("At least one scoring rule must be enabled. Please choose again.\n"));
 	}
 
@@ -141,5 +155,11 @@ class UserInteractionManagerTest
 		                         .stream()
 		                         .filter(IRule::isSelectableAtSetup)
 		                         .toList();
+	}
+
+	private void queueRuleSelections(List<IRule> selectableRules, Set<RuleType> enabledRules) {
+		for (IRule rule : selectableRules) {
+			inputManager.addString(enabledRules.contains(rule.getRuleType()) ? "y" : "n");
+		}
 	}
 }

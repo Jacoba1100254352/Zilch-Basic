@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -29,16 +30,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GameStateManagerTest
 {
 	@Test
-	void processTurnMarksBustWhenNoOptionsExist() throws Exception {
+	void processTurnMarksBustWhenNoOptionsExistAfterScoring() throws Exception {
 		Player player = TestDoubles.player("Jacob");
-		SequencedDiceManager diceManager = new SequencedDiceManager().queueRoll(Map.of(2, 2, 3, 2, 4, 1, 6, 1));
+		player.score().increasePermanentScore(1000);
+		SequencedDiceManager diceManager = new SequencedDiceManager()
+				.queueRoll(Map.of(1, 1, 2, 5))
+				.queueRoll(Map.of(2, 2, 3, 2, 4, 1));
 		ActionManager actionManager = new ActionManager(new StubPlayerManager(List.of(player)), diceManager, 5000);
 
 		RuleManager ruleManager = new RuleManager(new RuleRegistry());
-		ruleManager.initializeRules(Map.of(RuleType.SINGLE, Set.of(1, 5)));
+		ruleManager.initializeRules(Map.of(
+				RuleType.SINGLE, Set.of(1, 5),
+				RuleType.FIRST_ROLL_BUST, 50
+		));
 		GameOptionManager gameOptionManager = new GameOptionManager(ruleManager);
 		RecordingMessage uiManager = new RecordingMessage();
-		ScriptedUserInteraction userInteraction = new ScriptedUserInteraction();
+		ScriptedUserInteraction userInteraction = new ScriptedUserInteraction()
+				.addRollAgainDecision(true);
 
 		GameStateManager gameStateManager = new GameStateManager(gameOptionManager, uiManager, actionManager, userInteraction);
 		TurnContext turnContext = new TurnContext(player);
@@ -49,8 +57,44 @@ class GameStateManagerTest
 		assertEquals(0, player.score().getRoundScore());
 		assertEquals(GamePhase.END_TURN, gameStateManager.getCurrentPhase());
 		assertEquals(List.of("Bust! No scoring options are available.\n"), uiManager.waitingMessages);
-		assertEquals(0, userInteraction.chooseCalls);
-		assertEquals(0, userInteraction.rollAgainCalls);
+		assertEquals(1, userInteraction.chooseCalls);
+		assertEquals(1, userInteraction.rollAgainCalls);
+		assertEquals(2, diceManager.rollCalls);
+	}
+
+	@Test
+	void processTurnAwardsFirstRollBustBonusAndContinues() throws Exception {
+		Player player = TestDoubles.player("Jacob");
+		player.score().increasePermanentScore(1000);
+		SequencedDiceManager diceManager = new SequencedDiceManager()
+				.queueRoll(Map.of(2, 2, 3, 2, 4, 2))
+				.queueRoll(Map.of(1, 1, 2, 5));
+		ActionManager actionManager = new ActionManager(new StubPlayerManager(List.of(player)), diceManager, 5000);
+
+		RuleManager ruleManager = new RuleManager(new RuleRegistry());
+		ruleManager.initializeRules(Map.of(
+				RuleType.SINGLE, Set.of(1, 5),
+				RuleType.FIRST_ROLL_BUST, 50
+		));
+		GameOptionManager gameOptionManager = new GameOptionManager(ruleManager);
+		RecordingMessage uiManager = new RecordingMessage();
+		ScriptedUserInteraction userInteraction = new ScriptedUserInteraction()
+				.addRollAgainDecision(false);
+
+		GameStateManager gameStateManager = new GameStateManager(gameOptionManager, uiManager, actionManager, userInteraction);
+		TurnContext turnContext = new TurnContext(player);
+
+		gameStateManager.processTurn(turnContext);
+
+		assertFalse(turnContext.isBusted());
+		assertEquals(1150, player.score().getPermanentScore());
+		assertEquals(0, player.score().getRoundScore());
+		assertEquals(GamePhase.END_TURN, gameStateManager.getCurrentPhase());
+		assertEquals(List.of("First-roll bust! Awarded 50 points. Roll again.\n"), uiManager.waitingMessages);
+		assertEquals(List.of("Jacob:0", "Jacob:50"), uiManager.currentScoreCalls);
+		assertEquals(1, userInteraction.chooseCalls);
+		assertEquals(1, userInteraction.rollAgainCalls);
+		assertEquals(2, diceManager.rollCalls);
 	}
 
 	@Test

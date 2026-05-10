@@ -80,7 +80,7 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 
 		gameplayUI.displayRulesMenu();
 
-		while (selectedConfig.isEmpty()) {
+		while (!hasScoringRuleSelected(selectedConfig, selectableRules)) {
 			selectedConfig.clear();
 
 			for (IRule rule : selectableRules) {
@@ -92,7 +92,7 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 				}
 			}
 
-			if (selectedConfig.isEmpty()) {
+			if (!hasScoringRuleSelected(selectedConfig, selectableRules)) {
 				gameplayUI.displayMessage(
 						"At least one scoring rule must be enabled. Please choose again.\n"
 				);
@@ -100,6 +100,12 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		}
 
 		return selectedConfig;
+	}
+
+	private boolean hasScoringRuleSelected(Map<RuleType, Object> selectedConfig, List<IRule> selectableRules) {
+		return selectableRules.stream()
+		                      .filter(rule -> selectedConfig.containsKey(rule.getRuleType()))
+		                      .anyMatch(IRule::isScoringRule);
 	}
 
 	/**

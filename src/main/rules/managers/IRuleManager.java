@@ -20,4 +20,6 @@ public interface IRuleManager
 	void applyRule(RuleContext context, GameOption option);
 
 	List<IRule> getAvailableRules();
+
+	boolean isRuleActive(RuleType ruleType);
 }

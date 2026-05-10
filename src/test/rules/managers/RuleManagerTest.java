@@ -85,4 +85,17 @@ class RuleManagerTest
 		assertTrue(ruleManager.getAvailableRules().stream().anyMatch(rule -> rule.getRuleType().equals(RuleType.SINGLE)));
 		assertTrue(ruleManager.getAvailableRules().stream().anyMatch(rule -> rule.getRuleType().equals(new RuleType("test_auto_loaded"))));
 	}
+
+	@Test
+	void isRuleActiveReflectsConfiguredRules() {
+		RuleManager ruleManager = new RuleManager(new RuleRegistry());
+		ruleManager.initializeRules(Map.of(RuleType.FIRST_ROLL_BUST, 50));
+
+		assertTrue(ruleManager.isRuleActive(RuleType.FIRST_ROLL_BUST));
+		assertTrue(ruleManager.evaluateRules(new RuleContext(
+				new Player("Jacob", new Dice(new HashMap<>()), new Score()),
+				new HashMap<>(),
+				new HashMap<>()
+		)).isEmpty());
+	}
 }

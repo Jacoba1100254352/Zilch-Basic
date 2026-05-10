@@ -4,6 +4,8 @@ package model.managers;
 import model.entities.GameOption;
 import rules.context.RuleContext;
 import rules.managers.IRuleManager;
+import rules.managers.RuleType;
+import rules.variable.IRule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +41,20 @@ public class GameOptionManager
 	public void evaluateGameOptions(RuleContext ruleContext) {
 		gameOptions.clear();
 		gameOptions.addAll(ruleManager.evaluateRules(ruleContext));
+	}
+
+	/**
+	 * Returns whether a non-option game rule is active for this game.
+	 */
+	public boolean isRuleActive(RuleType ruleType) {
+		return ruleManager.isRuleActive(ruleType);
+	}
+
+	/**
+	 * Returns the discovered rule object for rule-specific configuration.
+	 */
+	public IRule getRule(RuleType ruleType) {
+		return ruleManager.getRule(ruleType);
 	}
 
 	/**

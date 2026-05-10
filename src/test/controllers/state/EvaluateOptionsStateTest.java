@@ -22,7 +22,28 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class EvaluateOptionsStateTest
 {
 	@Test
-	void handleMarksBustWhenNoOptionsAreAvailable() {
+	void handleAwardsFirstRollBustBonusAndRollsAgain() {
+		Player player = TestDoubles.playerWithDice("Jacob", Map.of(2, 2, 3, 2, 4, 2));
+		RuleManager ruleManager = new RuleManager(new RuleRegistry());
+		ruleManager.initializeRules(Map.of(
+				RuleType.SINGLE, Set.of(1, 5),
+				RuleType.FIRST_ROLL_BUST, 50
+		));
+		GameOptionManager gameOptionManager = new GameOptionManager(ruleManager);
+		RecordingMessage uiManager = new RecordingMessage();
+		TurnContext turnContext = new TurnContext(player);
+
+		GamePhase nextPhase = new EvaluateOptionsState(gameOptionManager, uiManager).handle(turnContext);
+
+		assertEquals(GamePhase.ROLL_DICE, nextPhase);
+		assertFalse(turnContext.isBusted());
+		assertEquals(50, player.score().getRoundScore());
+		assertEquals(0, player.score().getScoreFromMultiples());
+		assertEquals(List.of("First-roll bust! Awarded 50 points. Roll again.\n"), uiManager.waitingMessages);
+	}
+
+	@Test
+	void handleMarksBustWhenNoOptionsAreAvailableAndFirstRollBustIsDisabled() {
 		Player player = TestDoubles.playerWithDice("Jacob", Map.of(2, 2, 3, 2, 4, 2));
 		player.score().setRoundScore(250);
 		player.score().setScoreFromMultiples(200);
