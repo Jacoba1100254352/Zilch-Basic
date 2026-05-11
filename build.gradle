@@ -1,6 +1,7 @@
 plugins {
 	id "java"
 	id "application"
+	id "idea"
 }
 
 group = "zilch"
@@ -9,6 +10,10 @@ version = "1.0.0"
 java {
 	sourceCompatibility = JavaVersion.VERSION_22
 	targetCompatibility = JavaVersion.VERSION_22
+}
+
+base {
+	archivesName = "zilch-basic"
 }
 
 ext {
@@ -28,6 +33,16 @@ dependencies {
 application {
 	mainClass = "client.ZilchClient"
 	applicationName = "zilch-basic"
+}
+
+idea {
+	module {
+		name = "Zilch Basic"
+		inheritOutputDirs = false
+		outputDir = file("build/classes/java/main")
+		testOutputDir = file("build/classes/java/test")
+		excludeDirs += files(".gradle", "build", "out")
+	}
 }
 
 sourceSets {

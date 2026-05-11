@@ -1,9 +1,16 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="ZilchClient" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="client.ZilchClient" />
-    <module name="Zilch Basic" />
-    <method v="2">
-      <option name="Make" enabled="true" />
-    </method>
+  <configuration default="false" name="ZilchClient" type="GradleRunConfiguration" factoryName="Gradle">
+    <ExternalSystemSettings>
+      <option name="externalProjectPath" value="$PROJECT_DIR$" />
+      <option name="externalSystemIdString" value="GRADLE" />
+      <option name="scriptParameters" value="" />
+      <option name="taskNames">
+        <list>
+          <option value="run" />
+        </list>
+      </option>
+      <option name="vmOptions" value="" />
+    </ExternalSystemSettings>
+    <method v="2" />
   </configuration>
 </component>

@@ -42,6 +42,12 @@ Expected directory markings:
 - `build`, `out`, `.gradle`: Excluded
 - `lib`: regular folder for legacy local jars, not a Resources Root
 
+Naming convention:
+
+- Display/project name: `Zilch Basic`
+- Gradle root project name: `Zilch Basic`
+- Application/archive/script name: `zilch-basic`
+
 ## Architecture Map
 
 The diagram below shows how the main classes connect at runtime.

@@ -1,6 +1,8 @@
 ### IntelliJ IDEA ###
 .idea
 *.iml
+*.ipr
+*.iws
 out/
 .run/main-classes/
 .run/test-classes/
