@@ -11,20 +11,40 @@ import model.entities.Player;
  */
 public class ActionManager
 {
-	private static final int OPENING_SCORE_LIMIT = 1000;
+	public static final int DEFAULT_OPENING_SCORE_LIMIT = 1000;
 
 	private final IPlayerManager playerManager;
 	private final IDiceManager diceManager;
 	private final int scoreLimit;
+	private final int openingScoreLimit;
 	private Player gameEndingPlayer;
 
 	/**
 	 * Creates the action manager for a game with the supplied collaborators.
 	 */
 	public ActionManager(IPlayerManager playerManager, IDiceManager diceManager, int scoreLimit) {
+		this(playerManager, diceManager, scoreLimit, DEFAULT_OPENING_SCORE_LIMIT);
+	}
+
+	/**
+	 * Creates an action manager with explicit winning and opening thresholds.
+	 */
+	public ActionManager(
+			IPlayerManager playerManager,
+			IDiceManager diceManager,
+			int scoreLimit,
+			int openingScoreLimit
+	) {
+		if (scoreLimit <= 0) {
+			throw new IllegalArgumentException("scoreLimit must be positive.");
+		}
+		if (openingScoreLimit < 0) {
+			throw new IllegalArgumentException("openingScoreLimit cannot be negative.");
+		}
 		this.playerManager = playerManager;
 		this.diceManager = diceManager;
 		this.scoreLimit = scoreLimit;
+		this.openingScoreLimit = openingScoreLimit;
 	}
 
 	/**
@@ -82,8 +102,18 @@ public class ActionManager
 	 * threshold during the current turn.
 	 */
 	public boolean canBankPoints(Player player) {
-		return player.score().getPermanentScore() >= OPENING_SCORE_LIMIT ||
-				player.score().getRoundScore() >= OPENING_SCORE_LIMIT;
+		return hasOpened(player) || player.score().getRoundScore() >= openingScoreLimit;
+	}
+
+	/**
+	 * Returns whether the player has already banked the configured opening score.
+	 */
+	public boolean hasOpened(Player player) {
+		return player.score().getPermanentScore() >= openingScoreLimit;
+	}
+
+	public int getOpeningScoreLimit() {
+		return openingScoreLimit;
 	}
 
 	/**

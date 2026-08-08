@@ -11,4 +11,6 @@ public interface ReadOnlyConfig
 	List<String> getPlayerNames();
 	
 	int getScoreLimit();
+
+	int getOpeningScoreLimit();
 }

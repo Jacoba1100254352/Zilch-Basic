@@ -9,6 +9,7 @@ import model.entities.Dice;
 import model.entities.GameOption;
 import model.entities.Player;
 import model.entities.Score;
+import model.entities.TurnContinuation;
 import model.managers.IDiceManager;
 import model.managers.IPlayerManager;
 import rules.managers.RuleType;
@@ -194,15 +195,20 @@ public final class TestDoubles
 		private int numberOfPlayers = 2;
 		private List<String> playerNames = List.of("Alice", "Bob");
 		private int scoreLimit = 5000;
+		private int openingScoreLimit = 1000;
 		private Map<RuleType, Object> selectedRules = Map.of(RuleType.SINGLE, Set.of(1, 5));
 		private Function<List<GameOption>, GameOption> optionChooser = options -> options.get(0);
 		private final Deque<Boolean> rollAgainDecisions = new ArrayDeque<>();
+		private final Deque<Boolean> stealingDecisions = new ArrayDeque<>();
 
 		public final List<Player> choosePlayers = new ArrayList<>();
 		public final List<Player> rollAgainPlayers = new ArrayList<>();
 		public final List<Boolean> canBankRequests = new ArrayList<>();
+		public final List<Player> stealingPlayers = new ArrayList<>();
+		public final List<TurnContinuation> stealingContinuations = new ArrayList<>();
 		public int chooseCalls;
 		public int rollAgainCalls;
+		public int stealingCalls;
 
 		public ScriptedUserInteraction withNumberOfPlayers(int numberOfPlayers) {
 			this.numberOfPlayers = numberOfPlayers;
@@ -219,6 +225,11 @@ public final class TestDoubles
 			return this;
 		}
 
+		public ScriptedUserInteraction withOpeningScoreLimit(int openingScoreLimit) {
+			this.openingScoreLimit = openingScoreLimit;
+			return this;
+		}
+
 		public ScriptedUserInteraction withSelectedRules(Map<RuleType, Object> selectedRules) {
 			this.selectedRules = new LinkedHashMap<>(selectedRules);
 			return this;
@@ -231,6 +242,11 @@ public final class TestDoubles
 
 		public ScriptedUserInteraction addRollAgainDecision(boolean rollAgain) {
 			rollAgainDecisions.addLast(rollAgain);
+			return this;
+		}
+
+		public ScriptedUserInteraction addStealingDecision(boolean steal) {
+			stealingDecisions.addLast(steal);
 			return this;
 		}
 
@@ -250,6 +266,11 @@ public final class TestDoubles
 		}
 
 		@Override
+		public int getValidOpeningScoreLimit(int scoreLimit) {
+			return openingScoreLimit;
+		}
+
+		@Override
 		public Map<RuleType, Object> selectRules() {
 			return new LinkedHashMap<>(selectedRules);
 		}
@@ -262,7 +283,7 @@ public final class TestDoubles
 		}
 
 		@Override
-		public boolean shouldRollAgain(Player currentPlayer, boolean canBankPoints) {
+		public boolean shouldRollAgain(Player currentPlayer, boolean canBankPoints, int openingScoreLimit) {
 			rollAgainCalls++;
 			rollAgainPlayers.add(currentPlayer);
 			canBankRequests.add(canBankPoints);
@@ -270,6 +291,17 @@ public final class TestDoubles
 				return false;
 			}
 			return rollAgainDecisions.removeFirst();
+		}
+
+		@Override
+		public boolean shouldSteal(Player currentPlayer, TurnContinuation continuation) {
+			stealingCalls++;
+			stealingPlayers.add(currentPlayer);
+			stealingContinuations.add(continuation);
+			if (stealingDecisions.isEmpty()) {
+				return false;
+			}
+			return stealingDecisions.removeFirst();
 		}
 	}
 

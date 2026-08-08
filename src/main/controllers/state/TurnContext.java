@@ -4,6 +4,7 @@ package controllers.state;
 import model.entities.GameOption;
 import model.entities.Player;
 import model.entities.Dice;
+import model.entities.TurnContinuation;
 import rules.context.RuleContext;
 
 import java.util.HashMap;
@@ -96,5 +97,17 @@ public class TurnContext
 		selectedOption = null;
 		scoredMultiples.clear();
 		busted = false;
+	}
+
+	/**
+	 * Replaces fresh-turn state with an accepted cross-player continuation.
+	 */
+	public void continueFrom(TurnContinuation continuation) {
+		resetForNewTurn();
+		player.score().setRoundScore(continuation.inheritedScore());
+		player.score().setScoreFromMultiples(0);
+		player.dice().getDiceSetMap().clear();
+		player.dice().setNumDiceInPlay(continuation.diceInPlay());
+		scoredMultiples.putAll(continuation.scoredMultiples());
 	}
 }

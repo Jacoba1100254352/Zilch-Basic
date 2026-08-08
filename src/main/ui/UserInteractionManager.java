@@ -5,6 +5,7 @@ import model.entities.Dice;
 import model.entities.GameOption;
 import model.entities.Player;
 import model.entities.Score;
+import model.entities.TurnContinuation;
 import rules.managers.RuleRegistry;
 import rules.managers.RuleType;
 import rules.variable.IRule;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 
 /**
@@ -31,7 +33,14 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	 */
 	@SuppressWarnings("unused")
 	public UserInteractionManager() throws IOException {
-		this(new ConsoleMessage(), new ConsoleInputManager());
+		this(new Scanner(System.in));
+	}
+
+	/**
+	 * Creates a user interaction manager with a shared scanner.
+	 */
+	public UserInteractionManager(Scanner scanner) throws IOException {
+		this(new ConsoleMessage(scanner), new ConsoleInputManager(scanner));
 	}
 
 	/**
@@ -141,7 +150,7 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	 */
 	@Override
 	public int getValidScoreLimit() {
-		final int minScoreLimit = 1000; // Hardcoded minimum score limit.
+		final int minScoreLimit = 1000;
 		int limit;
 
 		while (true) {
@@ -160,6 +169,23 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 			}
 		}
 		return limit;
+	}
+
+	/**
+	 * Prompts for the score a player must bank before they are considered on.
+	 */
+	@Override
+	public int getValidOpeningScoreLimit(int scoreLimit) {
+		while (true) {
+			displayMessage(
+					"\nEnter the opening (on) score from 0 to " + scoreLimit + " (usually 1000): "
+			);
+			int limit = inputManager.getInputInt();
+			if (limit >= 0 && limit <= scoreLimit) {
+				return limit;
+			}
+			displayMessage("Invalid opening score. Enter a value from 0 to " + scoreLimit + ".");
+		}
 	}
 
 	/**
@@ -187,14 +213,27 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	 * score. If the player has not opened yet, the turn must continue.
 	 */
 	@Override
-	public boolean shouldRollAgain(Player currentPlayer, boolean canBankPoints) {
+	public boolean shouldRollAgain(Player currentPlayer, boolean canBankPoints, int openingScoreLimit) {
 		if (!canBankPoints) {
 			gameplayUI.displayMessage(
-					currentPlayer.name() + " cannot bank points yet. You need 1000 points to open.\n"
+					currentPlayer.name() + " cannot bank points yet. You need " +
+							openingScoreLimit + " points to open.\n"
 			);
 			return true;
 		}
 		return readYesNo("Roll again? Enter 'yes' to continue or 'no' to bank this turn: ");
+	}
+
+	/**
+	 * Offers an eligible player the prior turn's score and remaining dice.
+	 */
+	@Override
+	public boolean shouldSteal(Player currentPlayer, TurnContinuation continuation) {
+		return readYesNo(
+				currentPlayer.name() + " may steal " + continuation.inheritedScore() +
+						" points from " + continuation.sourcePlayerName() + " by rolling " +
+						continuation.diceInPlay() + " remaining dice. Continue that turn? "
+		);
 	}
 
 	/**

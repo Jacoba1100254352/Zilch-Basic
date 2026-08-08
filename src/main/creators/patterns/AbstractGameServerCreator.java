@@ -32,6 +32,26 @@ public abstract class AbstractGameServerCreator
 			IUserInteraction userInteraction,
 			Map<RuleType, Object> selectedRules
 	) throws IOException {
+		return createGameServer(
+				playerNames,
+				uiManager,
+				gameID,
+				scoreLimit,
+				ActionManager.DEFAULT_OPENING_SCORE_LIMIT,
+				userInteraction,
+				selectedRules
+		);
+	}
+
+	protected GameServer createGameServer(
+			List<String> playerNames,
+			IMessage uiManager,
+			String gameID,
+			int scoreLimit,
+			int openingScoreLimit,
+			IUserInteraction userInteraction,
+			Map<RuleType, Object> selectedRules
+	) throws IOException {
 		IEventDispatcher dispatcher = new SimpleEventDispatcher();
 		IPlayerManager playerManager = new PlayerManager(playerNames);
 		IDiceManager diceManager = new DiceManager();
@@ -40,7 +60,12 @@ public abstract class AbstractGameServerCreator
 
 		ruleManager.initializeRules(selectedRules);
 
-		ActionManager actionManager = new ActionManager(playerManager, diceManager, scoreLimit);
+		ActionManager actionManager = new ActionManager(
+				playerManager,
+				diceManager,
+				scoreLimit,
+				openingScoreLimit
+		);
 		return new GameServer(dispatcher, actionManager, ruleManager, uiManager, scoreLimit, userInteraction, gameID);
 	}
 }

@@ -24,4 +24,24 @@ public class GameFactory extends AbstractGameServerCreator
 				playerNames, uiManager, gameID, scoreLimit, userInteraction, selectedRules
 		);
 	}
+
+	public GameServer createGameServer(
+			List<String> playerNames,
+			IMessage uiManager,
+			String gameID,
+			int scoreLimit,
+			int openingScoreLimit,
+			IUserInteraction userInteraction,
+			Map<RuleType, Object> selectedRules
+	) throws IOException {
+		return super.createGameServer(
+				playerNames,
+				uiManager,
+				gameID,
+				scoreLimit,
+				openingScoreLimit,
+				userInteraction,
+				selectedRules
+		);
+	}
 }

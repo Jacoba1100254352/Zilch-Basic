@@ -2,6 +2,7 @@ package creators.patterns;
 
 
 import controllers.GameServer;
+import model.managers.ActionManager;
 import rules.managers.RuleType;
 import ui.IMessage;
 import ui.IUserInteraction;
@@ -17,6 +18,7 @@ public class GameBuilder extends AbstractGameServerCreator
 	private IMessage uiManager;
 	private String gameID;
 	private int scoreLimit;
+	private int openingScoreLimit;
 	private IUserInteraction userInteraction;
 	private Map<RuleType, Object> selectedRules;
 	
@@ -25,6 +27,7 @@ public class GameBuilder extends AbstractGameServerCreator
 		uiManager = null;
 		gameID = "DefaultGameID";
 		scoreLimit = 1000;
+		openingScoreLimit = ActionManager.DEFAULT_OPENING_SCORE_LIMIT;
 		userInteraction = null;
 		selectedRules = null;
 	}
@@ -48,6 +51,11 @@ public class GameBuilder extends AbstractGameServerCreator
 		this.scoreLimit = scoreLimit;
 		return this;
 	}
+
+	public GameBuilder setOpeningScoreLimit(int openingScoreLimit) {
+		this.openingScoreLimit = openingScoreLimit;
+		return this;
+	}
 	
 	public GameBuilder setUserInteraction(IUserInteraction userInteraction) {
 		this.userInteraction = userInteraction;
@@ -63,6 +71,14 @@ public class GameBuilder extends AbstractGameServerCreator
 		if (playerNames == null || uiManager == null || userInteraction == null || selectedRules == null) {
 			throw new IllegalStateException("Missing required fields for building the GameServer.");
 		}
-		return createGameServer(playerNames, uiManager, gameID, scoreLimit, userInteraction, selectedRules);
+		return createGameServer(
+				playerNames,
+				uiManager,
+				gameID,
+				scoreLimit,
+				openingScoreLimit,
+				userInteraction,
+				selectedRules
+		);
 	}
 }

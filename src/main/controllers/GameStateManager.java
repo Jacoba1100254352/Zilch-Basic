@@ -2,6 +2,7 @@ package controllers;
 
 
 import controllers.state.ApplyOptionState;
+import controllers.state.ChooseTurnStartState;
 import controllers.state.DecideTurnState;
 import controllers.state.EndTurnState;
 import controllers.state.EvaluateOptionsState;
@@ -12,6 +13,7 @@ import controllers.state.SelectOptionState;
 import controllers.state.StartTurnState;
 import model.managers.ActionManager;
 import model.managers.GameOptionManager;
+import rules.managers.RuleType;
 import ui.IMessage;
 import ui.IUserInteraction;
 
@@ -44,12 +46,26 @@ public class GameStateManager extends AbstractGameStateManager
 			IUserInteraction userInteraction
 	) {
 		Map<GamePhase, GameTurnState> states = new EnumMap<>(GamePhase.class);
+		StealingManager stealingManager = new StealingManager(
+				gameOptionManager.isRuleActive(RuleType.STEALING),
+				actionManager.getOpeningScoreLimit()
+		);
 		states.put(GamePhase.START_TURN, new StartTurnState(actionManager, gameOptionManager));
+		states.put(
+				GamePhase.CHOOSE_TURN_START,
+				new ChooseTurnStartState(stealingManager, userInteraction)
+		);
 		states.put(GamePhase.ROLL_DICE, new RollDiceState(actionManager, uiManager));
-		states.put(GamePhase.EVALUATE_OPTIONS, new EvaluateOptionsState(gameOptionManager, uiManager));
+		states.put(
+				GamePhase.EVALUATE_OPTIONS,
+				new EvaluateOptionsState(gameOptionManager, uiManager, stealingManager)
+		);
 		states.put(GamePhase.SELECT_OPTION, new SelectOptionState(gameOptionManager, userInteraction));
 		states.put(GamePhase.APPLY_OPTION, new ApplyOptionState(actionManager, gameOptionManager, uiManager));
-		states.put(GamePhase.DECIDE_TURN, new DecideTurnState(actionManager, userInteraction));
+		states.put(
+				GamePhase.DECIDE_TURN,
+				new DecideTurnState(actionManager, userInteraction, stealingManager)
+		);
 		states.put(GamePhase.END_TURN, new EndTurnState(gameOptionManager));
 		return states;
 	}

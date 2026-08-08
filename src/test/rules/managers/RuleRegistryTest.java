@@ -47,6 +47,7 @@ class RuleRegistryTest
 		assertEquals(Set.of(1, 5), defaults.get(RuleType.SINGLE));
 		assertEquals(3, defaults.get(RuleType.SET));
 		assertEquals(50, defaults.get(RuleType.FIRST_ROLL_BUST));
+		assertEquals(true, defaults.get(RuleType.STEALING));
 		assertTrue(defaults.containsKey(new RuleType("test_auto_loaded")));
 	}
 

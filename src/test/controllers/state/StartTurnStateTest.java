@@ -40,7 +40,7 @@ class StartTurnStateTest
 
 		GamePhase nextPhase = new StartTurnState(actionManager, gameOptionManager).handle(turnContext);
 
-		assertEquals(GamePhase.ROLL_DICE, nextPhase);
+		assertEquals(GamePhase.CHOOSE_TURN_START, nextPhase);
 		assertEquals(0, player.score().getRoundScore());
 		assertEquals(0, player.score().getScoreFromMultiples());
 		assertTrue(player.dice().getDiceSetMap().isEmpty());

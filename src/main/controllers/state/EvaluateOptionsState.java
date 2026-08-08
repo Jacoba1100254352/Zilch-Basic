@@ -1,6 +1,7 @@
 package controllers.state;
 
 
+import controllers.StealingManager;
 import model.managers.GameOptionManager;
 import rules.managers.RuleType;
 import rules.variable.FirstRollBustRule;
@@ -16,13 +17,23 @@ public class EvaluateOptionsState implements GameTurnState
 
 	private final GameOptionManager gameOptionManager;
 	private final IMessage uiManager;
+	private final StealingManager stealingManager;
 
 	/**
 	 * Creates the state that evaluates the current roll against active rules.
 	 */
 	public EvaluateOptionsState(GameOptionManager gameOptionManager, IMessage uiManager) {
+		this(gameOptionManager, uiManager, new StealingManager(false, 0));
+	}
+
+	public EvaluateOptionsState(
+			GameOptionManager gameOptionManager,
+			IMessage uiManager,
+			StealingManager stealingManager
+	) {
 		this.gameOptionManager = gameOptionManager;
 		this.uiManager = uiManager;
+		this.stealingManager = stealingManager;
 	}
 
 	/** {@inheritDoc} */
@@ -40,6 +51,7 @@ public class EvaluateOptionsState implements GameTurnState
 			turnContext.markBusted();
 			turnContext.getPlayer().score().setRoundScore(0);
 			turnContext.getPlayer().score().setScoreFromMultiples(0);
+			stealingManager.clearContinuation();
 			uiManager.displayAndWait("Bust! No scoring options are available.\n");
 			return GamePhase.END_TURN;
 		}

@@ -1,11 +1,14 @@
 package ui.visual;
 
+import controllers.StealingManager;
 import controllers.state.TurnContext;
 import model.entities.GameOption;
 import model.entities.Player;
+import model.entities.TurnContinuation;
 import model.managers.ActionManager;
 import model.managers.DiceManager;
 import model.managers.GameOptionManager;
+import model.managers.IDiceManager;
 import model.managers.PlayerManager;
 import rules.managers.RuleManager;
 import rules.managers.RuleRegistry;
@@ -19,6 +22,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 
 /**
@@ -30,21 +34,27 @@ public class VisualGameSession
 	public static final int MIN_PLAYERS = 1;
 	public static final int MAX_PLAYERS = 6;
 	public static final int MIN_SCORE_LIMIT = 1000;
+	public static final int MIN_OPENING_SCORE_LIMIT = 0;
 
 	private static final int DEFAULT_PLAYERS = 2;
 	private static final int DEFAULT_SCORE_LIMIT = 5000;
 	private static final int SCORE_LIMIT_STEP = 500;
+	private static final int DEFAULT_OPENING_SCORE_LIMIT = 1000;
+	private static final int OPENING_SCORE_LIMIT_STEP = 250;
 	private static final int FALLBACK_FIRST_ROLL_BUST_POINTS = 50;
 
 	private final RuleRegistry setupRuleRegistry;
 	private final List<IRule> selectableRules;
 	private final Map<RuleType, Object> selectedRules = new LinkedHashMap<>();
+	private final IDiceManager diceManager;
 
 	private int playerCount = DEFAULT_PLAYERS;
 	private int scoreLimit = DEFAULT_SCORE_LIMIT;
+	private int openingScoreLimit = DEFAULT_OPENING_SCORE_LIMIT;
 	private PlayerManager playerManager;
 	private ActionManager actionManager;
 	private GameOptionManager gameOptionManager;
+	private StealingManager stealingManager;
 	private TurnContext turnContext;
 	private List<GameOption> currentOptions = List.of();
 	private Phase phase = Phase.SETUP;
@@ -53,6 +63,11 @@ public class VisualGameSession
 	private String notice = "Choose the game setup, then start.";
 
 	public VisualGameSession() {
+		this(new DiceManager());
+	}
+
+	VisualGameSession(IDiceManager diceManager) {
+		this.diceManager = Objects.requireNonNull(diceManager, "diceManager cannot be null.");
 		setupRuleRegistry = new RuleRegistry();
 		selectableRules = setupRuleRegistry.getAvailableRules()
 		                                   .stream()
@@ -65,6 +80,7 @@ public class VisualGameSession
 	public enum Phase
 	{
 		SETUP,
+		AWAITING_STEAL_DECISION,
 		AWAITING_ROLL,
 		AWAITING_OPTION,
 		AWAITING_DECISION,
@@ -81,7 +97,16 @@ public class VisualGameSession
 		ruleManager.initializeRules(selectedRules);
 		gameOptionManager = new GameOptionManager(ruleManager);
 		playerManager = new PlayerManager(buildDefaultPlayerNames());
-		actionManager = new ActionManager(playerManager, new DiceManager(), scoreLimit);
+		actionManager = new ActionManager(
+				playerManager,
+				diceManager,
+				scoreLimit,
+				openingScoreLimit
+		);
+		stealingManager = new StealingManager(
+				selectedRules.containsKey(RuleType.STEALING),
+				openingScoreLimit
+		);
 		finalRound = false;
 		gameEndingPlayer = null;
 		beginTurn("Game started.");
@@ -91,12 +116,35 @@ public class VisualGameSession
 		playerManager = null;
 		actionManager = null;
 		gameOptionManager = null;
+		stealingManager = null;
 		turnContext = null;
 		currentOptions = List.of();
 		finalRound = false;
 		gameEndingPlayer = null;
 		phase = Phase.SETUP;
 		notice = "Choose the game setup, then start.";
+	}
+
+	public void steal() {
+		if (phase != Phase.AWAITING_STEAL_DECISION || stealingManager == null) {
+			return;
+		}
+
+		TurnContinuation continuation = stealingManager.acceptContinuation(turnContext);
+		phase = Phase.AWAITING_ROLL;
+		notice = getCurrentPlayer().name() + " accepted " + continuation.inheritedScore() +
+				" points from " + continuation.sourcePlayerName() + " and must score with " +
+				continuation.diceInPlay() + " dice to keep them.";
+	}
+
+	public void freshRoll() {
+		if (phase != Phase.AWAITING_STEAL_DECISION || stealingManager == null) {
+			return;
+		}
+
+		stealingManager.clearContinuation();
+		phase = Phase.AWAITING_ROLL;
+		notice = getCurrentPlayer().name() + " declined the steal and will roll all six dice.";
 	}
 
 	public void roll() {
@@ -136,7 +184,8 @@ public class VisualGameSession
 		if (canBankCurrentTurn()) {
 			notice = scoredMessage + " Roll again or bank the round.";
 		} else {
-			notice = scoredMessage + " You need at least 1000 round points before banking.";
+			notice = scoredMessage + " You need at least " + openingScoreLimit +
+					" round points before banking.";
 		}
 	}
 
@@ -154,12 +203,13 @@ public class VisualGameSession
 			return;
 		}
 		if (!canBankCurrentTurn()) {
-			notice = "You need at least 1000 round points before banking.";
+			notice = "You need at least " + openingScoreLimit + " round points before banking.";
 			return;
 		}
 
 		Player completedPlayer = getCurrentPlayer();
 		int bankedPoints = completedPlayer.score().getRoundScore();
+		stealingManager.offerContinuation(turnContext);
 		actionManager.bankCurrentRound(completedPlayer);
 		String message = completedPlayer.name() + " banked " + bankedPoints + " points.";
 
@@ -189,10 +239,25 @@ public class VisualGameSession
 			return;
 		}
 		this.scoreLimit = Math.max(MIN_SCORE_LIMIT, scoreLimit);
+		openingScoreLimit = Math.min(openingScoreLimit, this.scoreLimit);
 	}
 
 	public void adjustScoreLimit(int steps) {
 		setScoreLimit(scoreLimit + (steps * SCORE_LIMIT_STEP));
+	}
+
+	public void setOpeningScoreLimit(int openingScoreLimit) {
+		if (phase != Phase.SETUP) {
+			return;
+		}
+		this.openingScoreLimit = Math.max(
+				MIN_OPENING_SCORE_LIMIT,
+				Math.min(scoreLimit, openingScoreLimit)
+		);
+	}
+
+	public void adjustOpeningScoreLimit(int steps) {
+		setOpeningScoreLimit(openingScoreLimit + (steps * OPENING_SCORE_LIMIT_STEP));
 	}
 
 	public void toggleRule(IRule rule) {
@@ -238,6 +303,10 @@ public class VisualGameSession
 
 	public int getScoreLimit() {
 		return scoreLimit;
+	}
+
+	public int getOpeningScoreLimit() {
+		return openingScoreLimit;
 	}
 
 	public List<IRule> getSelectableRules() {
@@ -311,6 +380,7 @@ public class VisualGameSession
 		bustedPlayer.score().setRoundScore(0);
 		bustedPlayer.score().setScoreFromMultiples(0);
 		turnContext.markBusted();
+		stealingManager.clearContinuation();
 		currentOptions = List.of();
 		advanceTurn(bustedPlayer.name() + " busted. No points banked this turn.");
 	}
@@ -333,8 +403,29 @@ public class VisualGameSession
 		gameOptionManager.setSelectedGameOption(null);
 		actionManager.replenishAllDice();
 		currentOptions = List.of();
+
+		String turnMessage = previousTurnMessage + " " + player.name() + " is up.";
+		if (stealingManager.hasAvailableContinuation()) {
+			TurnContinuation continuation = stealingManager.getAvailableContinuation().orElseThrow();
+			if (stealingManager.canSteal(player)) {
+				phase = Phase.AWAITING_STEAL_DECISION;
+				notice = turnMessage + " Continue " + continuation.sourcePlayerName() +
+						"'s " + continuation.inheritedScore() + "-point turn with " +
+						continuation.diceInPlay() + " dice, or start fresh.";
+				return;
+			}
+
+			stealingManager.clearContinuation();
+			if (player.score().getPermanentScore() < openingScoreLimit) {
+				turnMessage += " Stealing is unavailable until this player has already banked " +
+						openingScoreLimit + " points; this turn starts fresh.";
+			} else {
+				turnMessage += " A player cannot steal their own prior turn; this turn starts fresh.";
+			}
+		}
+
 		phase = Phase.AWAITING_ROLL;
-		notice = previousTurnMessage + " " + player.name() + " is up.";
+		notice = turnMessage;
 	}
 
 	private void concludeGame() {

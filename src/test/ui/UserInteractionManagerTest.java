@@ -3,6 +3,7 @@ package ui;
 
 import model.entities.GameOption;
 import model.entities.Player;
+import model.entities.TurnContinuation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import rules.managers.RuleRegistry;
@@ -133,7 +134,7 @@ class UserInteractionManagerTest
 	void shouldRollAgainReturnsTrueImmediatelyWhenThePlayerCannotBank() {
 		Player player = TestDoubles.player("Jacob");
 
-		boolean shouldRollAgain = userInteractionManager.shouldRollAgain(player, false);
+		boolean shouldRollAgain = userInteractionManager.shouldRollAgain(player, false, 1000);
 
 		assertTrue(shouldRollAgain);
 		assertTrue(gameplayUI.messageCalls.contains("Jacob cannot bank points yet. You need 1000 points to open.\n"));
@@ -144,10 +145,39 @@ class UserInteractionManagerTest
 		Player player = TestDoubles.player("Jacob");
 		inputManager.addString("maybe").addString("n");
 
-		boolean shouldRollAgain = userInteractionManager.shouldRollAgain(player, true);
+		boolean shouldRollAgain = userInteractionManager.shouldRollAgain(player, true, 1000);
 
 		assertFalse(shouldRollAgain);
 		assertTrue(gameplayUI.messageCalls.contains("Invalid input. Please enter 'yes' or 'no' [y/n]: "));
+	}
+
+	@Test
+	void getValidOpeningScoreLimitRejectsValuesOutsideTheConfiguredGameRange() {
+		inputManager.addInt(-50).addInt(2500).addInt(750);
+
+		int openingScoreLimit = userInteractionManager.getValidOpeningScoreLimit(2000);
+
+		assertEquals(750, openingScoreLimit);
+		assertEquals(
+				2,
+				gameplayUI.messageCalls.stream()
+				             .filter(message -> message.startsWith("Invalid opening score."))
+				             .count()
+		);
+	}
+
+	@Test
+	void shouldStealExplainsTheInheritedScoreAndRemainingDice() {
+		Player player = TestDoubles.player("Bob");
+		TurnContinuation continuation = new TurnContinuation("Alice", 450, 3, Map.of(2, 3));
+		inputManager.addString("y");
+
+		assertTrue(userInteractionManager.shouldSteal(player, continuation));
+		assertTrue(
+				gameplayUI.messageCalls.stream().anyMatch(message ->
+						message.contains("steal 450 points from Alice") && message.contains("3 remaining dice")
+				)
+		);
 	}
 
 	private List<IRule> selectableRules() {

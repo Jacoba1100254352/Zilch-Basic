@@ -4,6 +4,7 @@ package controllers.state;
 public enum GamePhase
 {
 	START_TURN,
+	CHOOSE_TURN_START,
 	ROLL_DICE,
 	EVALUATE_OPTIONS,
 	SELECT_OPTION,

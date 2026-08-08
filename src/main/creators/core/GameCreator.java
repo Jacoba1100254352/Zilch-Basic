@@ -21,6 +21,26 @@ public class GameCreator
 	) throws IOException {
 		return new GameFactory().createGameServer(playerNames, uiManager, gameID, scoreLimit, userInteraction, selectedRules);
 	}
+
+	public GameServer createSimpleGameServer(
+			List<String> playerNames,
+			IMessage uiManager,
+			String gameID,
+			int scoreLimit,
+			int openingScoreLimit,
+			IUserInteraction userInteraction,
+			Map<RuleType, Object> selectedRules
+	) throws IOException {
+		return new GameFactory().createGameServer(
+				playerNames,
+				uiManager,
+				gameID,
+				scoreLimit,
+				openingScoreLimit,
+				userInteraction,
+				selectedRules
+		);
+	}
 	
 	/*public static GameServer createSimpleGameServer(List<String> playerNames, IMessage uiManager) {
 		return GameFactory.createGameServer(playerNames, uiManager, "DefaultGameID", 1000);

@@ -102,7 +102,7 @@ public class ZilchGdxGame extends ApplicationAdapter
 
 		drawText("Setup Rules", margin + 24, top, 1.2f, TEXT);
 		drawWrapped(
-				"Toggle scoring rules and variants before the game starts. First-Roll Bust is a variant: if the opening roll has no scoring options, the player receives 50 points and rolls again.",
+				"Toggle scoring rules and variants. First-Roll Bust awards 50 and rerolls; Stealing offers an already-on player the prior turn's score and remaining dice.",
 				margin + 24,
 				top - 34,
 				leftWidth - 48,
@@ -110,7 +110,7 @@ public class ZilchGdxGame extends ApplicationAdapter
 				MUTED_TEXT
 		);
 
-		float y = top - 105f;
+		float y = top - 118f;
 		for (IRule rule : session.getSelectableRules()) {
 			boolean enabled = session.isRuleEnabled(rule);
 			Color buttonColor = enabled ? SUCCESS : DISABLED;
@@ -119,13 +119,13 @@ public class ZilchGdxGame extends ApplicationAdapter
 					margin + 24,
 					y,
 					leftWidth - 48,
-					42,
+					38,
 					buttonColor,
 					true,
 					() -> session.toggleRule(rule)
 			);
 			drawText(rule.getDescription(), margin + 42, y - 10, 0.74f, MUTED_TEXT);
-			y -= 68;
+			y -= 58;
 		}
 
 		drawText("Players", rightX + 24, top, 1.08f, TEXT);
@@ -133,10 +133,15 @@ public class ZilchGdxGame extends ApplicationAdapter
 		addButton("-", rightX + 24, top - 60, 54, 42, PRIMARY_DARK, session.getPlayerCount() > VisualGameSession.MIN_PLAYERS, () -> session.adjustPlayerCount(-1));
 		addButton("+", rightX + 88, top - 60, 54, 42, PRIMARY, session.getPlayerCount() < VisualGameSession.MAX_PLAYERS, () -> session.adjustPlayerCount(1));
 
-		drawText("Score Limit", rightX + 24, top - 132, 1.08f, TEXT);
+		drawText("Winning Score", rightX + 24, top - 132, 1.08f, TEXT);
 		drawText(String.valueOf(session.getScoreLimit()), rightX + 160, top - 132, 1.08f, TEXT);
 		addButton("-500", rightX + 24, top - 192, 82, 42, PRIMARY_DARK, session.getScoreLimit() > VisualGameSession.MIN_SCORE_LIMIT, () -> session.adjustScoreLimit(-1));
 		addButton("+500", rightX + 116, top - 192, 82, 42, PRIMARY, true, () -> session.adjustScoreLimit(1));
+
+		drawText("On Score", rightX + 24, top - 252, 1.08f, TEXT);
+		drawText(String.valueOf(session.getOpeningScoreLimit()), rightX + 160, top - 252, 1.08f, TEXT);
+		addButton("-250", rightX + 24, top - 312, 82, 42, PRIMARY_DARK, session.getOpeningScoreLimit() > VisualGameSession.MIN_OPENING_SCORE_LIMIT, () -> session.adjustOpeningScoreLimit(-1));
+		addButton("+250", rightX + 116, top - 312, 82, 42, PRIMARY, session.getOpeningScoreLimit() < session.getScoreLimit(), () -> session.adjustOpeningScoreLimit(1));
 
 		addButton("Start Visual Game", rightX + 24, 88, rightWidth - 48, 52, session.canStart() ? PRIMARY : DISABLED, session.canStart(), session::startGame);
 		drawWrapped(session.getNotice(), rightX + 24, 64, rightWidth - 48, 0.84f, MUTED_TEXT);
@@ -206,6 +211,12 @@ public class ZilchGdxGame extends ApplicationAdapter
 
 	private void drawActions(float x, float y, float panelWidth) {
 		VisualGameSession.Phase phase = session.getPhase();
+		if (phase == VisualGameSession.Phase.AWAITING_STEAL_DECISION) {
+			addButton("Continue / Steal", x, y, panelWidth, 48, SUCCESS, true, session::steal);
+			addButton("Fresh Roll", x, y - 62, panelWidth, 48, PRIMARY, true, session::freshRoll);
+			return;
+		}
+
 		if (phase == VisualGameSession.Phase.AWAITING_ROLL) {
 			addButton("Roll Dice", x, y, panelWidth, 48, PRIMARY, true, session::roll);
 			addButton("Back To Setup", x, 70, panelWidth, 42, DISABLED, true, session::resetToSetup);
@@ -228,7 +239,14 @@ public class ZilchGdxGame extends ApplicationAdapter
 			addButton("Roll Again", x, y, panelWidth, 48, PRIMARY, true, session::rollAgain);
 			addButton("Bank Round", x, y - 62, panelWidth, 48, session.canBankCurrentTurn() ? SUCCESS : DISABLED, session.canBankCurrentTurn(), session::bank);
 			if (!session.canBankCurrentTurn()) {
-				drawWrapped("Banking unlocks after the round reaches 1000 points.", x, y - 136, panelWidth, 0.78f, MUTED_TEXT);
+				drawWrapped(
+						"Banking unlocks after the round reaches " + session.getOpeningScoreLimit() + " points.",
+						x,
+						y - 136,
+						panelWidth,
+						0.78f,
+						MUTED_TEXT
+				);
 			}
 			return;
 		}

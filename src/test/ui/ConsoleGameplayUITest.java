@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -135,7 +136,7 @@ class ConsoleGameplayUITest
 	}
 
 	private ConsoleMessage newConsoleMessage(String input) throws IOException {
-		System.setIn(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)));
-		return new ConsoleMessage();
+		Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)));
+		return new ConsoleMessage(scanner);
 	}
 }

@@ -16,6 +16,7 @@ public class Config implements ReadOnlyConfig
 	private int numPlayers;
 	private List<String> playerNames;
 	private int scoreLimit;
+	private int openingScoreLimit;
 	
 	public Config(String filename) throws IOException {
 		this.filename = filename;
@@ -29,9 +30,11 @@ public class Config implements ReadOnlyConfig
 			this.numPlayers = 3;
 			this.playerNames = Arrays.asList("Alice", "Bob", "Charlie");
 			this.scoreLimit = 5000;
+			this.openingScoreLimit = 1000;
 			properties.setProperty("numPlayers", "3");
 			properties.setProperty("playerNames", "Alice,Bob,Charlie");
 			properties.setProperty("scoreLimit", "5000");
+			properties.setProperty("openingScoreLimit", "1000");
 			saveConfig();
 		} catch (IOException e) {
 			throw new IOException("Error reading configuration file.", e);
@@ -41,6 +44,7 @@ public class Config implements ReadOnlyConfig
 			this.numPlayers = Integer.parseInt(properties.getProperty("numPlayers"));
 			this.playerNames = Arrays.asList(properties.getProperty("playerNames").split(","));
 			this.scoreLimit = Integer.parseInt(properties.getProperty("scoreLimit"));
+			this.openingScoreLimit = Integer.parseInt(properties.getProperty("openingScoreLimit", "1000"));
 		}
 	}
 	
@@ -72,6 +76,16 @@ public class Config implements ReadOnlyConfig
 	public void setScoreLimit(int scoreLimit) {
 		this.scoreLimit = scoreLimit;
 		properties.setProperty("scoreLimit", String.valueOf(scoreLimit));
+	}
+
+	@Override
+	public int getOpeningScoreLimit() {
+		return openingScoreLimit;
+	}
+
+	public void setOpeningScoreLimit(int openingScoreLimit) {
+		this.openingScoreLimit = openingScoreLimit;
+		properties.setProperty("openingScoreLimit", String.valueOf(openingScoreLimit));
 	}
 	
 	public void saveConfig() throws IOException {

@@ -21,15 +21,21 @@ import java.util.stream.IntStream;
 public class ConsoleMessage implements IMessage
 {
 	private final int scoreLimit;
-	private final Scanner scanner; // We'll use this to wait for user input.
+	private final Scanner scanner;
 
 	/**
-	 * Creates the console UI and loads the configured score limit.
+	 * Creates the console UI with a shared scanner and loads the configured score limit.
+	 */
+	public ConsoleMessage(Scanner scanner) throws IOException {
+		this.scoreLimit = new Config("config.properties").getScoreLimit();
+		this.scanner = scanner;
+	}
+
+	/**
+	 * Creates the console UI with a new scanner and loads the configured score limit.
 	 */
 	public ConsoleMessage() throws IOException {
-		// Load the score limit from config.
-		scoreLimit = new Config("config.properties").getScoreLimit();
-		scanner = new Scanner(System.in);
+		this(new Scanner(System.in));
 	}
 
 	@Override
@@ -39,6 +45,7 @@ public class ConsoleMessage implements IMessage
 		System.out.println(getWelcomeMessage());
 		// Wait for user acknowledgment before proceeding.
 		System.out.print("Press enter to continue...");
+		System.out.flush();
 		scanner.nextLine();
 	}
 
@@ -82,14 +89,17 @@ public class ConsoleMessage implements IMessage
 	@Override
 	public void displayMessage(String message) {
 		System.out.print(message);
+		System.out.flush();
 	}
 
 	@Override
 	public void displayAndWait(String message) {
 		System.out.print(message);
+		System.out.flush();
 		// Wait for user input before continuing.
 		pauseAndContinue(() -> {
 			System.out.print("Press enter to continue...");
+			System.out.flush();
 			scanner.nextLine();
 		});
 	}
@@ -137,7 +147,7 @@ public class ConsoleMessage implements IMessage
 				Welcome to Zilch!
 
 				Here are the basic rules:
-				1. You must score an initial 1000 points to start logging your points.
+				1. You must reach the configured opening (on) score before banking points.
 				2. Sets (three pairs) and straits (1, 2, 3, 4, 5, 6) give 1000 points.
 				3. A group of 3 identical dice gives 100 points times the value of that die.
 				4. Each additional identical die doubles the score for that multiple.

@@ -35,6 +35,31 @@ class ActionManagerTest
 	}
 
 	@Test
+	void openingThresholdIsConfigurableAndOpeningRequiresBankedPoints() {
+		Player player = TestDoubles.player("Jacob");
+		ActionManager actionManager = new ActionManager(
+				new StubPlayerManager(List.of(player)),
+				new SequencedDiceManager(),
+				5000,
+				1500
+		);
+
+		player.score().setRoundScore(1499);
+		assertFalse(actionManager.canBankPoints(player));
+		assertFalse(actionManager.hasOpened(player));
+
+		player.score().setRoundScore(1500);
+		assertTrue(actionManager.canBankPoints(player));
+		assertFalse(actionManager.hasOpened(player));
+
+		player.score().increasePermanentScore(1500);
+		player.score().setRoundScore(0);
+		assertTrue(actionManager.hasOpened(player));
+		assertTrue(actionManager.canBankPoints(player));
+		assertEquals(1500, actionManager.getOpeningScoreLimit());
+	}
+
+	@Test
 	void bankCurrentRoundMovesPointsAndResetsTurnState() {
 		Player player = TestDoubles.player("Jacob");
 		player.score().increasePermanentScore(2500);

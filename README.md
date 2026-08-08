@@ -29,6 +29,24 @@ To run tests:
 ./gradlew test
 ```
 
+## Setup and Variants
+
+The winning score and opening ("on") score are configured separately. The
+opening score defaults to 1,000, but it can be changed before starting a game.
+
+`Stealing` is an optional, dynamically discovered variant. When a player banks
+without using all six dice, the next player may either:
+
+- continue with the remaining dice and put the prior turn's round score at risk, or
+- decline and start fresh with all six dice.
+
+A successful continuation can be banked and offered to the following player,
+so stealing can chain. A bust, a fresh-roll decision, or finishing the dice set
+ends the current chain. A player may only steal after already banking the
+configured opening score; inherited points can never put a player "on."
+The prior player's banked points remain safe; the continuing player begins a
+separate at-risk round at the inherited score.
+
 ## IntelliJ Setup
 
 Open the folder as a Gradle project and reload Gradle after checkout. Do not
@@ -79,7 +97,10 @@ flowchart LR
         GSM["GameStateManager"]
         AGSM["AbstractGameStateManager"]
         TC["TurnContext"]
+        SM["StealingManager"]
+        TCONT["TurnContinuation"]
         ST["StartTurnState"]
+        CTS["ChooseTurnStartState"]
         RD["RollDiceState"]
         EO["EvaluateOptionsState"]
         SO["SelectOptionState"]
@@ -100,6 +121,7 @@ flowchart LR
         SER["SetRule"]
         STR["StraitRule"]
         FBR["FirstRollBustRule"]
+        STEAL["StealingRule"]
     end
 
     subgraph Model["Game Data / Managers"]
@@ -129,6 +151,7 @@ flowchart LR
     VGS --> GOM
     VGS --> PM
     VGS --> DM
+    VGS --> SM
 
     UIM --> CM
     UIM --> CIM
@@ -151,6 +174,7 @@ flowchart LR
     GE --> GSM
     GSM --> AGSM
     GSM --> ST
+    GSM --> CTS
     GSM --> RD
     GSM --> EO
     GSM --> SO
@@ -158,6 +182,9 @@ flowchart LR
     GSM --> DT
     GSM --> ET
     ST --> TC
+    CTS --> TC
+    CTS --> SM
+    SM --> TCONT
     RD --> TC
     EO --> TC
     SO --> TC
@@ -179,6 +206,7 @@ flowchart LR
     IR --> SER
     IR --> STR
     IR --> FBR
+    IR --> STEAL
     RM --> GO
 
     ST --> ACT
@@ -206,7 +234,9 @@ This is the per-turn flow driven by `GameStateManager`.
 ```mermaid
 stateDiagram-v2
     [*] --> START_TURN
-    START_TURN --> ROLL_DICE
+    START_TURN --> CHOOSE_TURN_START
+    CHOOSE_TURN_START --> ROLL_DICE: no offer / fresh roll
+    CHOOSE_TURN_START --> ROLL_DICE: accept continuation
     ROLL_DICE --> EVALUATE_OPTIONS
     EVALUATE_OPTIONS --> ROLL_DICE: first-roll bust / +50 points
     EVALUATE_OPTIONS --> END_TURN: later bust
@@ -225,6 +255,8 @@ stateDiagram-v2
 - `RuleScanner` discovers concrete rule classes under `rules.variable`, so a new rule that implements the expected template can be loaded automatically.
 - `RuleRegistry` separates discovered rules from active rules, and `UserInteractionManager` uses that discovered list to build setup options.
 - Some setup options are game variants rather than scoring options, such as `First-Roll Bust`, which can award 50 points and reroll on a no-score opening roll.
+- `Stealing` is also a non-scoring setup variant. `StealingManager` owns its one-use cross-player continuation, while `ChooseTurnStartState` makes the accept-or-fresh decision explicit in the state machine.
+- The opening score is a game setting rather than a hardcoded gameplay rule, and stealing eligibility uses that configured value.
 - `TurnContext` is the mutable turn-local object passed across the entire state machine.
 - `GameServer` owns the outer game loop, while `GameEngine` owns a single turn.
 - `GameOverListener` bridges the event system back into gameplay by triggering the final-round flow.

@@ -10,6 +10,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -37,16 +38,16 @@ class ConsoleInputManagerTest
 
 	@Test
 	void getInputStringReadsTheNextLine() {
-		System.setIn(new ByteArrayInputStream("hello\n".getBytes(StandardCharsets.UTF_8)));
-		ConsoleInputManager inputManager = new ConsoleInputManager();
+		Scanner scanner = new Scanner(new ByteArrayInputStream("hello\n".getBytes(StandardCharsets.UTF_8)));
+		ConsoleInputManager inputManager = new ConsoleInputManager(scanner);
 
 		assertEquals("hello", inputManager.getInputString());
 	}
 
 	@Test
 	void getInputIntRepromptsUntilItReceivesAnInteger() {
-		System.setIn(new ByteArrayInputStream("abc\n42\n".getBytes(StandardCharsets.UTF_8)));
-		ConsoleInputManager inputManager = new ConsoleInputManager();
+		Scanner scanner = new Scanner(new ByteArrayInputStream("abc\n42\n".getBytes(StandardCharsets.UTF_8)));
+		ConsoleInputManager inputManager = new ConsoleInputManager(scanner);
 
 		assertEquals(42, inputManager.getInputInt());
 		assertTrue(outputStream.toString().contains("Please enter a valid integer:"));
@@ -54,8 +55,8 @@ class ConsoleInputManagerTest
 
 	@Test
 	void waitForEnterKeyPrintsThePausePrompt() {
-		System.setIn(new ByteArrayInputStream("\n".getBytes(StandardCharsets.UTF_8)));
-		ConsoleInputManager inputManager = new ConsoleInputManager();
+		Scanner scanner = new Scanner(new ByteArrayInputStream("\n".getBytes(StandardCharsets.UTF_8)));
+		ConsoleInputManager inputManager = new ConsoleInputManager(scanner);
 
 		inputManager.waitForEnterKey().run();
 

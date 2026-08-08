@@ -13,6 +13,7 @@ import ui.UserInteractionManager;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 
 public class ZilchCliClient
@@ -26,19 +27,21 @@ public class ZilchCliClient
 		int numPlayers;
 		List<String> playerNames;
 		int scoreLimit;
+		int openingScoreLimit;
 
-		try {
+		try (Scanner scanner = new Scanner(System.in)) {
 			String mode = args.length > 0 ? args[0] : "writeConfig";
 
-			Config config = new Config("config.properties");
+			Config gameConfig = new Config("config.properties");
 			GameIDManager gameIDManager = new GameIDManager();
-			IUserInteraction userSetup = new UserInteractionManager();
-			IMessage uiManager = new ConsoleMessage();
+			IUserInteraction userSetup = new UserInteractionManager(scanner);
+			IMessage uiManager = new ConsoleMessage(scanner);
 
 			if (mode.equals("readConfig")) {
-				numPlayers = config.getNumPlayers();
-				playerNames = config.getPlayerNames();
-				scoreLimit = config.getScoreLimit();
+				numPlayers = gameConfig.getNumPlayers();
+				playerNames = gameConfig.getPlayerNames();
+				scoreLimit = gameConfig.getScoreLimit();
+				openingScoreLimit = gameConfig.getOpeningScoreLimit();
 
 				if (numPlayers != playerNames.size()) {
 					System.out.println("Invalid configuration: numPlayers does not match length of playerNames");
@@ -48,11 +51,13 @@ public class ZilchCliClient
 				numPlayers = userSetup.getNumberOfPlayers();
 				playerNames = userSetup.getPlayerNames(numPlayers);
 				scoreLimit = userSetup.getValidScoreLimit();
+				openingScoreLimit = userSetup.getValidOpeningScoreLimit(scoreLimit);
 
-				config.setNumPlayers(numPlayers);
-				config.setPlayerNames(playerNames);
-				config.setScoreLimit(scoreLimit);
-				config.saveConfig();
+				gameConfig.setNumPlayers(numPlayers);
+				gameConfig.setPlayerNames(playerNames);
+				gameConfig.setScoreLimit(scoreLimit);
+				gameConfig.setOpeningScoreLimit(openingScoreLimit);
+				gameConfig.saveConfig();
 			} else {
 				System.out.println("Usage: java ZilchCliClient [readConfig|writeConfig]");
 				return;
@@ -66,6 +71,7 @@ public class ZilchCliClient
 					uiManager,
 					gameID,
 					scoreLimit,
+					openingScoreLimit,
 					userSetup,
 					selectedRules
 			);

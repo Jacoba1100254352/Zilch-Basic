@@ -29,6 +29,6 @@ public class StartTurnState implements GameTurnState
 		turnContext.getPlayer().score().setScoreFromMultiples(0);
 		gameOptionManager.setSelectedGameOption(null);
 		actionManager.replenishAllDice();
-		return GamePhase.ROLL_DICE;
+		return GamePhase.CHOOSE_TURN_START;
 	}
 }

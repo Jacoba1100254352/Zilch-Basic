@@ -162,4 +162,47 @@ class GameStateManagerTest
 		assertEquals(List.of(true, true), userInteraction.canBankRequests);
 		assertEquals(GamePhase.END_TURN, gameStateManager.getCurrentPhase());
 	}
+
+	@Test
+	void stealingContinuesThePriorBankedTurnWithItsScoreAndRemainingDice() throws Exception {
+		Player alice = TestDoubles.player("Alice");
+		Player bob = TestDoubles.player("Bob");
+		alice.score().increasePermanentScore(1000);
+		bob.score().increasePermanentScore(1000);
+		StubPlayerManager playerManager = new StubPlayerManager(List.of(alice, bob));
+		SequencedDiceManager diceManager = new SequencedDiceManager()
+				.queueRoll(Map.of(1, 1, 2, 5))
+				.queueRoll(Map.of(5, 1, 2, 4));
+		ActionManager actionManager = new ActionManager(playerManager, diceManager, 5000, 1000);
+
+		RuleManager ruleManager = new RuleManager(new RuleRegistry());
+		ruleManager.initializeRules(Map.of(
+				RuleType.SINGLE, Set.of(1, 5),
+				RuleType.STEALING, true
+		));
+		GameOptionManager gameOptionManager = new GameOptionManager(ruleManager);
+		RecordingMessage uiManager = new RecordingMessage();
+		ScriptedUserInteraction userInteraction = new ScriptedUserInteraction()
+				.addRollAgainDecision(false)
+				.addStealingDecision(true)
+				.addRollAgainDecision(false);
+		GameStateManager gameStateManager = new GameStateManager(
+				gameOptionManager,
+				uiManager,
+				actionManager,
+				userInteraction
+		);
+
+		gameStateManager.processTurn(new TurnContext(alice));
+		actionManager.switchToNextPlayer();
+		gameStateManager.processTurn(new TurnContext(bob));
+
+		assertEquals(1100, alice.score().getPermanentScore());
+		assertEquals(1150, bob.score().getPermanentScore());
+		assertEquals(List.of("Alice:0", "Bob:100"), uiManager.currentScoreCalls);
+		assertEquals(1, userInteraction.stealingCalls);
+		assertEquals(100, userInteraction.stealingContinuations.get(0).inheritedScore());
+		assertEquals(5, userInteraction.stealingContinuations.get(0).diceInPlay());
+		assertEquals(2, diceManager.rollCalls);
+	}
 }

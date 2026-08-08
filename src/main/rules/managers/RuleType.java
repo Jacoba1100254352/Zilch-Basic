@@ -20,6 +20,7 @@ public final class RuleType implements Comparable<RuleType>
 	public static final RuleType ROLL_AGAIN = new RuleType("roll_again");
 	public static final RuleType END_TURN = new RuleType("end_turn");
 	public static final RuleType FIRST_ROLL_BUST = new RuleType("first_roll_bust");
+	public static final RuleType STEALING = new RuleType("stealing");
 
 	private final String id;
 
