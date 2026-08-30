@@ -24,15 +24,25 @@ public class ConsoleMessage implements IMessage
 	private final Scanner scanner;
 
 	/**
-	 * Creates the console UI with a shared scanner and loads the configured score limit.
+	 * Creates the console UI with a shared scanner and loads the configured Winning Score.
 	 */
 	public ConsoleMessage(Scanner scanner) throws IOException {
-		this.scoreLimit = new Config("config.properties").getScoreLimit();
+		this(scanner, new Config("config.properties").getScoreLimit());
+	}
+
+	/**
+	 * Creates the console UI with the active game's winning score.
+	 */
+	public ConsoleMessage(Scanner scanner, int scoreLimit) {
+		if (scoreLimit <= 0) {
+			throw new IllegalArgumentException("scoreLimit must be positive.");
+		}
+		this.scoreLimit = scoreLimit;
 		this.scanner = scanner;
 	}
 
 	/**
-	 * Creates the console UI with a new scanner and loads the configured score limit.
+	 * Creates the console UI with a new scanner and loads the configured Winning Score.
 	 */
 	public ConsoleMessage() throws IOException {
 		this(new Scanner(System.in));
@@ -106,8 +116,8 @@ public class ConsoleMessage implements IMessage
 
 	@Override
 	public void displayLastRoundMessage(Player gameEndingPlayer, Runnable waitFunction) {
-		System.out.println(gameEndingPlayer.name() + " is over " + scoreLimit + " points!");
-		System.out.println("Everyone else has one more chance to win.");
+		System.out.println(gameEndingPlayer.name() + " reached " + scoreLimit + " points!");
+		System.out.println("Final Chase: everyone else has one more chance to win.");
 		pauseAndContinue(waitFunction);
 		System.out.println();
 	}
@@ -147,8 +157,8 @@ public class ConsoleMessage implements IMessage
 				Welcome to Zilch!
 
 				Here are the basic rules:
-				1. You must reach the configured opening (on) score before banking points.
-				2. Sets (three pairs) and straits (1, 2, 3, 4, 5, 6) give 1000 points.
+				1. You must reach the configured Opening Score before banking points.
+				2. Three Pairs and a Straight (1, 2, 3, 4, 5, 6) give 1000 points.
 				3. A group of 3 identical dice gives 100 points times the value of that die.
 				4. Each additional identical die doubles the score for that multiple.
 				5. Single 1's are worth 100 points and single 5's are worth 50 points.

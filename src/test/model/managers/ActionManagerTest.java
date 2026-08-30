@@ -13,6 +13,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -57,6 +58,20 @@ class ActionManagerTest
 		assertTrue(actionManager.hasOpened(player));
 		assertTrue(actionManager.canBankPoints(player));
 		assertEquals(1500, actionManager.getOpeningScoreLimit());
+	}
+
+	@Test
+	void openingThresholdCannotExceedWinningScoreAndLegacyConstructorSupportsLowLimits() {
+		Player player = TestDoubles.player("Jacob");
+		StubPlayerManager playerManager = new StubPlayerManager(List.of(player));
+		SequencedDiceManager diceManager = new SequencedDiceManager();
+
+		ActionManager lowScoreGame = new ActionManager(playerManager, diceManager, 500);
+		assertEquals(500, lowScoreGame.getOpeningScoreLimit());
+		assertThrows(
+				IllegalArgumentException.class,
+				() -> new ActionManager(playerManager, diceManager, 1000, 1001)
+		);
 	}
 
 	@Test

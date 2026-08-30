@@ -27,12 +27,12 @@ public class Config implements ReadOnlyConfig
 		} catch (FileNotFoundException e) {
 			System.out.println("Configuration file not found. Creating a new one with default values.");
 			// Set default values
-			this.numPlayers = 3;
-			this.playerNames = Arrays.asList("Alice", "Bob", "Charlie");
+			this.numPlayers = 2;
+			this.playerNames = Arrays.asList("Alice", "Bob");
 			this.scoreLimit = 5000;
 			this.openingScoreLimit = 1000;
-			properties.setProperty("numPlayers", "3");
-			properties.setProperty("playerNames", "Alice,Bob,Charlie");
+			properties.setProperty("numPlayers", "2");
+			properties.setProperty("playerNames", "Alice,Bob");
 			properties.setProperty("scoreLimit", "5000");
 			properties.setProperty("openingScoreLimit", "1000");
 			saveConfig();

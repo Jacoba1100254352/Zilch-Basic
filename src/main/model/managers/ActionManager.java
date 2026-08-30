@@ -4,6 +4,8 @@ package model.managers;
 import model.entities.Dice;
 import model.entities.Player;
 
+import java.util.List;
+
 
 /**
  * Centralizes non-rule game actions such as player rotation, banking scores,
@@ -23,7 +25,7 @@ public class ActionManager
 	 * Creates the action manager for a game with the supplied collaborators.
 	 */
 	public ActionManager(IPlayerManager playerManager, IDiceManager diceManager, int scoreLimit) {
-		this(playerManager, diceManager, scoreLimit, DEFAULT_OPENING_SCORE_LIMIT);
+		this(playerManager, diceManager, scoreLimit, Math.min(DEFAULT_OPENING_SCORE_LIMIT, scoreLimit));
 	}
 
 	/**
@@ -40,6 +42,9 @@ public class ActionManager
 		}
 		if (openingScoreLimit < 0) {
 			throw new IllegalArgumentException("openingScoreLimit cannot be negative.");
+		}
+		if (openingScoreLimit > scoreLimit) {
+			throw new IllegalArgumentException("openingScoreLimit cannot exceed scoreLimit.");
 		}
 		this.playerManager = playerManager;
 		this.diceManager = diceManager;
@@ -66,6 +71,22 @@ public class ActionManager
 	 */
 	public Player findHighestScoringPlayer() {
 		return playerManager.findHighestScoringPlayer();
+	}
+
+	/**
+	 * Returns every player tied at the current permanent-score maximum, preserving
+	 * player order so a no-ties game has a deterministic incumbent fallback.
+	 */
+	public List<Player> findHighestScoringPlayers() {
+		Player highestScoringPlayer = findHighestScoringPlayer();
+		if (highestScoringPlayer == null) {
+			return List.of();
+		}
+		int highestScore = highestScoringPlayer.score().getPermanentScore();
+		return playerManager.getPlayers()
+		                    .stream()
+		                    .filter(player -> player.score().getPermanentScore() == highestScore)
+		                    .toList();
 	}
 
 	/**

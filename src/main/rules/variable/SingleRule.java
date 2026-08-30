@@ -16,7 +16,7 @@ public class SingleRule extends AbstractVariableRule
 	private Set<Integer> acceptedValues = Set.of(1, 5);
 
 	public SingleRule() {
-		super(RuleType.SINGLE, "Single", "Score a single scoring die.");
+		super(RuleType.SINGLE, "Singles", "Score individual ones and fives.");
 	}
 
 	@SuppressWarnings("unchecked")

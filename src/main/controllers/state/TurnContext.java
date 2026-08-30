@@ -45,6 +45,14 @@ public class TurnContext
 	}
 
 	/**
+	 * Ends the current multiple-extension chain, including the legacy score field.
+	 */
+	public void clearScoredMultiples() {
+		scoredMultiples.clear();
+		player.score().setScoreFromMultiples(0);
+	}
+
+	/**
 	 * Builds the immutable rule-facing context used during evaluation and
 	 * application of scoring options.
 	 */
@@ -95,7 +103,7 @@ public class TurnContext
 	 */
 	public void resetForNewTurn() {
 		selectedOption = null;
-		scoredMultiples.clear();
+		clearScoredMultiples();
 		busted = false;
 	}
 
@@ -105,7 +113,6 @@ public class TurnContext
 	public void continueFrom(TurnContinuation continuation) {
 		resetForNewTurn();
 		player.score().setRoundScore(continuation.inheritedScore());
-		player.score().setScoreFromMultiples(0);
 		player.dice().getDiceSetMap().clear();
 		player.dice().setNumDiceInPlay(continuation.diceInPlay());
 		scoredMultiples.putAll(continuation.scoredMultiples());

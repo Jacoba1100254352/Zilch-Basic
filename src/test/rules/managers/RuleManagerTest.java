@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,7 +39,10 @@ class RuleManagerTest
 				new RuleContext(player, player.dice().getDiceSetMap(), new HashMap<>())
 		);
 
-		assertTrue(gameOptions.stream().anyMatch(option -> option.type().equals(RuleType.SINGLE)));
+		assertTrue(gameOptions.stream().anyMatch(option ->
+				option.type().equals(RuleType.SINGLE) && option.selectedValue() == 5));
+		assertFalse(gameOptions.stream().anyMatch(option ->
+				option.type().equals(RuleType.SINGLE) && option.selectedValue() == 1));
 		assertTrue(gameOptions.stream().anyMatch(option -> option.type().equals(RuleType.MULTIPLE)));
 		assertTrue(gameOptions.stream().noneMatch(option -> option.type().equals(RuleType.SET)));
 		assertTrue(gameOptions.stream().noneMatch(option -> option.type().equals(RuleType.STRAIT)));
@@ -84,6 +88,34 @@ class RuleManagerTest
 
 		assertTrue(ruleManager.getAvailableRules().stream().anyMatch(rule -> rule.getRuleType().equals(RuleType.SINGLE)));
 		assertTrue(ruleManager.getAvailableRules().stream().anyMatch(rule -> rule.getRuleType().equals(new RuleType("test_auto_loaded"))));
+	}
+
+	@Test
+	void multipleExtensionOwnsMatchingSinglesWhileOtherSinglesRemainAvailable() {
+		RuleManager ruleManager = new RuleManager(new RuleRegistry());
+		ruleManager.initializeRules(Map.of(
+				RuleType.SINGLE, Set.of(1, 5),
+				RuleType.MULTIPLE, 3
+		));
+		Player player = new Player(
+				"Jacob",
+				new Dice(new HashMap<>(Map.of(1, 1, 5, 1, 2, 4))),
+				new Score()
+		);
+		RuleContext context = new RuleContext(
+				player,
+				player.dice().getDiceSetMap(),
+				new HashMap<>(Map.of(1, 3))
+		);
+
+		List<GameOption> options = ruleManager.evaluateRules(context);
+
+		assertTrue(options.stream().anyMatch(option ->
+				option.type().equals(RuleType.ADD_MULTIPLE) && option.selectedValue() == 1));
+		assertFalse(options.stream().anyMatch(option ->
+				option.type().equals(RuleType.SINGLE) && option.selectedValue() == 1));
+		assertTrue(options.stream().anyMatch(option ->
+				option.type().equals(RuleType.SINGLE) && option.selectedValue() == 5));
 	}
 
 	@Test

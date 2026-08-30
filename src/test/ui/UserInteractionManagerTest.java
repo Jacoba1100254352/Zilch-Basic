@@ -38,15 +38,13 @@ class UserInteractionManagerTest
 	@Test
 	void selectRulesTreatsSingleLetterYesAsEnabled() {
 		List<IRule> selectableRules = selectableRules();
-		inputManager.addString("y");
-		for (int index = 1; index < selectableRules.size(); index++) {
-			inputManager.addString("n");
-		}
+		IRule scoringRule = selectableRules.stream().filter(IRule::isScoringRule).findFirst().orElseThrow();
+		queueRuleSelections(selectableRules, Set.of(scoringRule.getRuleType()));
 
 		Map<RuleType, Object> selectedRules = userInteractionManager.selectRules();
 
 		assertEquals(1, selectedRules.size());
-		assertTrue(selectedRules.containsKey(selectableRules.get(0).getRuleType()));
+		assertTrue(selectedRules.containsKey(scoringRule.getRuleType()));
 	}
 
 	@Test
@@ -55,15 +53,20 @@ class UserInteractionManagerTest
 		for (int index = 0; index < selectableRules.size(); index++) {
 			inputManager.addString("n");
 		}
-		inputManager.addString("y");
-		for (int index = 1; index < selectableRules.size(); index++) {
-			inputManager.addString("n");
-		}
+		IRule scoringRule = selectableRules.stream().filter(IRule::isScoringRule).findFirst().orElseThrow();
+		queueRuleSelections(selectableRules, Set.of(scoringRule.getRuleType()));
 
 		Map<RuleType, Object> selectedRules = userInteractionManager.selectRules();
 
 		assertEquals(1, selectedRules.size());
 		assertTrue(gameplayUI.messageCalls.contains("At least one scoring rule must be enabled. Please choose again.\n"));
+	}
+
+	@Test
+	void addMultipleIsGroupedUnderMultiplesAndCannotSatisfySetupAlone() {
+		List<IRule> selectableRules = selectableRules();
+
+		assertTrue(selectableRules.stream().noneMatch(rule -> rule.getRuleType().equals(RuleType.ADD_MULTIPLE)));
 	}
 
 	@Test
@@ -77,6 +80,19 @@ class UserInteractionManagerTest
 		assertEquals(1, selectedRules.size());
 		assertTrue(selectedRules.containsKey(RuleType.SINGLE));
 		assertTrue(gameplayUI.messageCalls.contains("At least one scoring rule must be enabled. Please choose again.\n"));
+	}
+
+	@Test
+	void blankRuleAnswersAcceptTheCanonicalDefaults() {
+		List<IRule> selectableRules = selectableRules();
+		for (int index = 0; index < selectableRules.size(); index++) {
+			inputManager.addString("");
+		}
+
+		Map<RuleType, Object> selectedRules = userInteractionManager.selectRules();
+
+		assertEquals(new RuleRegistry().getDefaultConfig().keySet(), selectedRules.keySet());
+		assertFalse(selectedRules.containsKey(RuleType.STEALING));
 	}
 
 	@Test
@@ -127,7 +143,7 @@ class UserInteractionManagerTest
 		int scoreLimit = userInteractionManager.getValidScoreLimit();
 
 		assertEquals(1500, scoreLimit);
-		assertTrue(gameplayUI.messageCalls.contains("Invalid score limit. Score limit must be at least 1000. Please try again."));
+		assertTrue(gameplayUI.messageCalls.contains("Invalid Winning Score. Winning Score must be at least 1000. Please try again."));
 	}
 
 	@Test
@@ -152,6 +168,20 @@ class UserInteractionManagerTest
 	}
 
 	@Test
+	void shouldScoreMoreUsesASeparateBackwardCompatiblePrompt() {
+		Player player = TestDoubles.player("Jacob");
+		inputManager.addString("y");
+
+		boolean scoreMore = userInteractionManager.shouldScoreMore(
+				player,
+				List.of(new GameOption(RuleType.SINGLE, "Singles", "Single five", 5, 50, Map.of(5, 1)))
+		);
+
+		assertTrue(scoreMore);
+		assertTrue(gameplayUI.messageCalls.stream().anyMatch(message -> message.contains("Score another option")));
+	}
+
+	@Test
 	void getValidOpeningScoreLimitRejectsValuesOutsideTheConfiguredGameRange() {
 		inputManager.addInt(-50).addInt(2500).addInt(750);
 
@@ -161,7 +191,7 @@ class UserInteractionManagerTest
 		assertEquals(
 				2,
 				gameplayUI.messageCalls.stream()
-				             .filter(message -> message.startsWith("Invalid opening score."))
+					             .filter(message -> message.startsWith("Invalid Opening Score."))
 				             .count()
 		);
 	}

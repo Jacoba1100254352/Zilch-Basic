@@ -35,6 +35,11 @@ public class StealingRule implements IRule
 	}
 
 	@Override
+	public boolean isEnabledByDefault() {
+		return false;
+	}
+
+	@Override
 	public void configure(Object configValue) {
 		Object value = configValue == null ? getDefaultConfig() : configValue;
 		if (!(value instanceof Boolean)) {

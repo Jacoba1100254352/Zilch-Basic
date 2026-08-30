@@ -61,7 +61,10 @@ public class GameStateManager extends AbstractGameStateManager
 				new EvaluateOptionsState(gameOptionManager, uiManager, stealingManager)
 		);
 		states.put(GamePhase.SELECT_OPTION, new SelectOptionState(gameOptionManager, userInteraction));
-		states.put(GamePhase.APPLY_OPTION, new ApplyOptionState(actionManager, gameOptionManager, uiManager));
+		states.put(
+				GamePhase.APPLY_OPTION,
+				new ApplyOptionState(actionManager, gameOptionManager, uiManager, userInteraction)
+		);
 		states.put(
 				GamePhase.DECIDE_TURN,
 				new DecideTurnState(actionManager, userInteraction, stealingManager)

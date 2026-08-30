@@ -74,6 +74,22 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		return input.equals("yes") || input.equals("y");
 	}
 
+	private boolean readYesNo(String message, boolean defaultValue) {
+		gameplayUI.displayMessage(message);
+		String input = inputManager.getInputString().trim().toLowerCase();
+		if (input.isEmpty()) {
+			return defaultValue;
+		}
+		while (!input.equals("yes") && !input.equals("no") && !input.equals("y") && !input.equals("n")) {
+			gameplayUI.displayMessage("Invalid input. Please enter 'yes' or 'no' [y/n]: ");
+			input = inputManager.getInputString().trim().toLowerCase();
+			if (input.isEmpty()) {
+				return defaultValue;
+			}
+		}
+		return input.equals("yes") || input.equals("y");
+	}
+
 	/**
 	 * Presents the discovered selectable rules and returns the subset enabled by
 	 * the user along with each rule's default configuration.
@@ -94,7 +110,9 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 
 			for (IRule rule : selectableRules) {
 				boolean isEnabled = readYesNo(
-						"Enable " + rule.getDisplayName() + " (" + rule.getDescription() + ")? "
+						"Enable " + rule.getDisplayName() + " (" + rule.getDescription() + ")? " +
+								(rule.isEnabledByDefault() ? "[Y/n] " : "[y/N] "),
+						rule.isEnabledByDefault()
 				);
 				if (isEnabled) {
 					selectedConfig.put(rule.getRuleType(), rule.getDefaultConfig());
@@ -146,7 +164,7 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	}
 
 	/**
-	 * Prompts for the score limit and keeps asking until a valid minimum is met.
+	 * Prompts for the Winning Score and keeps asking until a valid minimum is met.
 	 */
 	@Override
 	public int getValidScoreLimit() {
@@ -155,16 +173,16 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 
 		while (true) {
 			try {
-				displayMessage("\nEnter the score limit (minimum " + minScoreLimit + "): ");
+				displayMessage("\nEnter the Winning Score (minimum " + minScoreLimit + "): ");
 				limit = inputManager.getInputInt();
 				if (limit < minScoreLimit) {
-					displayMessage("Invalid score limit. Score limit must be at least 1000. Please try again.");
+					displayMessage("Invalid Winning Score. Winning Score must be at least 1000. Please try again.");
 				} else {
 					break;
 				}
 			} catch (Exception e) {
 				clear();
-				displayMessage("Invalid score limit. Please try again.");
+				displayMessage("Invalid Winning Score. Please try again.");
 				inputManager.getInputString(); // Clears the buffer.
 			}
 		}
@@ -178,13 +196,13 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	public int getValidOpeningScoreLimit(int scoreLimit) {
 		while (true) {
 			displayMessage(
-					"\nEnter the opening (on) score from 0 to " + scoreLimit + " (usually 1000): "
+					"\nEnter the Opening Score from 0 to " + scoreLimit + " (usually 1000): "
 			);
 			int limit = inputManager.getInputInt();
 			if (limit >= 0 && limit <= scoreLimit) {
 				return limit;
 			}
-			displayMessage("Invalid opening score. Enter a value from 0 to " + scoreLimit + ".");
+			displayMessage("Invalid Opening Score. Enter a value from 0 to " + scoreLimit + ".");
 		}
 	}
 
@@ -206,6 +224,13 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 		}
 
 		return gameOptions.get(choice - 1);
+	}
+
+	@Override
+	public boolean shouldScoreMore(Player currentPlayer, List<GameOption> remainingOptions) {
+		return readYesNo(
+				"Score another option from this roll (" + remainingOptions.size() + " available)? "
+		);
 	}
 
 	/**

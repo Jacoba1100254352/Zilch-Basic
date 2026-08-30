@@ -24,6 +24,15 @@ public interface IUserInteraction
 
 	GameOption chooseGameOption(Player currentPlayer, List<GameOption> gameOptions);
 
+	/**
+	 * Asks whether the player wants to apply another scoring option from the
+	 * current physical roll. Existing interaction implementations retain the
+	 * former one-option behavior unless they opt in by overriding this method.
+	 */
+	default boolean shouldScoreMore(Player currentPlayer, List<GameOption> remainingOptions) {
+		return false;
+	}
+
 	boolean shouldRollAgain(Player currentPlayer, boolean canBankPoints, int openingScoreLimit);
 
 	boolean shouldSteal(Player currentPlayer, TurnContinuation continuation);

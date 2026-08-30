@@ -25,6 +25,16 @@ public interface IRule
 		return true;
 	}
 
+	/**
+	 * Returns whether setup surfaces should enable this rule in a fresh game.
+	 * Activation is intentionally separate from {@link #getDefaultConfig()} so
+	 * an enabled boolean rule can still use {@code true} as its configuration
+	 * value while remaining off by default.
+	 */
+	default boolean isEnabledByDefault() {
+		return true;
+	}
+
 	default boolean isScoringRule() {
 		return true;
 	}

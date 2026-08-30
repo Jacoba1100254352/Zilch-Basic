@@ -59,7 +59,11 @@ public class VisualGameSession
 	private List<GameOption> currentOptions = List.of();
 	private Phase phase = Phase.SETUP;
 	private boolean finalRound;
+	private boolean finalChaseEnabled;
+	private boolean allowTies;
 	private Player gameEndingPlayer;
+	private Player incumbentHighScorer;
+	private int incumbentHighScore = Integer.MIN_VALUE;
 	private String notice = "Choose the game setup, then start.";
 
 	public VisualGameSession() {
@@ -107,8 +111,12 @@ public class VisualGameSession
 				selectedRules.containsKey(RuleType.STEALING),
 				openingScoreLimit
 		);
+		finalChaseEnabled = selectedRules.containsKey(RuleType.FINAL_CHASE);
+		allowTies = selectedRules.containsKey(RuleType.ALLOW_TIES);
 		finalRound = false;
 		gameEndingPlayer = null;
+		incumbentHighScorer = null;
+		incumbentHighScore = Integer.MIN_VALUE;
 		beginTurn("Game started.");
 	}
 
@@ -120,7 +128,11 @@ public class VisualGameSession
 		turnContext = null;
 		currentOptions = List.of();
 		finalRound = false;
+		finalChaseEnabled = false;
+		allowTies = false;
 		gameEndingPlayer = null;
+		incumbentHighScorer = null;
+		incumbentHighScore = Integer.MIN_VALUE;
 		phase = Phase.SETUP;
 		notice = "Choose the game setup, then start.";
 	}
@@ -172,17 +184,26 @@ public class VisualGameSession
 		turnContext.setSelectedOption(option);
 		gameOptionManager.setSelectedGameOption(option);
 		gameOptionManager.applyGameOption(turnContext.toRuleContext(), option);
-		currentOptions = List.of();
 
 		String scoredMessage = getCurrentPlayer().name() + " scored " + option.pointsAwarded() + " points.";
 		if (getCurrentPlayer().dice().getNumDiceInPlay() == 0) {
 			actionManager.replenishAllDice();
+			turnContext.clearScoredMultiples();
+			currentOptions = List.of();
 			scoredMessage += " Hot dice - all six dice are back in play.";
+		} else {
+			gameOptionManager.evaluateGameOptions(turnContext.toRuleContext());
+			currentOptions = gameOptionManager.getGameOptions();
 		}
 
 		phase = Phase.AWAITING_DECISION;
+		if (!currentOptions.isEmpty()) {
+			scoredMessage += " More scoring options remain in this roll.";
+		}
 		if (canBankCurrentTurn()) {
-			notice = scoredMessage + " Roll again or bank the round.";
+			notice = scoredMessage + (currentOptions.isEmpty()
+					? " Roll again or bank the round."
+					: " Score more, roll again, or bank the round.");
 		} else {
 			notice = scoredMessage + " You need at least " + openingScoreLimit +
 					" round points before banking.";
@@ -194,8 +215,19 @@ public class VisualGameSession
 			return;
 		}
 		phase = Phase.AWAITING_ROLL;
+		currentOptions = List.of();
 		gameOptionManager.setSelectedGameOption(null);
 		notice = getCurrentPlayer().name() + " is rolling again.";
+	}
+
+	public void scoreMore() {
+		if (phase != Phase.AWAITING_DECISION || currentOptions.isEmpty()) {
+			return;
+		}
+		turnContext.setSelectedOption(null);
+		gameOptionManager.setSelectedGameOption(null);
+		phase = Phase.AWAITING_OPTION;
+		notice = "Choose another scoring option from this roll.";
 	}
 
 	public void bank() {
@@ -211,13 +243,19 @@ public class VisualGameSession
 		int bankedPoints = completedPlayer.score().getRoundScore();
 		stealingManager.offerContinuation(turnContext);
 		actionManager.bankCurrentRound(completedPlayer);
+		recordHighScore(completedPlayer);
 		String message = completedPlayer.name() + " banked " + bankedPoints + " points.";
 
 		if (!finalRound && actionManager.hasReachedScoreLimit(completedPlayer)) {
-			finalRound = true;
 			gameEndingPlayer = completedPlayer;
 			actionManager.setGameEndingPlayer(completedPlayer);
-			message += " Final round started - everyone else gets one more turn.";
+			if (finalChaseEnabled) {
+				finalRound = true;
+				message += " Final chase started - everyone else gets one more turn.";
+			} else {
+				concludeGame();
+				return;
+			}
 		}
 
 		advanceTurn(message);
@@ -357,6 +395,10 @@ public class VisualGameSession
 		return actionManager != null && actionManager.canBankPoints(getCurrentPlayer());
 	}
 
+	public boolean canScoreMore() {
+		return phase == Phase.AWAITING_DECISION && !currentOptions.isEmpty();
+	}
+
 	public boolean isFinalRound() {
 		return finalRound;
 	}
@@ -429,20 +471,37 @@ public class VisualGameSession
 	}
 
 	private void concludeGame() {
-		Player winner = actionManager.findHighestScoringPlayer();
-		int winningScore = winner == null ? 0 : winner.score().getPermanentScore();
-		List<Player> tiedPlayers = getPlayers().stream()
-		                                      .filter(player -> player.score().getPermanentScore() == winningScore)
-		                                      .toList();
+		List<Player> tiedPlayers = actionManager.findHighestScoringPlayers();
 		currentOptions = List.of();
 		phase = Phase.GAME_OVER;
+		if (tiedPlayers.isEmpty()) {
+			notice = "Game over. No winner.";
+			return;
+		}
+		int winningScore = tiedPlayers.get(0).score().getPermanentScore();
 
-		if (tiedPlayers.size() > 1) {
+		if (allowTies && tiedPlayers.size() > 1) {
 			notice = "Game over. " + tiedPlayers.stream().map(Player::name).reduce((a, b) -> a + ", " + b).orElse("")
 					+ " tied with " + winningScore + " points.";
 		} else {
+			Player winner = resolveWinner(tiedPlayers);
 			notice = "Game over. " + winner.name() + " wins with " + winningScore + " points.";
 		}
+	}
+
+	private void recordHighScore(Player player) {
+		int score = player.score().getPermanentScore();
+		if (incumbentHighScorer == null || score > incumbentHighScore) {
+			incumbentHighScorer = player;
+			incumbentHighScore = score;
+		}
+	}
+
+	private Player resolveWinner(List<Player> highestScoringPlayers) {
+		if (highestScoringPlayers.contains(incumbentHighScorer)) {
+			return incumbentHighScorer;
+		}
+		return highestScoringPlayers.isEmpty() ? null : highestScoringPlayers.get(0);
 	}
 
 	private int getFirstRollBustPoints() {

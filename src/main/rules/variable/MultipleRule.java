@@ -14,7 +14,11 @@ public class MultipleRule extends AbstractVariableRule
 	private Integer minimumMultiples = 3;
 
 	public MultipleRule() {
-		super(RuleType.MULTIPLE, "Multiple", "Score three or more of the same die.");
+		super(
+				RuleType.MULTIPLE,
+				"Multiples",
+				"Score three or more matching dice and extend them on later rolls."
+		);
 	}
 
 	@Override

@@ -102,7 +102,7 @@ public class ZilchGdxGame extends ApplicationAdapter
 
 		drawText("Setup Rules", margin + 24, top, 1.2f, TEXT);
 		drawWrapped(
-				"Toggle scoring rules and variants. First-Roll Bust awards 50 and rerolls; Stealing offers an already-on player the prior turn's score and remaining dice.",
+				"Canonical defaults enable core scoring, First-Roll Bust, Final Chase, and ties. Stealing is optional and starts off.",
 				margin + 24,
 				top - 34,
 				leftWidth - 48,
@@ -110,8 +110,15 @@ public class ZilchGdxGame extends ApplicationAdapter
 				MUTED_TEXT
 		);
 
+		List<IRule> selectableRules = session.getSelectableRules();
 		float y = top - 118f;
-		for (IRule rule : session.getSelectableRules()) {
+		float ruleStep = selectableRules.size() <= 1
+				? 58f
+				: Math.min(58f, (y - 44f) / (selectableRules.size() - 1));
+		float ruleButtonHeight = ruleStep < 54f ? 34f : 38f;
+		float ruleDescriptionOffset = ruleStep < 54f ? 8f : 10f;
+		float ruleDescriptionScale = ruleStep < 54f ? 0.70f : 0.74f;
+		for (IRule rule : selectableRules) {
 			boolean enabled = session.isRuleEnabled(rule);
 			Color buttonColor = enabled ? SUCCESS : DISABLED;
 			addButton(
@@ -119,13 +126,19 @@ public class ZilchGdxGame extends ApplicationAdapter
 					margin + 24,
 					y,
 					leftWidth - 48,
-					38,
+					ruleButtonHeight,
 					buttonColor,
 					true,
 					() -> session.toggleRule(rule)
 			);
-			drawText(rule.getDescription(), margin + 42, y - 10, 0.74f, MUTED_TEXT);
-			y -= 58;
+			drawText(
+					rule.getDescription(),
+					margin + 42,
+					y - ruleDescriptionOffset,
+					ruleDescriptionScale,
+					MUTED_TEXT
+			);
+			y -= ruleStep;
 		}
 
 		drawText("Players", rightX + 24, top, 1.08f, TEXT);
@@ -138,7 +151,7 @@ public class ZilchGdxGame extends ApplicationAdapter
 		addButton("-500", rightX + 24, top - 192, 82, 42, PRIMARY_DARK, session.getScoreLimit() > VisualGameSession.MIN_SCORE_LIMIT, () -> session.adjustScoreLimit(-1));
 		addButton("+500", rightX + 116, top - 192, 82, 42, PRIMARY, true, () -> session.adjustScoreLimit(1));
 
-		drawText("On Score", rightX + 24, top - 252, 1.08f, TEXT);
+		drawText("Opening Score", rightX + 24, top - 252, 1.08f, TEXT);
 		drawText(String.valueOf(session.getOpeningScoreLimit()), rightX + 160, top - 252, 1.08f, TEXT);
 		addButton("-250", rightX + 24, top - 312, 82, 42, PRIMARY_DARK, session.getOpeningScoreLimit() > VisualGameSession.MIN_OPENING_SCORE_LIMIT, () -> session.adjustOpeningScoreLimit(-1));
 		addButton("+250", rightX + 116, top - 312, 82, 42, PRIMARY, session.getOpeningScoreLimit() < session.getScoreLimit(), () -> session.adjustOpeningScoreLimit(1));
@@ -186,7 +199,7 @@ public class ZilchGdxGame extends ApplicationAdapter
 
 		if (session.isFinalRound() && session.getGameEndingPlayer() != null) {
 			drawWrapped(
-					"Final round triggered by " + session.getGameEndingPlayer().name() + ".",
+					"Final Chase triggered by " + session.getGameEndingPlayer().name() + ".",
 					x,
 					88,
 					panelWidth,
@@ -237,12 +250,17 @@ public class ZilchGdxGame extends ApplicationAdapter
 
 		if (phase == VisualGameSession.Phase.AWAITING_DECISION) {
 			addButton("Roll Again", x, y, panelWidth, 48, PRIMARY, true, session::rollAgain);
-			addButton("Bank Round", x, y - 62, panelWidth, 48, session.canBankCurrentTurn() ? SUCCESS : DISABLED, session.canBankCurrentTurn(), session::bank);
+			float bankY = y - 62;
+			if (session.canScoreMore()) {
+				addButton("Score More", x, bankY, panelWidth, 48, WARNING, true, session::scoreMore);
+				bankY -= 62;
+			}
+			addButton("Bank Round", x, bankY, panelWidth, 48, session.canBankCurrentTurn() ? SUCCESS : DISABLED, session.canBankCurrentTurn(), session::bank);
 			if (!session.canBankCurrentTurn()) {
 				drawWrapped(
 						"Banking unlocks after the round reaches " + session.getOpeningScoreLimit() + " points.",
 						x,
-						y - 136,
+						bankY - 74,
 						panelWidth,
 						0.78f,
 						MUTED_TEXT

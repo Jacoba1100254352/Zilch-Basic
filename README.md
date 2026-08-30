@@ -11,6 +11,26 @@ LibGDX desktop Zilch implementation built around:
 The current `main` path launches the LibGDX visual game. The previous console
 menu path is preserved as `client.ZilchCliClient` and on the `cli-menu` branch.
 
+## Shared Zilch Baseline
+
+This project follows the same gameplay and setup contract as the companion
+Zilch projects while retaining its Java and LibGDX architecture.
+
+| Setting | Default | Behavior |
+| --- | ---: | --- |
+| Players | 2 | Local pass-and-play, with 1 to 6 players supported |
+| Winning score | 5,000 | Reaching or passing this score ends the normal game |
+| Opening score | 1,000 | An unopened player must reach this amount in one round before banking |
+| Core scoring | On | Singles, Multiples with later-roll extensions, Three Pairs, and Straight |
+| First-Roll Bust | On, 50 points | A no-score first roll awards 50 and rerolls |
+| Final Chase | On | Every other player receives one final turn |
+| Allow Ties | On | All players tied at the final high score share the result |
+| Stealing | Off | An eligible opened player may continue a banked partial turn |
+
+Players may apply more than one non-overlapping scoring option from the same
+physical roll. For example, a single 1 and a single 5 can both be scored for
+150 points before the player decides whether to roll again or bank.
+
 ## Running
 
 ```bash
@@ -31,8 +51,18 @@ To run tests:
 
 ## Setup and Variants
 
-The winning score and opening ("on") score are configured separately. The
-opening score defaults to 1,000, but it can be changed before starting a game.
+The Winning Score and Opening Score are configured separately. Visual
+setup starts from the defaults above. In console setup, pressing Enter at a
+rule prompt accepts that rule's displayed default.
+
+`Multiple Extension` is an internal companion to `Multiples`, not a separate
+setup option. Enabling Multiples automatically enables extensions when a later
+roll adds matching dice to a multiple already scored in the current turn.
+
+`Final Chase` and `Allow Ties` are independent options. With Final Chase off,
+the game ends as soon as a player reaches the target. With Allow Ties off, the
+first player to attain the final high score remains the winner when another
+player later matches it.
 
 `Stealing` is an optional, dynamically discovered variant. When a player banks
 without using all six dice, the next player may either:
@@ -46,6 +76,19 @@ ends the current chain. A player may only steal after already banking the
 configured opening score; inherited points can never put a player "on."
 The prior player's banked points remain safe; the continuing player begins a
 separate at-risk round at the inherited score.
+
+## Intentional Java Differences
+
+- The primary interface is a resizable LibGDX desktop application. The console
+  interface remains available for text play and scripting.
+- Rules are discovered from Java classes at runtime, including from packaged
+  JARs. Other Zilch projects may use static registries appropriate to their
+  language.
+- The console uses an explicit turn state machine and event dispatcher. The
+  visual session exposes non-blocking button actions for the LibGDX event loop.
+- Console setup can persist player names and score thresholds in
+  `config.properties`. Full game save/resume and visual setup persistence are
+  not currently offered.
 
 ## IntelliJ Setup
 
@@ -117,10 +160,12 @@ flowchart LR
         IR["IRule"]
         SR["SingleRule"]
         MR["MultipleRule"]
-        AMR["AddMultipleRule"]
-        SER["SetRule"]
-        STR["StraitRule"]
+        AMR["Multiple Extension (internal)"]
+        SER["Three Pairs / SetRule"]
+        STR["Straight / StraitRule"]
         FBR["FirstRollBustRule"]
+        FCR["FinalChaseRule"]
+        ATR["AllowTiesRule"]
         STEAL["StealingRule"]
     end
 
@@ -206,6 +251,8 @@ flowchart LR
     IR --> SER
     IR --> STR
     IR --> FBR
+    IR --> FCR
+    IR --> ATR
     IR --> STEAL
     RM --> GO
 
@@ -242,7 +289,8 @@ stateDiagram-v2
     EVALUATE_OPTIONS --> END_TURN: later bust
     EVALUATE_OPTIONS --> SELECT_OPTION: options found
     SELECT_OPTION --> APPLY_OPTION
-    APPLY_OPTION --> DECIDE_TURN
+    APPLY_OPTION --> SELECT_OPTION: score another option from this roll
+    APPLY_OPTION --> DECIDE_TURN: done scoring / no options remain
     DECIDE_TURN --> ROLL_DICE: roll again
     DECIDE_TURN --> END_TURN: bank round
     END_TURN --> [*]
@@ -254,14 +302,16 @@ stateDiagram-v2
 - `VisualGameSession` adapts the existing game rules to button-driven UI actions without blocking the LibGDX render loop.
 - `RuleScanner` discovers concrete rule classes under `rules.variable`, so a new rule that implements the expected template can be loaded automatically.
 - `RuleRegistry` separates discovered rules from active rules, and `UserInteractionManager` uses that discovered list to build setup options.
-- Some setup options are game variants rather than scoring options, such as `First-Roll Bust`, which can award 50 points and reroll on a no-score opening roll.
+- Some setup options are game variants rather than scoring options, including `First-Roll Bust`, `Final Chase`, `Allow Ties`, and `Stealing`.
+- Default-enabled metadata is separate from a rule's configuration value, so Stealing can use `true` when selected while remaining off in a fresh setup.
+- `Multiples` automatically activates its hidden `Multiple Extension` companion rule.
 - `Stealing` is also a non-scoring setup variant. `StealingManager` owns its one-use cross-player continuation, while `ChooseTurnStartState` makes the accept-or-fresh decision explicit in the state machine.
 - The opening score is a game setting rather than a hardcoded gameplay rule, and stealing eligibility uses that configured value.
 - `TurnContext` is the mutable turn-local object passed across the entire state machine.
 - `GameServer` owns the outer game loop, while `GameEngine` owns a single turn.
-- `GameOverListener` bridges the event system back into gameplay by triggering the final-round flow.
+- `GameOverListener` bridges the event system back into gameplay by applying Final Chase and tie policy to the console flow.
 
 ## TODO
 
 - Add more specialized listeners if more game events become meaningful.
-- Continue cleanup and documentation polishing.
+- Consolidate the console and visual orchestration behind one shared session reducer if their implementation paths grow further.

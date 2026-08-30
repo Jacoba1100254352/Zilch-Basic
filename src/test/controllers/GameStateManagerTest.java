@@ -205,4 +205,36 @@ class GameStateManagerTest
 		assertEquals(5, userInteraction.stealingContinuations.get(0).diceInPlay());
 		assertEquals(2, diceManager.rollCalls);
 	}
+
+	@Test
+	void playerCanScoreAOneAndFiveFromTheSameRollBeforeBanking() throws Exception {
+		Player player = TestDoubles.player("Jacob");
+		player.score().increasePermanentScore(1000);
+		SequencedDiceManager diceManager = new SequencedDiceManager()
+				.queueRoll(Map.of(1, 1, 2, 4, 5, 1));
+		ActionManager actionManager = new ActionManager(
+				new StubPlayerManager(List.of(player)),
+				diceManager,
+				5000
+		);
+		RuleManager ruleManager = new RuleManager(new RuleRegistry());
+		ruleManager.initializeRules(Map.of(RuleType.SINGLE, Set.of(1, 5)));
+		GameOptionManager gameOptionManager = new GameOptionManager(ruleManager);
+		ScriptedUserInteraction userInteraction = new ScriptedUserInteraction()
+				.addScoreMoreDecision(true)
+				.addRollAgainDecision(false);
+		GameStateManager gameStateManager = new GameStateManager(
+				gameOptionManager,
+				new RecordingMessage(),
+				actionManager,
+				userInteraction
+		);
+
+		gameStateManager.processTurn(new TurnContext(player));
+
+		assertEquals(1150, player.score().getPermanentScore());
+		assertEquals(2, userInteraction.chooseCalls);
+		assertEquals(1, userInteraction.scoreMoreCalls);
+		assertEquals(1, diceManager.rollCalls);
+	}
 }

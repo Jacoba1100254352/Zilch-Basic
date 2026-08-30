@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -69,5 +70,35 @@ class ApplyOptionStateTest
 		assertTrue(player.dice().getDiceSetMap().isEmpty());
 		assertEquals(6, player.dice().getNumDiceInPlay());
 		assertEquals(List.of("Hot dice! All dice scored. Rolling all six dice again.\n"), uiManager.waitingMessages);
+	}
+
+	@Test
+	void hotDiceEndsTheMultipleExtensionChainBeforeTheNextRoll() {
+		Player player = TestDoubles.playerWithDice("Jacob", Map.of(3, 6));
+		SequencedDiceManager diceManager = new SequencedDiceManager();
+		ActionManager actionManager = new ActionManager(new StubPlayerManager(List.of(player)), diceManager, 5000);
+		RuleManager ruleManager = new RuleManager(new RuleRegistry());
+		ruleManager.initializeRules(Map.of(
+				RuleType.MULTIPLE, 3,
+				RuleType.SINGLE, Set.of(1, 5)
+		));
+		GameOptionManager gameOptionManager = new GameOptionManager(ruleManager);
+		TurnContext turnContext = new TurnContext(player);
+		gameOptionManager.evaluateGameOptions(turnContext.toRuleContext());
+		turnContext.setSelectedOption(gameOptionManager.getGameOptions().stream()
+				.filter(option -> option.type().equals(RuleType.MULTIPLE))
+				.findFirst()
+				.orElseThrow());
+
+		new ApplyOptionState(actionManager, gameOptionManager, new RecordingMessage()).handle(turnContext);
+		player.dice().setDiceSetMap(Map.of(3, 1, 1, 1, 2, 2, 4, 2));
+		player.dice().calculateNumDiceInPlay();
+		gameOptionManager.evaluateGameOptions(turnContext.toRuleContext());
+
+		assertTrue(turnContext.getScoredMultiples().isEmpty());
+		assertFalse(gameOptionManager.getGameOptions().stream()
+				.anyMatch(option -> option.type().equals(RuleType.ADD_MULTIPLE)));
+		assertTrue(gameOptionManager.getGameOptions().stream()
+				.anyMatch(option -> option.type().equals(RuleType.SINGLE) && option.selectedValue() == 1));
 	}
 }

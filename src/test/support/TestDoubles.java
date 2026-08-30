@@ -198,6 +198,7 @@ public final class TestDoubles
 		private int openingScoreLimit = 1000;
 		private Map<RuleType, Object> selectedRules = Map.of(RuleType.SINGLE, Set.of(1, 5));
 		private Function<List<GameOption>, GameOption> optionChooser = options -> options.get(0);
+		private final Deque<Boolean> scoreMoreDecisions = new ArrayDeque<>();
 		private final Deque<Boolean> rollAgainDecisions = new ArrayDeque<>();
 		private final Deque<Boolean> stealingDecisions = new ArrayDeque<>();
 
@@ -207,6 +208,7 @@ public final class TestDoubles
 		public final List<Player> stealingPlayers = new ArrayList<>();
 		public final List<TurnContinuation> stealingContinuations = new ArrayList<>();
 		public int chooseCalls;
+		public int scoreMoreCalls;
 		public int rollAgainCalls;
 		public int stealingCalls;
 
@@ -242,6 +244,11 @@ public final class TestDoubles
 
 		public ScriptedUserInteraction addRollAgainDecision(boolean rollAgain) {
 			rollAgainDecisions.addLast(rollAgain);
+			return this;
+		}
+
+		public ScriptedUserInteraction addScoreMoreDecision(boolean scoreMore) {
+			scoreMoreDecisions.addLast(scoreMore);
 			return this;
 		}
 
@@ -291,6 +298,15 @@ public final class TestDoubles
 				return false;
 			}
 			return rollAgainDecisions.removeFirst();
+		}
+
+		@Override
+		public boolean shouldScoreMore(Player currentPlayer, List<GameOption> remainingOptions) {
+			scoreMoreCalls++;
+			if (scoreMoreDecisions.isEmpty()) {
+				return false;
+			}
+			return scoreMoreDecisions.removeFirst();
 		}
 
 		@Override

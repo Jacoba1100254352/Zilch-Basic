@@ -16,7 +16,7 @@ public class StraitRule extends AbstractVariableRule
 	private Integer minNumStraitValues = FULL_SET_OF_DICE;
 
 	public StraitRule() {
-		super(RuleType.STRAIT, "Strait", "Score a straight sequence of dice.");
+		super(RuleType.STRAIT, "Straight", "Score a straight sequence of dice.");
 	}
 
 	@Override

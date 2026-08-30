@@ -16,7 +16,16 @@ public class AddMultipleRule extends AbstractVariableRule
 	private Integer minimumAdditionalDice = 1;
 
 	public AddMultipleRule() {
-		super(RuleType.ADD_MULTIPLE, "Add Multiple", "Extend a previously scored multiple in the same turn.");
+		super(
+				RuleType.ADD_MULTIPLE,
+				"Multiple Extension",
+				"Extend a previously scored multiple with matching dice from a later roll."
+		);
+	}
+
+	@Override
+	public boolean isSelectableAtSetup() {
+		return false;
 	}
 
 	@Override

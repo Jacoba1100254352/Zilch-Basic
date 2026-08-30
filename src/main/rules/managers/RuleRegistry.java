@@ -46,12 +46,22 @@ public class RuleRegistry implements IRuleRegistry
 	public void configureRules(Map<RuleType, Object> config) {
 		activeRules.clear();
 		for (Map.Entry<RuleType, Object> entry : config.entrySet()) {
+			if (entry.getKey().equals(RuleType.ADD_MULTIPLE)) {
+				continue;
+			}
 			IRule rule = availableRules.get(entry.getKey());
 			if (rule == null) {
 				throw new IllegalArgumentException("No rule is registered for " + entry.getKey());
 			}
 			rule.configure(entry.getValue());
 			activeRules.put(entry.getKey(), rule);
+			if (entry.getKey().equals(RuleType.MULTIPLE)) {
+				IRule extensionRule = availableRules.get(RuleType.ADD_MULTIPLE);
+				if (extensionRule != null) {
+					extensionRule.configure(extensionRule.getDefaultConfig());
+					activeRules.put(RuleType.ADD_MULTIPLE, extensionRule);
+				}
+			}
 		}
 	}
 
@@ -70,7 +80,7 @@ public class RuleRegistry implements IRuleRegistry
 	public Map<RuleType, Object> getDefaultConfig() {
 		Map<RuleType, Object> defaultConfig = new LinkedHashMap<>();
 		for (IRule rule : availableRules.values()) {
-			if (rule.isSelectableAtSetup()) {
+			if (rule.isSelectableAtSetup() && rule.isEnabledByDefault()) {
 				defaultConfig.put(rule.getRuleType(), rule.getDefaultConfig());
 			}
 		}

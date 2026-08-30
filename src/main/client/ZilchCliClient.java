@@ -35,7 +35,6 @@ public class ZilchCliClient
 			Config gameConfig = new Config("config.properties");
 			GameIDManager gameIDManager = new GameIDManager();
 			IUserInteraction userSetup = new UserInteractionManager(scanner);
-			IMessage uiManager = new ConsoleMessage(scanner);
 
 			if (mode.equals("readConfig")) {
 				numPlayers = gameConfig.getNumPlayers();
@@ -63,6 +62,7 @@ public class ZilchCliClient
 				return;
 			}
 
+			IMessage uiManager = new ConsoleMessage(scanner, scoreLimit);
 			String gameID = gameIDManager.generateGameID();
 			Map<RuleType, Object> selectedRules = userSetup.selectRules();
 

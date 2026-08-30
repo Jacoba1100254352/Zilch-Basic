@@ -39,4 +39,17 @@ class GameBuilderTest
 
 		assertNotNull(gameServer);
 	}
+
+	@Test
+	void buildRejectsAnOpeningThresholdAboveTheWinningScore() {
+		GameBuilder builder = new GameBuilder()
+				.setPlayerNames(List.of("Alice", "Bob"))
+				.setUiManager(new RecordingMessage())
+				.setUserInteraction(new ScriptedUserInteraction())
+				.setSelectedRules(Map.of(RuleType.SINGLE, Set.of(1, 5)))
+				.setScoreLimit(1000)
+				.setOpeningScoreLimit(1001);
+
+		assertThrows(IllegalArgumentException.class, builder::build);
+	}
 }

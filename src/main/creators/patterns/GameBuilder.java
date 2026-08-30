@@ -26,7 +26,7 @@ public class GameBuilder extends AbstractGameServerCreator
 		playerNames = null;
 		uiManager = null;
 		gameID = "DefaultGameID";
-		scoreLimit = 1000;
+		scoreLimit = 5000;
 		openingScoreLimit = ActionManager.DEFAULT_OPENING_SCORE_LIMIT;
 		userInteraction = null;
 		selectedRules = null;

@@ -47,8 +47,24 @@ class RuleRegistryTest
 		assertEquals(Set.of(1, 5), defaults.get(RuleType.SINGLE));
 		assertEquals(3, defaults.get(RuleType.SET));
 		assertEquals(50, defaults.get(RuleType.FIRST_ROLL_BUST));
-		assertEquals(true, defaults.get(RuleType.STEALING));
+		assertEquals(true, defaults.get(RuleType.FINAL_CHASE));
+		assertEquals(true, defaults.get(RuleType.ALLOW_TIES));
+		assertTrue(!defaults.containsKey(RuleType.STEALING));
+		assertTrue(!defaults.containsKey(RuleType.ADD_MULTIPLE));
 		assertTrue(defaults.containsKey(new RuleType("test_auto_loaded")));
+	}
+
+	@Test
+	void multiplesAutomaticallyActivatesItsHiddenExtensionRule() {
+		RuleRegistry ruleRegistry = new RuleRegistry();
+
+		ruleRegistry.configureRules(Map.of(RuleType.MULTIPLE, 3));
+
+		assertEquals(
+				List.of(RuleType.MULTIPLE, RuleType.ADD_MULTIPLE),
+				ruleRegistry.getActiveRules().stream().map(IRule::getRuleType).toList()
+		);
+		assertTrue(!ruleRegistry.getRule(RuleType.ADD_MULTIPLE).isSelectableAtSetup());
 	}
 
 	@Test

@@ -120,9 +120,21 @@ class ConsoleGameplayUITest
 		String output = outputStream.toString();
 		assertTrue(output.contains("Bust!"));
 		assertTrue(output.contains("Press enter to continue"));
-		assertTrue(output.contains("Alice is over"));
+		assertTrue(output.contains("Alice reached"));
+		assertTrue(output.contains("Final Chase"));
 		assertTrue(output.contains("Alice, Bob have tied with 5000 points!"));
 		assertTrue(output.contains("Alice won with 5200 points!"));
+	}
+
+	@Test
+	void lastRoundMessageUsesTheActiveGameWinningScore() {
+		Scanner scanner = new Scanner(new ByteArrayInputStream("\n".getBytes(StandardCharsets.UTF_8)));
+		ConsoleMessage consoleMessage = new ConsoleMessage(scanner, 7500);
+
+		consoleMessage.displayLastRoundMessage(TestDoubles.player("Alice"), () -> {
+		});
+
+		assertTrue(outputStream.toString().contains("Alice reached 7500 points!"));
 	}
 
 	@Test

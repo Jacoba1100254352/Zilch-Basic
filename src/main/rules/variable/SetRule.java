@@ -13,7 +13,7 @@ public class SetRule extends AbstractVariableRule
 	private Integer setMin = 3;
 
 	public SetRule() {
-		super(RuleType.SET, "Set", "Score three pairs.");
+		super(RuleType.SET, "Three Pairs", "Score a roll containing three pairs.");
 	}
 
 	@Override

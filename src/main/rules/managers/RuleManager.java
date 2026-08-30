@@ -6,8 +6,10 @@ import rules.context.RuleContext;
 import rules.variable.IRule;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -43,6 +45,16 @@ public class RuleManager implements IRuleManager
 		for (IRule rule : ruleRegistry.getActiveRules()) {
 			gameOptions.addAll(rule.evaluate(context));
 		}
+
+		Set<Integer> multipleOwnedValues = new HashSet<>();
+		for (GameOption option : gameOptions) {
+			if ((option.type().equals(RuleType.MULTIPLE) || option.type().equals(RuleType.ADD_MULTIPLE)) &&
+					option.selectedValue() != null) {
+				multipleOwnedValues.add(option.selectedValue());
+			}
+		}
+		gameOptions.removeIf(option -> option.type().equals(RuleType.SINGLE) &&
+				option.selectedValue() != null && multipleOwnedValues.contains(option.selectedValue()));
 		return gameOptions;
 	}
 

@@ -9,10 +9,12 @@ import model.entities.Player;
 import model.managers.ActionManager;
 import model.managers.GameOptionManager;
 import rules.managers.IRuleManager;
+import rules.managers.RuleType;
 import ui.IMessage;
 import ui.IUserInteraction;
 
 import java.io.IOException;
+import java.util.List;
 
 
 /**
@@ -26,6 +28,9 @@ public class GameServer
 	private final ActionManager actionManager;
 	private final IEventDispatcher eventDispatcher;
 	private final String gameID;
+	private final boolean allowTies;
+	private Player incumbentHighScorer;
+	private int incumbentHighScore = Integer.MIN_VALUE;
 
 	public GameServer(
 			IEventDispatcher eventDispatcher,
@@ -40,6 +45,13 @@ public class GameServer
 		this.actionManager = actionManager;
 		this.eventDispatcher = eventDispatcher;
 		this.gameID = gameID;
+		boolean hasScoringRule = ruleManager.getAvailableRules().stream().anyMatch(
+				rule -> rule.isScoringRule() && ruleManager.isRuleActive(rule.getRuleType())
+		);
+		if (!hasScoringRule) {
+			throw new IllegalArgumentException("At least one scoring rule must be enabled.");
+		}
+		this.allowTies = ruleManager.isRuleActive(RuleType.ALLOW_TIES);
 
 		GameOptionManager gameOptionManager = new GameOptionManager(ruleManager);
 		GameStateManager gameStateManager = new GameStateManager(
@@ -50,7 +62,13 @@ public class GameServer
 		);
 		this.gameEngine = new GameEngine(gameStateManager, actionManager);
 
-		GameOverListener gameOverListener = new GameOverListener(scoreLimit, this, actionManager, uiManager);
+		GameOverListener gameOverListener = new GameOverListener(
+				scoreLimit,
+				this,
+				actionManager,
+				uiManager,
+				ruleManager.isRuleActive(RuleType.FINAL_CHASE)
+		);
 		eventDispatcher.addListener(GameEventType.GAME_OVER, gameOverListener);
 		eventDispatcher.addListener(GameEventType.SCORE_UPDATED, gameOverListener);
 	}
@@ -75,6 +93,7 @@ public class GameServer
 	 */
 	private void playTurn(Player player) throws IOException {
 		gameEngine.processGameTurn();
+		recordHighScore(player);
 
 		Event scoreUpdatedEvent = new Event(GameEventType.SCORE_UPDATED);
 		scoreUpdatedEvent.setData(EventDataKey.PLAYER, player);
@@ -103,9 +122,32 @@ public class GameServer
 	 * Dispatches the final game-over event once the winner is known.
 	 */
 	private void concludeGame() throws IOException {
-		Player winner = actionManager.findHighestScoringPlayer();
+		List<Player> highestScoringPlayers = actionManager.findHighestScoringPlayers();
 		Event gameOverEvent = new Event(GameEventType.GAME_OVER);
-		gameOverEvent.setData(EventDataKey.WINNER, winner);
+		if (allowTies && highestScoringPlayers.size() > 1) {
+			gameOverEvent.setData(EventDataKey.TIED_PLAYERS, highestScoringPlayers);
+			gameOverEvent.setData(
+					EventDataKey.SCORE,
+					highestScoringPlayers.get(0).score().getPermanentScore()
+			);
+		} else {
+			gameOverEvent.setData(EventDataKey.WINNER, resolveWinner(highestScoringPlayers));
+		}
 		eventDispatcher.dispatchEvent(gameOverEvent);
+	}
+
+	private void recordHighScore(Player player) {
+		int score = player.score().getPermanentScore();
+		if (incumbentHighScorer == null || score > incumbentHighScore) {
+			incumbentHighScorer = player;
+			incumbentHighScore = score;
+		}
+	}
+
+	private Player resolveWinner(List<Player> highestScoringPlayers) {
+		if (highestScoringPlayers.contains(incumbentHighScorer)) {
+			return incumbentHighScorer;
+		}
+		return highestScoringPlayers.isEmpty() ? null : highestScoringPlayers.get(0);
 	}
 }

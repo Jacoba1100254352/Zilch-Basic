@@ -16,6 +16,18 @@ class ConfigTest
 	Path tempDirectory;
 
 	@Test
+	void missingConfigurationUsesCanonicalSharedDefaults() throws Exception {
+		Path configPath = tempDirectory.resolve("defaults.properties");
+
+		Config config = new Config(configPath.toString());
+
+		assertEquals(2, config.getNumPlayers());
+		assertEquals(java.util.List.of("Alice", "Bob"), config.getPlayerNames());
+		assertEquals(5000, config.getScoreLimit());
+		assertEquals(1000, config.getOpeningScoreLimit());
+	}
+
+	@Test
 	void openingScoreLimitIsPersistedWithTheOtherGameSettings() throws Exception {
 		Path configPath = tempDirectory.resolve("zilch.properties");
 		Config config = new Config(configPath.toString());
