@@ -1,6 +1,7 @@
 package creators.patterns;
 
 import controllers.GameServer;
+import model.entities.PlayerConfiguration;
 import rules.managers.RuleType;
 import ui.IMessage;
 import ui.IUserInteraction;
@@ -36,6 +37,26 @@ public class GameFactory extends AbstractGameServerCreator
 	) throws IOException {
 		return super.createGameServer(
 				playerNames,
+				uiManager,
+				gameID,
+				scoreLimit,
+				openingScoreLimit,
+				userInteraction,
+				selectedRules
+		);
+	}
+
+	public GameServer createConfiguredGameServer(
+			List<PlayerConfiguration> playerConfigurations,
+			IMessage uiManager,
+			String gameID,
+			int scoreLimit,
+			int openingScoreLimit,
+			IUserInteraction userInteraction,
+			Map<RuleType, Object> selectedRules
+	) throws IOException {
+		return super.createConfiguredGameServer(
+				playerConfigurations,
 				uiManager,
 				gameID,
 				scoreLimit,

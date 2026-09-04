@@ -7,6 +7,7 @@ LibGDX desktop Zilch implementation built around:
 - a simple in-process event system
 - creator/builder/factory wiring for bootstrapping a game
 - a visual, event-loop friendly play surface backed by the same core rules
+- optional Easy, Medium, and Hard computer players shared by both interfaces
 
 The current `main` path launches the LibGDX visual game. The previous console
 menu path is preserved as `client.ZilchCliClient` and on the `cli-menu` branch.
@@ -18,7 +19,7 @@ Zilch projects while retaining its Java and LibGDX architecture.
 
 | Setting | Default | Behavior |
 | --- | ---: | --- |
-| Players | 2 | Local pass-and-play, with 1 to 6 players supported |
+| Players | 2 humans | Local pass-and-play or computer play, with 1 to 6 players supported |
 | Winning score | 5,000 | Reaching or passing this score ends the normal game |
 | Opening score | 1,000 | An unopened player must reach this amount in one round before banking |
 | Core scoring | On | Singles, Multiples with later-roll extensions, Three Pairs, and Straight |
@@ -43,11 +44,43 @@ To run the preserved console flow from this branch:
 ./gradlew run --args='cli'
 ```
 
+That setup writes `config.properties`. Reuse the saved player types,
+difficulties, and score settings with `./gradlew run --args='cli readConfig'`.
+
 To run tests:
 
 ```bash
 ./gradlew test
 ```
+
+## Computer Players
+
+The visual setup can make Player 2 a computer opponent and select Easy,
+Medium, or Hard. The console setup can mark any named player as a computer, so
+human-only pass-and-play, mixed tables, and computer-only tables use the same
+state machine. Medium is the default when an older or incomplete computer
+configuration has no valid difficulty.
+
+| Level | Decision style |
+| --- | --- |
+| Easy | Takes every compatible scoring option, normally banks at 600 round points, and banks immediately when that wins |
+| Medium | Values points, remaining dice, hot dice, and multiples; adjusts risk for the score gap and can stage below or press beyond the target |
+| Hard | Uses the best simulation-tested standard policy, or the separately trained Stealing policy when that variant is active, plus the same score-aware finish logic |
+
+The Medium base banking cutoffs for one through six dice remaining are 350,
+500, 700, 850, 1,000, and 1,150 points. Hard uses 200, 1,021, 1,128,
+1,506, 2,130, and 2,130 in standard play. With Stealing enabled, Hard switches
+to 313, 313, 1,106, 1,360, 1,360, and 1,376 and also evaluates whether a
+carried score is worth accepting. Its practical Stealing acceptance cutoffs
+are about 550, 450, 350, 250, and 150 carried points for one through five dice.
+
+These Hard policies are the best tested in the companion two-player simulator,
+not mathematically proven optimal. The holdouts used a 5,000-point target,
+1,000-point opening requirement, and the default scoring profile. The standard
+policy scored 58.5621% match points against the baseline over 500,000 games,
+and the Stealing policy scored 52.0527% in its matching holdout. Separate Three
+Pairs-off runs support the same recommendation for that toggle. They do not
+establish the policy for disabling Straights, Multiples, or Singles.
 
 ## Setup and Variants
 
@@ -86,9 +119,10 @@ separate at-risk round at the inherited score.
   language.
 - The console uses an explicit turn state machine and event dispatcher. The
   visual session exposes non-blocking button actions for the LibGDX event loop.
-- Console setup can persist player names and score thresholds in
-  `config.properties`. Full game save/resume and visual setup persistence are
-  not currently offered.
+- Console setup persists player names, human or computer type, computer
+  difficulty, and score thresholds in `config.properties`. Existing files
+  without player metadata load as human-only games. Full game save/resume and
+  visual setup persistence are not currently offered.
 
 ## IntelliJ Setup
 
@@ -122,6 +156,7 @@ flowchart LR
         GDX["ZilchGdxGame"]
         VGS["VisualGameSession"]
         UIM["UserInteractionManager"]
+        PAI["PlayerAwareUserInteraction"]
         CM["ConsoleMessage"]
         CIM["ConsoleInputManager"]
     end
@@ -141,6 +176,7 @@ flowchart LR
         AGSM["AbstractGameStateManager"]
         TC["TurnContext"]
         SM["StealingManager"]
+        CS["ComputerStrategy"]
         TCONT["TurnContinuation"]
         ST["StartTurnState"]
         CTS["ChooseTurnStartState"]
@@ -174,6 +210,7 @@ flowchart LR
         PM["PlayerManager"]
         DM["DiceManager"]
         P["Player"]
+        PC["PlayerConfiguration"]
         D["Dice"]
         S["Score"]
         GO["GameOption"]
@@ -197,9 +234,12 @@ flowchart LR
     VGS --> PM
     VGS --> DM
     VGS --> SM
+    VGS --> CS
+    VGS --> PC
 
     UIM --> CM
     UIM --> CIM
+    UIM --> PC
 
     GC --> GF
     GC --> GB
@@ -215,6 +255,10 @@ flowchart LR
     GS --> DISP
     GS --> GOM
     GS --> GOL
+    GS --> PAI
+    PAI --> UIM
+    PAI --> CS
+    CS --> ACT
 
     GE --> GSM
     GSM --> AGSM
@@ -263,6 +307,7 @@ flowchart LR
     ACT --> PM
     ACT --> DM
     PM --> P
+    PM --> PC
     P --> D
     P --> S
     RC --> P
@@ -300,6 +345,7 @@ stateDiagram-v2
 
 - `ZilchClient` now starts the LibGDX desktop interface. `ZilchCliClient` keeps the older interactive console menu available.
 - `VisualGameSession` adapts the existing game rules to button-driven UI actions without blocking the LibGDX render loop.
+- `ComputerStrategy` owns all automated scoring, banking, finishing, and Stealing decisions. The console routes computer turns through `PlayerAwareUserInteraction`, while `VisualGameSession` advances the same strategy one delayed action at a time.
 - `RuleScanner` discovers concrete rule classes under `rules.variable`, so a new rule that implements the expected template can be loaded automatically.
 - `RuleRegistry` separates discovered rules from active rules, and `UserInteractionManager` uses that discovered list to build setup options.
 - Some setup options are game variants rather than scoring options, including `First-Roll Bust`, `Final Chase`, `Allow Ties`, and `Stealing`.

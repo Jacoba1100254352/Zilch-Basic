@@ -44,7 +44,7 @@ public class EvaluateOptionsState implements GameTurnState
 			if (turnContext.isFirstRoll() && gameOptionManager.isRuleActive(RuleType.FIRST_ROLL_BUST)) {
 				int pointsAwarded = getFirstRollBustPoints();
 				turnContext.getPlayer().score().increaseRoundScore(pointsAwarded);
-				uiManager.displayAndWait("First-roll bust! Awarded " + pointsAwarded + " points. Roll again.\n");
+				displayTurnNotice(turnContext, "First-roll bust! Awarded " + pointsAwarded + " points. Roll again.\n");
 				return GamePhase.ROLL_DICE;
 			}
 
@@ -52,7 +52,7 @@ public class EvaluateOptionsState implements GameTurnState
 			turnContext.getPlayer().score().setRoundScore(0);
 			turnContext.getPlayer().score().setScoreFromMultiples(0);
 			stealingManager.clearContinuation();
-			uiManager.displayAndWait("Bust! No scoring options are available.\n");
+			displayTurnNotice(turnContext, "Bust! No scoring options are available.\n");
 			return GamePhase.END_TURN;
 		}
 		return GamePhase.SELECT_OPTION;
@@ -63,5 +63,13 @@ public class EvaluateOptionsState implements GameTurnState
 			return firstRollBustRule.getPointsAwarded();
 		}
 		return FIRST_ROLL_BUST_POINTS;
+	}
+
+	private void displayTurnNotice(TurnContext turnContext, String message) {
+		if (turnContext.getPlayer().isComputer()) {
+			uiManager.displayMessage(message);
+		} else {
+			uiManager.displayAndWait(message);
+		}
 	}
 }

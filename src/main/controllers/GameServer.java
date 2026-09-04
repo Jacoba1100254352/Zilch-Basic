@@ -1,5 +1,6 @@
 package controllers;
 
+import controllers.computer.ComputerStrategy;
 import eventHandling.dispatchers.IEventDispatcher;
 import eventHandling.events.Event;
 import eventHandling.events.EventDataKey;
@@ -12,6 +13,7 @@ import rules.managers.IRuleManager;
 import rules.managers.RuleType;
 import ui.IMessage;
 import ui.IUserInteraction;
+import ui.PlayerAwareUserInteraction;
 
 import java.io.IOException;
 import java.util.List;
@@ -54,11 +56,21 @@ public class GameServer
 		this.allowTies = ruleManager.isRuleActive(RuleType.ALLOW_TIES);
 
 		GameOptionManager gameOptionManager = new GameOptionManager(ruleManager);
+		IUserInteraction playerInteraction = new PlayerAwareUserInteraction(
+				userInteraction,
+				new ComputerStrategy(
+						actionManager,
+						ruleManager.isRuleActive(RuleType.FINAL_CHASE),
+						allowTies,
+						ruleManager.isRuleActive(RuleType.STEALING)
+				),
+				uiManager
+		);
 		GameStateManager gameStateManager = new GameStateManager(
 				gameOptionManager,
 				uiManager,
 				actionManager,
-				userInteraction
+				playerInteraction
 		);
 		this.gameEngine = new GameEngine(gameStateManager, actionManager);
 

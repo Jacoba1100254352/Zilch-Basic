@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -103,6 +104,21 @@ class ConsoleGameplayUITest
 		consoleMessage.displayHighScoreInfo(player, "Alice");
 
 		assertTrue(outputStream.toString().contains("Jacob's current score: 350"));
+	}
+
+	@Test
+	void legacyYouNameUsesNaturalConsolePossessives() throws IOException {
+		ConsoleMessage consoleMessage = newConsoleMessage("");
+		Player player = TestDoubles.player("You");
+		player.score().setRoundScore(350);
+
+		consoleMessage.displayCurrentScore("You", 350);
+		consoleMessage.displayHighScoreInfo(player, "You");
+
+		String output = outputStream.toString();
+		assertTrue(output.contains("Your current round score: 350"));
+		assertTrue(output.contains("Your current score: 350"));
+		assertFalse(output.contains("You's"));
 	}
 
 	@Test

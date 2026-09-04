@@ -43,7 +43,7 @@ public class ApplyOptionState implements GameTurnState
 		if (turnContext.getPlayer().dice().getNumDiceInPlay() == 0) {
 			actionManager.replenishAllDice();
 			turnContext.clearScoredMultiples();
-			uiManager.displayAndWait("Hot dice! All dice scored. Rolling all six dice again.\n");
+			displayTurnNotice(turnContext, "Hot dice! All dice scored. Rolling all six dice again.\n");
 			return GamePhase.DECIDE_TURN;
 		}
 
@@ -55,5 +55,13 @@ public class ApplyOptionState implements GameTurnState
 			return GamePhase.SELECT_OPTION;
 		}
 		return GamePhase.DECIDE_TURN;
+	}
+
+	private void displayTurnNotice(TurnContext turnContext, String message) {
+		if (turnContext.getPlayer().isComputer()) {
+			uiManager.displayMessage(message);
+		} else {
+			uiManager.displayAndWait(message);
+		}
 	}
 }

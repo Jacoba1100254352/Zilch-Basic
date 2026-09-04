@@ -4,6 +4,7 @@ package creators.core;
 import controllers.GameServer;
 import creators.patterns.GameBuilder;
 import creators.patterns.GameFactory;
+import model.entities.PlayerConfiguration;
 import rules.managers.RuleType;
 import ui.IMessage;
 import ui.IUserInteraction;
@@ -20,6 +21,26 @@ public class GameCreator
 			int scoreLimit, IUserInteraction userInteraction, Map<RuleType, Object> selectedRules
 	) throws IOException {
 		return new GameFactory().createGameServer(playerNames, uiManager, gameID, scoreLimit, userInteraction, selectedRules);
+	}
+
+	public GameServer createConfiguredGameServer(
+			List<PlayerConfiguration> playerConfigurations,
+			IMessage uiManager,
+			String gameID,
+			int scoreLimit,
+			int openingScoreLimit,
+			IUserInteraction userInteraction,
+			Map<RuleType, Object> selectedRules
+	) throws IOException {
+		return new GameFactory().createConfiguredGameServer(
+				playerConfigurations,
+				uiManager,
+				gameID,
+				scoreLimit,
+				openingScoreLimit,
+				userInteraction,
+				selectedRules
+		);
 	}
 
 	public GameServer createSimpleGameServer(

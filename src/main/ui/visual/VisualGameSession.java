@@ -1,9 +1,12 @@
 package ui.visual;
 
 import controllers.StealingManager;
+import controllers.computer.ComputerStrategy;
 import controllers.state.TurnContext;
+import model.entities.ComputerDifficulty;
 import model.entities.GameOption;
 import model.entities.Player;
+import model.entities.PlayerConfiguration;
 import model.entities.TurnContinuation;
 import model.managers.ActionManager;
 import model.managers.DiceManager;
@@ -15,6 +18,7 @@ import rules.managers.RuleRegistry;
 import rules.managers.RuleType;
 import rules.variable.FirstRollBustRule;
 import rules.variable.IRule;
+import ui.PlayerText;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +46,7 @@ public class VisualGameSession
 	private static final int DEFAULT_OPENING_SCORE_LIMIT = 1000;
 	private static final int OPENING_SCORE_LIMIT_STEP = 250;
 	private static final int FALLBACK_FIRST_ROLL_BUST_POINTS = 50;
+	private static final float COMPUTER_ACTION_DELAY_SECONDS = 0.45f;
 
 	private final RuleRegistry setupRuleRegistry;
 	private final List<IRule> selectableRules;
@@ -51,10 +56,14 @@ public class VisualGameSession
 	private int playerCount = DEFAULT_PLAYERS;
 	private int scoreLimit = DEFAULT_SCORE_LIMIT;
 	private int openingScoreLimit = DEFAULT_OPENING_SCORE_LIMIT;
+	private boolean computerOpponentEnabled;
+	private ComputerDifficulty computerDifficulty = ComputerDifficulty.MEDIUM;
 	private PlayerManager playerManager;
 	private ActionManager actionManager;
 	private GameOptionManager gameOptionManager;
 	private StealingManager stealingManager;
+	private ComputerStrategy computerStrategy;
+	private float computerActionTimer;
 	private TurnContext turnContext;
 	private List<GameOption> currentOptions = List.of();
 	private Phase phase = Phase.SETUP;
@@ -88,6 +97,7 @@ public class VisualGameSession
 		AWAITING_ROLL,
 		AWAITING_OPTION,
 		AWAITING_DECISION,
+		AWAITING_BUST_ACKNOWLEDGEMENT,
 		GAME_OVER
 	}
 
@@ -100,7 +110,7 @@ public class VisualGameSession
 		RuleManager ruleManager = new RuleManager(new RuleRegistry());
 		ruleManager.initializeRules(selectedRules);
 		gameOptionManager = new GameOptionManager(ruleManager);
-		playerManager = new PlayerManager(buildDefaultPlayerNames());
+		playerManager = PlayerManager.fromConfigurations(buildPlayerConfigurations());
 		actionManager = new ActionManager(
 				playerManager,
 				diceManager,
@@ -113,6 +123,13 @@ public class VisualGameSession
 		);
 		finalChaseEnabled = selectedRules.containsKey(RuleType.FINAL_CHASE);
 		allowTies = selectedRules.containsKey(RuleType.ALLOW_TIES);
+		computerStrategy = new ComputerStrategy(
+				actionManager,
+				finalChaseEnabled,
+				allowTies,
+				selectedRules.containsKey(RuleType.STEALING)
+		);
+		computerActionTimer = 0;
 		finalRound = false;
 		gameEndingPlayer = null;
 		incumbentHighScorer = null;
@@ -125,6 +142,8 @@ public class VisualGameSession
 		actionManager = null;
 		gameOptionManager = null;
 		stealingManager = null;
+		computerStrategy = null;
+		computerActionTimer = 0;
 		turnContext = null;
 		currentOptions = List.of();
 		finalRound = false;
@@ -137,6 +156,22 @@ public class VisualGameSession
 		notice = "Choose the game setup, then start.";
 	}
 
+	/**
+	 * Advances one computer decision after a short visual pause. Human turns are untouched.
+	 */
+	public void update(float deltaSeconds) {
+		if (!isComputerTurn() || phase == Phase.SETUP || phase == Phase.GAME_OVER) {
+			computerActionTimer = 0;
+			return;
+		}
+		computerActionTimer += Math.max(0, deltaSeconds);
+		if (computerActionTimer < COMPUTER_ACTION_DELAY_SECONDS) {
+			return;
+		}
+		computerActionTimer = 0;
+		performComputerAction();
+	}
+
 	public void steal() {
 		if (phase != Phase.AWAITING_STEAL_DECISION || stealingManager == null) {
 			return;
@@ -144,8 +179,9 @@ public class VisualGameSession
 
 		TurnContinuation continuation = stealingManager.acceptContinuation(turnContext);
 		phase = Phase.AWAITING_ROLL;
-		notice = getCurrentPlayer().name() + " accepted " + continuation.inheritedScore() +
-				" points from " + continuation.sourcePlayerName() + " and must score with " +
+		notice = getCurrentPlayer().name() + " accepted " +
+				PlayerText.possessive(continuation.sourcePlayerName()) + " " + continuation.inheritedScore() +
+				"-point continuation and must score with " +
 				continuation.diceInPlay() + " dice to keep them.";
 	}
 
@@ -205,8 +241,12 @@ public class VisualGameSession
 					? " Roll again or bank the round."
 					: " Score more, roll again, or bank the round.");
 		} else {
-			notice = scoredMessage + " You need at least " + openingScoreLimit +
-					" round points before banking.";
+			notice = scoredMessage + " " + PlayerText.withPresentVerb(
+					getCurrentPlayer().name(),
+					"need",
+					"needs"
+			) + " at least " +
+					openingScoreLimit + " round points before banking.";
 		}
 	}
 
@@ -217,7 +257,7 @@ public class VisualGameSession
 		phase = Phase.AWAITING_ROLL;
 		currentOptions = List.of();
 		gameOptionManager.setSelectedGameOption(null);
-		notice = getCurrentPlayer().name() + " is rolling again.";
+		notice = PlayerText.withPresentVerb(getCurrentPlayer().name(), "are", "is") + " rolling again.";
 	}
 
 	public void scoreMore() {
@@ -235,7 +275,9 @@ public class VisualGameSession
 			return;
 		}
 		if (!canBankCurrentTurn()) {
-			notice = "You need at least " + openingScoreLimit + " round points before banking.";
+			notice = PlayerText.withPresentVerb(getCurrentPlayer().name(), "need", "needs") +
+					" at least " + openingScoreLimit +
+					" round points before banking.";
 			return;
 		}
 
@@ -265,11 +307,48 @@ public class VisualGameSession
 		if (phase != Phase.SETUP) {
 			return;
 		}
-		this.playerCount = Math.max(MIN_PLAYERS, Math.min(MAX_PLAYERS, playerCount));
+		int minimum = computerOpponentEnabled ? 2 : MIN_PLAYERS;
+		this.playerCount = Math.max(minimum, Math.min(MAX_PLAYERS, playerCount));
 	}
 
 	public void adjustPlayerCount(int delta) {
 		setPlayerCount(playerCount + delta);
+	}
+
+	public void setComputerOpponentEnabled(boolean enabled) {
+		if (phase != Phase.SETUP) {
+			return;
+		}
+		computerOpponentEnabled = enabled;
+		if (enabled) {
+			playerCount = Math.max(2, playerCount);
+		}
+	}
+
+	public void toggleComputerOpponent() {
+		setComputerOpponentEnabled(!computerOpponentEnabled);
+	}
+
+	public boolean isComputerOpponentEnabled() {
+		return computerOpponentEnabled;
+	}
+
+	public void cycleComputerDifficulty() {
+		if (phase != Phase.SETUP || !computerOpponentEnabled) {
+			return;
+		}
+		ComputerDifficulty[] difficulties = ComputerDifficulty.values();
+		computerDifficulty = difficulties[(computerDifficulty.ordinal() + 1) % difficulties.length];
+	}
+
+	public void setComputerDifficulty(ComputerDifficulty difficulty) {
+		if (phase == Phase.SETUP && difficulty != null) {
+			computerDifficulty = difficulty;
+		}
+	}
+
+	public ComputerDifficulty getComputerDifficulty() {
+		return computerDifficulty;
 	}
 
 	public void setScoreLimit(int scoreLimit) {
@@ -362,6 +441,11 @@ public class VisualGameSession
 		return actionManager == null ? null : actionManager.getCurrentPlayer();
 	}
 
+	public boolean isComputerTurn() {
+		Player player = getCurrentPlayer();
+		return player != null && player.isComputer();
+	}
+
 	public List<GameOption> getCurrentOptions() {
 		return currentOptions;
 	}
@@ -399,6 +483,23 @@ public class VisualGameSession
 		return phase == Phase.AWAITING_DECISION && !currentOptions.isEmpty();
 	}
 
+	/**
+	 * Returns the next player in turn order without advancing or clearing the
+	 * current roll.
+	 */
+	public Player getNextPlayer() {
+		if (actionManager == null) {
+			return null;
+		}
+		List<Player> players = actionManager.getPlayers();
+		Player currentPlayer = getCurrentPlayer();
+		int currentIndex = players.indexOf(currentPlayer);
+		if (players.isEmpty() || currentIndex < 0) {
+			return null;
+		}
+		return players.get((currentIndex + 1) % players.size());
+	}
+
 	public boolean isFinalRound() {
 		return finalRound;
 	}
@@ -407,14 +508,29 @@ public class VisualGameSession
 		return gameEndingPlayer;
 	}
 
+	/**
+	 * Acknowledges a visible bust result and only then advances the turn.
+	 */
+	public void acknowledgeBust() {
+		if (phase != Phase.AWAITING_BUST_ACKNOWLEDGEMENT) {
+			return;
+		}
+		Player bustedPlayer = getCurrentPlayer();
+		advanceTurn(bustedPlayer.name() + " busted. No points were banked.");
+	}
+
 	private void handleNoScoringOptions() {
 		if (turnContext.isFirstRoll() && gameOptionManager.isRuleActive(RuleType.FIRST_ROLL_BUST)) {
 			int pointsAwarded = getFirstRollBustPoints();
 			getCurrentPlayer().score().increaseRoundScore(pointsAwarded);
 			currentOptions = List.of();
 			phase = Phase.AWAITING_ROLL;
-			notice = "First-roll bust: " + getCurrentPlayer().name() +
-					" gets " + pointsAwarded + " points and rolls again.";
+			notice = "First-roll bust: " + PlayerText.withPresentVerb(
+					getCurrentPlayer().name(),
+					"get",
+					"gets"
+			) + " " + pointsAwarded + " points and " +
+					(PlayerText.isSecondPerson(getCurrentPlayer().name()) ? "roll" : "rolls") + " again.";
 			return;
 		}
 
@@ -424,7 +540,9 @@ public class VisualGameSession
 		turnContext.markBusted();
 		stealingManager.clearContinuation();
 		currentOptions = List.of();
-		advanceTurn(bustedPlayer.name() + " busted. No points banked this turn.");
+		phase = Phase.AWAITING_BUST_ACKNOWLEDGEMENT;
+		notice = "Bust! " + bustedPlayer.name() +
+				" rolled no scoring dice. No points were banked. Review the roll, then continue.";
 	}
 
 	private void advanceTurn(String previousTurnMessage) {
@@ -446,13 +564,14 @@ public class VisualGameSession
 		actionManager.replenishAllDice();
 		currentOptions = List.of();
 
-		String turnMessage = previousTurnMessage + " " + player.name() + " is up.";
+		String turnMessage = previousTurnMessage + " " +
+				PlayerText.withPresentVerb(player.name(), "are", "is") + " up.";
 		if (stealingManager.hasAvailableContinuation()) {
 			TurnContinuation continuation = stealingManager.getAvailableContinuation().orElseThrow();
 			if (stealingManager.canSteal(player)) {
 				phase = Phase.AWAITING_STEAL_DECISION;
-				notice = turnMessage + " Continue " + continuation.sourcePlayerName() +
-						"'s " + continuation.inheritedScore() + "-point turn with " +
+				notice = turnMessage + " Continue " + PlayerText.possessive(continuation.sourcePlayerName()) +
+						" " + continuation.inheritedScore() + "-point turn with " +
 						continuation.diceInPlay() + " dice, or start fresh.";
 				return;
 			}
@@ -485,7 +604,8 @@ public class VisualGameSession
 					+ " tied with " + winningScore + " points.";
 		} else {
 			Player winner = resolveWinner(tiedPlayers);
-			notice = "Game over. " + winner.name() + " wins with " + winningScore + " points.";
+			notice = "Game over. " + PlayerText.withPresentVerb(winner.name(), "win", "wins") +
+					" with " + winningScore + " points.";
 		}
 	}
 
@@ -511,11 +631,48 @@ public class VisualGameSession
 		return FALLBACK_FIRST_ROLL_BUST_POINTS;
 	}
 
-	private List<String> buildDefaultPlayerNames() {
-		List<String> names = new ArrayList<>();
-		for (int index = 1; index <= playerCount; index++) {
-			names.add("Player " + index);
+	private void performComputerAction() {
+		Player player = getCurrentPlayer();
+		if (player == null || !player.isComputer() || computerStrategy == null) {
+			return;
 		}
-		return names;
+
+		switch (phase) {
+			case AWAITING_STEAL_DECISION -> {
+				TurnContinuation continuation = stealingManager.getAvailableContinuation().orElse(null);
+				if (continuation != null && computerStrategy.shouldSteal(player, continuation)) {
+					steal();
+				} else {
+					freshRoll();
+				}
+			}
+			case AWAITING_ROLL -> roll();
+			case AWAITING_OPTION -> chooseOption(computerStrategy.chooseGameOption(player, currentOptions));
+			case AWAITING_BUST_ACKNOWLEDGEMENT -> acknowledgeBust();
+			case AWAITING_DECISION -> {
+				if (canScoreMore() && computerStrategy.shouldScoreMore(player, currentOptions)) {
+					scoreMore();
+				} else if (computerStrategy.shouldRollAgain(player, canBankCurrentTurn())) {
+					rollAgain();
+				} else {
+					bank();
+				}
+			}
+			default -> {
+				// Setup and terminal phases do not accept computer actions.
+			}
+		}
+	}
+
+	private List<PlayerConfiguration> buildPlayerConfigurations() {
+		List<PlayerConfiguration> players = new ArrayList<>();
+		for (int index = 1; index <= playerCount; index++) {
+			if (computerOpponentEnabled && index == 2) {
+				players.add(PlayerConfiguration.computer("Computer", computerDifficulty));
+			} else {
+				players.add(PlayerConfiguration.human("Player " + index));
+			}
+		}
+		return players;
 	}
 }

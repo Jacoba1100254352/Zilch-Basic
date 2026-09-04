@@ -67,6 +67,13 @@ public class ActionManager
 	}
 
 	/**
+	 * Returns the players in turn order for score-aware decision strategies.
+	 */
+	public List<Player> getPlayers() {
+		return List.copyOf(playerManager.getPlayers());
+	}
+
+	/**
 	 * Finds the player with the highest permanent score.
 	 */
 	public Player findHighestScoringPlayer() {
@@ -135,6 +142,10 @@ public class ActionManager
 
 	public int getOpeningScoreLimit() {
 		return openingScoreLimit;
+	}
+
+	public int getScoreLimit() {
+		return scoreLimit;
 	}
 
 	/**

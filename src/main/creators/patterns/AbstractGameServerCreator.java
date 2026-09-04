@@ -4,6 +4,7 @@ package creators.patterns;
 import controllers.GameServer;
 import eventHandling.dispatchers.IEventDispatcher;
 import eventHandling.dispatchers.SimpleEventDispatcher;
+import model.entities.PlayerConfiguration;
 import model.managers.ActionManager;
 import model.managers.DiceManager;
 import model.managers.IDiceManager;
@@ -52,8 +53,47 @@ public abstract class AbstractGameServerCreator
 			IUserInteraction userInteraction,
 			Map<RuleType, Object> selectedRules
 	) throws IOException {
+		return createGameServer(
+				new PlayerManager(playerNames),
+				uiManager,
+				gameID,
+				scoreLimit,
+				openingScoreLimit,
+				userInteraction,
+				selectedRules
+		);
+	}
+
+	protected GameServer createConfiguredGameServer(
+			List<PlayerConfiguration> playerConfigurations,
+			IMessage uiManager,
+			String gameID,
+			int scoreLimit,
+			int openingScoreLimit,
+			IUserInteraction userInteraction,
+			Map<RuleType, Object> selectedRules
+	) throws IOException {
+		return createGameServer(
+				PlayerManager.fromConfigurations(playerConfigurations),
+				uiManager,
+				gameID,
+				scoreLimit,
+				openingScoreLimit,
+				userInteraction,
+				selectedRules
+		);
+	}
+
+	private GameServer createGameServer(
+			IPlayerManager playerManager,
+			IMessage uiManager,
+			String gameID,
+			int scoreLimit,
+			int openingScoreLimit,
+			IUserInteraction userInteraction,
+			Map<RuleType, Object> selectedRules
+	) throws IOException {
 		IEventDispatcher dispatcher = new SimpleEventDispatcher();
-		IPlayerManager playerManager = new PlayerManager(playerNames);
 		IDiceManager diceManager = new DiceManager();
 		IRuleRegistry ruleRegistry = new RuleRegistry();
 		IRuleManager ruleManager = new RuleManager(ruleRegistry);

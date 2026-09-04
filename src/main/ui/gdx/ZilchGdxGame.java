@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.Align;
 import model.entities.GameOption;
 import model.entities.Player;
 import rules.variable.IRule;
+import ui.PlayerText;
 import ui.visual.VisualGameSession;
 
 import java.util.ArrayList;
@@ -65,6 +66,7 @@ public class ZilchGdxGame extends ApplicationAdapter
 
 		Gdx.gl.glClearColor(BACKGROUND.r, BACKGROUND.g, BACKGROUND.b, BACKGROUND.a);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		session.update(Gdx.graphics.getDeltaTime());
 
 		drawBackground();
 		if (session.getPhase() == VisualGameSession.Phase.SETUP) {
@@ -143,18 +145,41 @@ public class ZilchGdxGame extends ApplicationAdapter
 
 		drawText("Players", rightX + 24, top, 1.08f, TEXT);
 		drawText(String.valueOf(session.getPlayerCount()), rightX + 142, top, 1.08f, TEXT);
-		addButton("-", rightX + 24, top - 60, 54, 42, PRIMARY_DARK, session.getPlayerCount() > VisualGameSession.MIN_PLAYERS, () -> session.adjustPlayerCount(-1));
+		int minimumPlayers = session.isComputerOpponentEnabled() ? 2 : VisualGameSession.MIN_PLAYERS;
+		addButton("-", rightX + 24, top - 60, 54, 42, PRIMARY_DARK, session.getPlayerCount() > minimumPlayers, () -> session.adjustPlayerCount(-1));
 		addButton("+", rightX + 88, top - 60, 54, 42, PRIMARY, session.getPlayerCount() < VisualGameSession.MAX_PLAYERS, () -> session.adjustPlayerCount(1));
 
-		drawText("Winning Score", rightX + 24, top - 132, 1.08f, TEXT);
-		drawText(String.valueOf(session.getScoreLimit()), rightX + 160, top - 132, 1.08f, TEXT);
-		addButton("-500", rightX + 24, top - 192, 82, 42, PRIMARY_DARK, session.getScoreLimit() > VisualGameSession.MIN_SCORE_LIMIT, () -> session.adjustScoreLimit(-1));
-		addButton("+500", rightX + 116, top - 192, 82, 42, PRIMARY, true, () -> session.adjustScoreLimit(1));
+		drawText("Player 2", rightX + 24, top - 112, 1.02f, TEXT);
+		addButton(
+				session.isComputerOpponentEnabled() ? "Computer" : "Human",
+				rightX + 24,
+				top - 164,
+				116,
+				42,
+				session.isComputerOpponentEnabled() ? SUCCESS : PRIMARY_DARK,
+				true,
+				session::toggleComputerOpponent
+		);
+		addButton(
+				"Level: " + session.getComputerDifficulty().getDisplayName(),
+				rightX + 150,
+				top - 164,
+				rightWidth - 174,
+				42,
+				PRIMARY,
+				session.isComputerOpponentEnabled(),
+				session::cycleComputerDifficulty
+		);
 
-		drawText("Opening Score", rightX + 24, top - 252, 1.08f, TEXT);
-		drawText(String.valueOf(session.getOpeningScoreLimit()), rightX + 160, top - 252, 1.08f, TEXT);
-		addButton("-250", rightX + 24, top - 312, 82, 42, PRIMARY_DARK, session.getOpeningScoreLimit() > VisualGameSession.MIN_OPENING_SCORE_LIMIT, () -> session.adjustOpeningScoreLimit(-1));
-		addButton("+250", rightX + 116, top - 312, 82, 42, PRIMARY, session.getOpeningScoreLimit() < session.getScoreLimit(), () -> session.adjustOpeningScoreLimit(1));
+		drawText("Winning Score", rightX + 24, top - 216, 1.02f, TEXT);
+		drawText(String.valueOf(session.getScoreLimit()), rightX + 160, top - 216, 1.02f, TEXT);
+		addButton("-500", rightX + 24, top - 264, 82, 42, PRIMARY_DARK, session.getScoreLimit() > VisualGameSession.MIN_SCORE_LIMIT, () -> session.adjustScoreLimit(-1));
+		addButton("+500", rightX + 116, top - 264, 82, 42, PRIMARY, true, () -> session.adjustScoreLimit(1));
+
+		drawText("Opening Score", rightX + 24, top - 320, 1.02f, TEXT);
+		drawText(String.valueOf(session.getOpeningScoreLimit()), rightX + 160, top - 320, 1.02f, TEXT);
+		addButton("-250", rightX + 24, top - 368, 82, 42, PRIMARY_DARK, session.getOpeningScoreLimit() > VisualGameSession.MIN_OPENING_SCORE_LIMIT, () -> session.adjustOpeningScoreLimit(-1));
+		addButton("+250", rightX + 116, top - 368, 82, 42, PRIMARY, session.getOpeningScoreLimit() < session.getScoreLimit(), () -> session.adjustOpeningScoreLimit(1));
 
 		addButton("Start Visual Game", rightX + 24, 88, rightWidth - 48, 52, session.canStart() ? PRIMARY : DISABLED, session.canStart(), session::startGame);
 		drawWrapped(session.getNotice(), rightX + 24, 64, rightWidth - 48, 0.84f, MUTED_TEXT);
@@ -177,10 +202,11 @@ public class ZilchGdxGame extends ApplicationAdapter
 		drawScoreboard(margin + 20, top - 38, scoreboardWidth - 40);
 
 		String playerName = currentPlayer == null ? "" : currentPlayer.name();
-		drawText(playerName + "'s Turn", centerX + 24, top, 1.22f, TEXT);
+		boolean isBust = session.getPhase() == VisualGameSession.Phase.AWAITING_BUST_ACKNOWLEDGEMENT;
+		drawText(isBust ? "Bust" : PlayerText.turnHeading(playerName), centerX + 24, top, 1.22f, isBust ? WARNING : TEXT);
 		drawText("Dice in play: " + session.getDiceInPlay(), centerX + 24, top - 32, 0.9f, MUTED_TEXT);
 		drawDice(centerX + 24, top - 170, centerWidth - 48);
-		drawWrapped(session.getNotice(), centerX + 24, 88, centerWidth - 48, 0.88f, TEXT);
+		drawWrapped(session.getNotice(), centerX + 24, 88, centerWidth - 48, 0.88f, isBust ? WARNING : TEXT);
 
 		drawText("Actions", width - margin - actionWidth + 22, top, 1.08f, TEXT);
 		drawActions(width - margin - actionWidth + 22, top - 54, actionWidth - 44);
@@ -191,7 +217,10 @@ public class ZilchGdxGame extends ApplicationAdapter
 			boolean active = player == session.getCurrentPlayer();
 			Color rowColor = active ? new Color(0.21f, 0.29f, 0.30f, 1f) : new Color(0.16f, 0.17f, 0.18f, 1f);
 			fillRect(x, y - 36, panelWidth, 48, rowColor);
-			drawText(player.name(), x + 12, y - 3, 0.88f, active ? TEXT : MUTED_TEXT);
+			String playerLabel = player.isComputer()
+					? player.name() + " (" + player.difficulty().getDisplayName() + ")"
+					: player.name();
+			drawText(playerLabel, x + 12, y - 3, 0.88f, active ? TEXT : MUTED_TEXT);
 			drawText("Banked " + player.score().getPermanentScore(), x + 12, y - 23, 0.72f, MUTED_TEXT);
 			drawText("Round " + player.score().getRoundScore(), x + panelWidth - 96, y - 23, 0.72f, MUTED_TEXT);
 			y -= 58;
@@ -224,6 +253,46 @@ public class ZilchGdxGame extends ApplicationAdapter
 
 	private void drawActions(float x, float y, float panelWidth) {
 		VisualGameSession.Phase phase = session.getPhase();
+		if (phase == VisualGameSession.Phase.GAME_OVER) {
+			addButton("New Game", x, y, panelWidth, 48, PRIMARY, true, session::resetToSetup);
+			return;
+		}
+		if (phase == VisualGameSession.Phase.AWAITING_BUST_ACKNOWLEDGEMENT) {
+			if (session.isComputerTurn()) {
+				drawWrapped(
+						"The computer will continue after showing the bust roll.",
+						x,
+						y + 18,
+						panelWidth,
+						0.88f,
+						WARNING
+				);
+			} else {
+				Player nextPlayer = session.getNextPlayer();
+				String label = nextPlayer == null
+						? "Continue"
+						: PlayerText.isSecondPerson(nextPlayer.name())
+								? "Start Your Turn"
+								: nextPlayer.isComputer()
+										? "Watch " + nextPlayer.name() + " Play"
+										: "Continue to " + nextPlayer.name();
+				addButton(label, x, y, panelWidth, 48, WARNING, true, session::acknowledgeBust);
+			}
+			addButton("Back To Setup", x, 70, panelWidth, 42, DISABLED, true, session::resetToSetup);
+			return;
+		}
+		if (session.isComputerTurn()) {
+			drawWrapped(
+					session.getCurrentPlayer().difficulty().getDisplayName() + " computer is choosing...",
+					x,
+					y + 18,
+					panelWidth,
+					0.88f,
+					MUTED_TEXT
+			);
+			addButton("Back To Setup", x, 70, panelWidth, 42, DISABLED, true, session::resetToSetup);
+			return;
+		}
 		if (phase == VisualGameSession.Phase.AWAITING_STEAL_DECISION) {
 			addButton("Continue / Steal", x, y, panelWidth, 48, SUCCESS, true, session::steal);
 			addButton("Fresh Roll", x, y - 62, panelWidth, 48, PRIMARY, true, session::freshRoll);
@@ -269,9 +338,6 @@ public class ZilchGdxGame extends ApplicationAdapter
 			return;
 		}
 
-		if (phase == VisualGameSession.Phase.GAME_OVER) {
-			addButton("New Game", x, y, panelWidth, 48, PRIMARY, true, session::resetToSetup);
-		}
 	}
 
 	private void drawDie(float x, float y, float size, int value) {

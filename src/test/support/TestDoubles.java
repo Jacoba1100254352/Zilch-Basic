@@ -5,9 +5,11 @@ import eventHandling.dispatchers.IEventDispatcher;
 import eventHandling.events.Event;
 import eventHandling.events.GameEventType;
 import eventHandling.listeners.IEventListener;
+import model.entities.ComputerDifficulty;
 import model.entities.Dice;
 import model.entities.GameOption;
 import model.entities.Player;
+import model.entities.PlayerType;
 import model.entities.Score;
 import model.entities.TurnContinuation;
 import model.managers.IDiceManager;
@@ -37,6 +39,16 @@ public final class TestDoubles
 
 	public static Player player(String name) {
 		return new Player(name, new Dice(new LinkedHashMap<>()), new Score());
+	}
+
+	public static Player computerPlayer(String name, ComputerDifficulty difficulty) {
+		return new Player(
+				name,
+				new Dice(new LinkedHashMap<>()),
+				new Score(),
+				PlayerType.COMPUTER,
+				difficulty
+		);
 	}
 
 	public static Player playerWithDice(String name, Map<Integer, Integer> diceSetMap) {

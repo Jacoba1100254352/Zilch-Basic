@@ -4,6 +4,7 @@ package controllers;
 import eventHandling.events.Event;
 import eventHandling.events.EventDataKey;
 import eventHandling.events.GameEventType;
+import model.entities.ComputerDifficulty;
 import model.entities.Player;
 import model.managers.ActionManager;
 import org.junit.jupiter.api.Test;
@@ -70,6 +71,41 @@ class GameServerTest
 
 		assertEquals(1, dispatcher.listeners.get(GameEventType.GAME_OVER).size());
 		assertEquals(1, dispatcher.listeners.get(GameEventType.SCORE_UPDATED).size());
+	}
+
+	@Test
+	void computerOnlyConsoleGameCompletesWithoutRequestingHumanDecisions() throws Exception {
+		RecordingEventDispatcher dispatcher = new RecordingEventDispatcher();
+		Player computer = TestDoubles.computerPlayer("Computer", ComputerDifficulty.EASY);
+		SequencedDiceManager diceManager = new SequencedDiceManager()
+				.queueRoll(Map.of(1, 1, 2, 4, 5, 1));
+		ActionManager actionManager = new ActionManager(
+				new StubPlayerManager(List.of(computer)),
+				diceManager,
+				100,
+				0
+		);
+		RecordingMessage uiManager = new RecordingMessage();
+		ScriptedUserInteraction humanInteraction = new ScriptedUserInteraction();
+		GameServer gameServer = new GameServer(
+				dispatcher,
+				actionManager,
+				configuredRuleManager(false, true),
+				uiManager,
+				100,
+				humanInteraction,
+				"game-id"
+		);
+
+		gameServer.playGame();
+
+		assertEquals(0, humanInteraction.chooseCalls);
+		assertEquals(0, humanInteraction.scoreMoreCalls);
+		assertEquals(0, humanInteraction.rollAgainCalls);
+		assertEquals(List.of(computer), uiManager.winningPlayers);
+		assertEquals(List.of(150), uiManager.winningScores);
+		assertTrue(uiManager.messageCalls.contains("Computer scores another option from this roll.\n"));
+		assertTrue(uiManager.messageCalls.contains("Computer banks 150 points.\n"));
 	}
 
 	@Test

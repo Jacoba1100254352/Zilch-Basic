@@ -2,6 +2,8 @@ package creators.patterns;
 
 
 import controllers.GameServer;
+import model.entities.ComputerDifficulty;
+import model.entities.PlayerConfiguration;
 import org.junit.jupiter.api.Test;
 import rules.managers.RuleType;
 import support.TestDoubles.RecordingMessage;
@@ -34,6 +36,21 @@ class GameBuilderTest
 				.setPlayerNames(List.of("Alice", "Bob"))
 				.setUiManager(uiManager)
 				.setUserInteraction(userInteraction)
+				.setSelectedRules(Map.of(RuleType.SINGLE, Set.of(1, 5)))
+				.build();
+
+		assertNotNull(gameServer);
+	}
+
+	@Test
+	void buildAcceptsConfiguredComputerPlayers() throws IOException {
+		GameServer gameServer = new GameBuilder()
+				.setPlayerConfigurations(List.of(
+						PlayerConfiguration.human("Alice"),
+						PlayerConfiguration.computer("Computer", ComputerDifficulty.HARD)
+				))
+				.setUiManager(new RecordingMessage())
+				.setUserInteraction(new ScriptedUserInteraction())
 				.setSelectedRules(Map.of(RuleType.SINGLE, Set.of(1, 5)))
 				.build();
 

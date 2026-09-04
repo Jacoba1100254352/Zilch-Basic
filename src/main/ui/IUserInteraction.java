@@ -3,6 +3,7 @@ package ui;
 
 import model.entities.GameOption;
 import model.entities.Player;
+import model.entities.PlayerConfiguration;
 import model.entities.TurnContinuation;
 import rules.managers.RuleType;
 
@@ -15,6 +16,14 @@ public interface IUserInteraction
 	int getNumberOfPlayers();
 
 	List<String> getPlayerNames(int numPlayers);
+
+	/**
+	 * Returns complete player setup data. Existing integrations remain human-only
+	 * unless they override this method.
+	 */
+	default List<PlayerConfiguration> getPlayerConfigurations(int numPlayers) {
+		return getPlayerNames(numPlayers).stream().map(PlayerConfiguration::human).toList();
+	}
 
 	int getValidScoreLimit();
 

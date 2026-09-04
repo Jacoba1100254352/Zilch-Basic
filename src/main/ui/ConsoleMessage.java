@@ -81,7 +81,7 @@ public class ConsoleMessage implements IMessage
 	public void displayCurrentScore(String playerName, int roundScore) {
 		// Optionally clear the screen before printing the active player's score.
 		clear();
-		System.out.println(playerName + "'s current round score: " + roundScore);
+		System.out.println(PlayerText.possessiveSubject(playerName) + " current round score: " + roundScore);
 	}
 
 	@Override
@@ -183,13 +183,15 @@ public class ConsoleMessage implements IMessage
 		StringBuilder message = new StringBuilder();
 		Score score = currentPlayer.score();
 		if (score.getPermanentScore() < scoreLimit) {
-			message.append(currentPlayer.name()).append("'s current score: ").append(score.getRoundScore());
+			message.append(PlayerText.possessiveSubject(currentPlayer.name()))
+			       .append(" current score: ")
+			       .append(score.getRoundScore());
 		} else if (!highestScoringPlayerName.equals(currentPlayer.name()) &&
 				score.getPermanentScore() > score.getRoundScore()) {
 			message.append("\n\nYour current score of ").append(score.getRoundScore())
 			       .append(" is ").append(score.getPermanentScore() - score.getRoundScore())
-			       .append(" less than ").append(highestScoringPlayerName)
-			       .append("'s high score of ").append(score.getPermanentScore())
+			       .append(" less than ").append(PlayerText.possessive(highestScoringPlayerName))
+			       .append(" high score of ").append(score.getPermanentScore())
 			       .append(".");
 		} else if (!highestScoringPlayerName.equals(currentPlayer.name())) {
 			message.append("You are currently tied with the highest scoring player.");

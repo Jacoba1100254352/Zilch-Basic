@@ -1,18 +1,34 @@
 package model.managers;
 
 
+import model.entities.ComputerDifficulty;
 import model.entities.Player;
+import model.entities.PlayerConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 class PlayerManagerTest
 {
+	@Test
+	void configuredComputerPlayerRetainsItsDifficulty() {
+		PlayerManager playerManager = PlayerManager.fromConfigurations(List.of(
+				PlayerConfiguration.human("Alice"),
+				PlayerConfiguration.computer("Computer", ComputerDifficulty.HARD)
+		));
+
+		assertFalse(playerManager.getPlayers().get(0).isComputer());
+		assertTrue(playerManager.getPlayers().get(1).isComputer());
+		assertEquals(ComputerDifficulty.HARD, playerManager.getPlayers().get(1).difficulty());
+	}
+
 	@Test
 	void initializesCurrentPlayerToFirstPlayer() {
 		PlayerManager playerManager = new PlayerManager(List.of("Alice", "Bob", "Charlie"));

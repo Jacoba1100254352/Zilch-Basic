@@ -2,6 +2,7 @@ package creators.patterns;
 
 
 import controllers.GameServer;
+import model.entities.PlayerConfiguration;
 import model.managers.ActionManager;
 import rules.managers.RuleType;
 import ui.IMessage;
@@ -15,6 +16,7 @@ import java.util.Map;
 public class GameBuilder extends AbstractGameServerCreator
 {
 	private List<String> playerNames;
+	private List<PlayerConfiguration> playerConfigurations;
 	private IMessage uiManager;
 	private String gameID;
 	private int scoreLimit;
@@ -24,6 +26,7 @@ public class GameBuilder extends AbstractGameServerCreator
 	
 	public GameBuilder() {
 		playerNames = null;
+		playerConfigurations = null;
 		uiManager = null;
 		gameID = "DefaultGameID";
 		scoreLimit = 5000;
@@ -34,6 +37,13 @@ public class GameBuilder extends AbstractGameServerCreator
 	
 	public GameBuilder setPlayerNames(List<String> playerNames) {
 		this.playerNames = playerNames;
+		this.playerConfigurations = null;
+		return this;
+	}
+
+	public GameBuilder setPlayerConfigurations(List<PlayerConfiguration> playerConfigurations) {
+		this.playerConfigurations = playerConfigurations;
+		this.playerNames = null;
 		return this;
 	}
 	
@@ -68,8 +78,20 @@ public class GameBuilder extends AbstractGameServerCreator
 	}
 	
 	public GameServer build() throws IOException {
-		if (playerNames == null || uiManager == null || userInteraction == null || selectedRules == null) {
+		if ((playerNames == null && playerConfigurations == null) || uiManager == null ||
+				userInteraction == null || selectedRules == null) {
 			throw new IllegalStateException("Missing required fields for building the GameServer.");
+		}
+		if (playerConfigurations != null) {
+			return createConfiguredGameServer(
+					playerConfigurations,
+					uiManager,
+					gameID,
+					scoreLimit,
+					openingScoreLimit,
+					userInteraction,
+					selectedRules
+			);
 		}
 		return createGameServer(
 				playerNames,

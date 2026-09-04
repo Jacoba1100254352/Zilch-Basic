@@ -1,8 +1,11 @@
 package ui;
 
 
+import model.entities.ComputerDifficulty;
 import model.entities.GameOption;
 import model.entities.Player;
+import model.entities.PlayerConfiguration;
+import model.entities.PlayerType;
 import model.entities.TurnContinuation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -137,6 +140,43 @@ class UserInteractionManagerTest
 	}
 
 	@Test
+	void playerSetupCanMixHumansAndComputerDifficulties() {
+		inputManager.addString("Alice").addString("Computer");
+		inputManager.addString("n").addString("y").addString("hard");
+
+		List<PlayerConfiguration> players = userInteractionManager.getPlayerConfigurations(2);
+
+		assertEquals(PlayerType.HUMAN, players.get(0).type());
+		assertEquals(PlayerType.COMPUTER, players.get(1).type());
+		assertEquals(ComputerDifficulty.HARD, players.get(1).difficulty());
+	}
+
+	@Test
+	void blankComputerDifficultyDefaultsToMedium() {
+		inputManager.addString("Computer").addString("y").addString("");
+
+		List<PlayerConfiguration> players = userInteractionManager.getPlayerConfigurations(1);
+
+		assertEquals(ComputerDifficulty.MEDIUM, players.get(0).difficulty());
+	}
+
+	@Test
+	void legacyYouNameUsesNaturalDifficultyAndContinuationCopy() {
+		inputManager.addString("You").addString("y").addString("");
+		userInteractionManager.getPlayerConfigurations(1);
+		inputManager.addString("y");
+
+		assertTrue(userInteractionManager.shouldSteal(
+				TestDoubles.player("Alice"),
+				new TurnContinuation("You", 450, 3, Map.of(2, 3))
+		));
+
+		assertTrue(gameplayUI.messageCalls.stream().anyMatch(message -> message.startsWith("Choose your difficulty")));
+		assertTrue(gameplayUI.messageCalls.stream().anyMatch(message -> message.contains("continue your 450-point turn")));
+		assertFalse(gameplayUI.messageCalls.stream().anyMatch(message -> message.contains("You's")));
+	}
+
+	@Test
 	void getValidScoreLimitRejectsValuesBelowTheMinimum() {
 		inputManager.addInt(500).addInt(1500);
 
@@ -205,7 +245,7 @@ class UserInteractionManagerTest
 		assertTrue(userInteractionManager.shouldSteal(player, continuation));
 		assertTrue(
 				gameplayUI.messageCalls.stream().anyMatch(message ->
-						message.contains("steal 450 points from Alice") && message.contains("3 remaining dice")
+						message.contains("continue Alice's 450-point turn") && message.contains("3 remaining dice")
 				)
 		);
 	}

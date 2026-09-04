@@ -1,9 +1,11 @@
 package ui;
 
 
+import model.entities.ComputerDifficulty;
 import model.entities.Dice;
 import model.entities.GameOption;
 import model.entities.Player;
+import model.entities.PlayerConfiguration;
 import model.entities.Score;
 import model.entities.TurnContinuation;
 import rules.managers.RuleRegistry;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -164,6 +167,40 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	}
 
 	/**
+	 * Collects optional computer-player metadata after the existing name prompts.
+	 */
+	@Override
+	public List<PlayerConfiguration> getPlayerConfigurations(int numPlayers) {
+		List<String> names = getPlayerNames(numPlayers);
+		List<PlayerConfiguration> configurations = new ArrayList<>();
+		for (String name : names) {
+			boolean computer = readYesNo("Make " + name + " a computer player? [y/N] ", false);
+			configurations.add(computer
+					? PlayerConfiguration.computer(name, readComputerDifficulty(name))
+					: PlayerConfiguration.human(name));
+		}
+		return configurations;
+	}
+
+	private ComputerDifficulty readComputerDifficulty(String playerName) {
+		gameplayUI.displayMessage(
+				"Choose " + PlayerText.possessive(playerName) +
+						" difficulty [easy/medium/hard] (default medium): "
+		);
+		while (true) {
+			String input = inputManager.getInputString().trim();
+			if (input.isEmpty()) {
+				return ComputerDifficulty.MEDIUM;
+			}
+			try {
+				return ComputerDifficulty.valueOf(input.toUpperCase(Locale.ROOT));
+			} catch (IllegalArgumentException exception) {
+				gameplayUI.displayMessage("Invalid difficulty. Enter easy, medium, or hard: ");
+			}
+		}
+	}
+
+	/**
 	 * Prompts for the Winning Score and keeps asking until a valid minimum is met.
 	 */
 	@Override
@@ -255,8 +292,9 @@ public class UserInteractionManager implements IMessage, IUserInteraction
 	@Override
 	public boolean shouldSteal(Player currentPlayer, TurnContinuation continuation) {
 		return readYesNo(
-				currentPlayer.name() + " may steal " + continuation.inheritedScore() +
-						" points from " + continuation.sourcePlayerName() + " by rolling " +
+				currentPlayer.name() + " may continue " +
+						PlayerText.possessive(continuation.sourcePlayerName()) + " " +
+						continuation.inheritedScore() + "-point turn by rolling " +
 						continuation.diceInPlay() + " remaining dice. Continue that turn? "
 		);
 	}

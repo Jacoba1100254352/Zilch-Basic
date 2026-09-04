@@ -3,6 +3,7 @@ package model.managers;
 
 import model.entities.Dice;
 import model.entities.Player;
+import model.entities.PlayerConfiguration;
 import model.entities.Score;
 
 import java.util.Comparator;
@@ -22,9 +23,31 @@ public class PlayerManager extends AbstractPlayerManager
 	 */
 	public PlayerManager(List<String> playerNames) {
 		super.players = playerNames.stream()
-		                           .map(name -> new Player(name, new Dice(new HashMap<>()), new Score()))
+		                           .map(PlayerConfiguration::human)
+		                           .map(PlayerManager::createPlayer)
 		                           .collect(Collectors.toCollection(Vector::new));
 		super.currentPlayer = players.isEmpty() ? null : players.get(0);
+	}
+
+	private PlayerManager() {
+	}
+
+	/**
+	 * Creates a manager from player setup records without changing the legacy name-only constructor.
+	 */
+	public static PlayerManager fromConfigurations(List<PlayerConfiguration> playerConfigurations) {
+		PlayerManager playerManager = new PlayerManager();
+		playerManager.players = playerConfigurations.stream()
+		                                             .map(PlayerManager::createPlayer)
+		                                             .collect(Collectors.toCollection(Vector::new));
+		playerManager.currentPlayer = playerManager.players.isEmpty()
+				? null
+				: playerManager.players.get(0);
+		return playerManager;
+	}
+
+	private static Player createPlayer(PlayerConfiguration configuration) {
+		return new Player(configuration, new Dice(new HashMap<>()), new Score());
 	}
 	
 	@Override

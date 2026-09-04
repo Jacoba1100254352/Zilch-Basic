@@ -1,9 +1,11 @@
 package client;
 
+
 import config.Config;
 import controllers.GameServer;
 import creators.core.GameCreator;
 import creators.core.GameIDManager;
+import model.entities.PlayerConfiguration;
 import rules.managers.RuleType;
 import ui.ConsoleMessage;
 import ui.IMessage;
@@ -25,7 +27,7 @@ public class ZilchCliClient
 	 */
 	public static void main(String[] args) {
 		int numPlayers;
-		List<String> playerNames;
+		List<PlayerConfiguration> playerConfigurations;
 		int scoreLimit;
 		int openingScoreLimit;
 
@@ -38,22 +40,21 @@ public class ZilchCliClient
 
 			if (mode.equals("readConfig")) {
 				numPlayers = gameConfig.getNumPlayers();
-				playerNames = gameConfig.getPlayerNames();
+				playerConfigurations = gameConfig.getPlayerConfigurations();
 				scoreLimit = gameConfig.getScoreLimit();
 				openingScoreLimit = gameConfig.getOpeningScoreLimit();
 
-				if (numPlayers != playerNames.size()) {
-					System.out.println("Invalid configuration: numPlayers does not match length of playerNames");
+				if (numPlayers != playerConfigurations.size()) {
+					System.out.println("Invalid configuration: numPlayers does not match the configured players");
 					return;
 				}
 			} else if (mode.equals("writeConfig")) {
 				numPlayers = userSetup.getNumberOfPlayers();
-				playerNames = userSetup.getPlayerNames(numPlayers);
+				playerConfigurations = userSetup.getPlayerConfigurations(numPlayers);
 				scoreLimit = userSetup.getValidScoreLimit();
 				openingScoreLimit = userSetup.getValidOpeningScoreLimit(scoreLimit);
 
-				gameConfig.setNumPlayers(numPlayers);
-				gameConfig.setPlayerNames(playerNames);
+				gameConfig.setPlayerConfigurations(playerConfigurations);
 				gameConfig.setScoreLimit(scoreLimit);
 				gameConfig.setOpeningScoreLimit(openingScoreLimit);
 				gameConfig.saveConfig();
@@ -66,8 +67,8 @@ public class ZilchCliClient
 			String gameID = gameIDManager.generateGameID();
 			Map<RuleType, Object> selectedRules = userSetup.selectRules();
 
-			GameServer gameServer = new GameCreator().createSimpleGameServer(
-					playerNames,
+			GameServer gameServer = new GameCreator().createConfiguredGameServer(
+					playerConfigurations,
 					uiManager,
 					gameID,
 					scoreLimit,
@@ -77,8 +78,8 @@ public class ZilchCliClient
 			);
 
 			gameServer.playGame();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (IOException exception) {
+			exception.printStackTrace();
 		}
 	}
 }
