@@ -555,6 +555,7 @@ public class VisualGameSession
 	}
 
 	private void beginTurn(String previousTurnMessage) {
+		computerStrategy.startTurn();
 		Player player = actionManager.getCurrentPlayer();
 		turnContext = new TurnContext(player);
 		turnContext.resetForNewTurn();

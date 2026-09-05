@@ -50,7 +50,7 @@ public class GameStateManager extends AbstractGameStateManager
 				gameOptionManager.isRuleActive(RuleType.STEALING),
 				actionManager.getOpeningScoreLimit()
 		);
-		states.put(GamePhase.START_TURN, new StartTurnState(actionManager, gameOptionManager));
+		states.put(GamePhase.START_TURN, new StartTurnState(actionManager, gameOptionManager, userInteraction));
 		states.put(
 				GamePhase.CHOOSE_TURN_START,
 				new ChooseTurnStartState(stealingManager, userInteraction)

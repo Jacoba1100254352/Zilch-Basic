@@ -32,7 +32,7 @@ public class ComputerStrategy
 	/** Policy produced by the standard Computers vs Zilch simulation. */
 	public static final ComputerPolicy HARD_STANDARD_POLICY = new ComputerPolicy(
 			"Hard",
-			Map.of(1, 200, 2, 1021, 3, 1128, 4, 1506, 5, 2130, 6, 2130),
+			Map.of(1, 200, 2, 1021, 3, 1128, 4, 1506, 5, 2130, 6, 5000),
 			1.0045, 36.0805, 354.561, 91.9329, 0, 0.293194, 0.193316, 136.066
 	);
 	/** Policy produced by the Stealing-enabled Computers vs Zilch simulation. */
@@ -46,6 +46,9 @@ public class ComputerStrategy
 	private final boolean finalChaseEnabled;
 	private final boolean allowTies;
 	private final boolean stealingEnabled;
+	// One strategy belongs to one game. The owner prevents a commitment leaking
+	// between players; startTurn and the final decision clear it between turns.
+	private Player bankingPlayer;
 
 	public ComputerStrategy(
 			ActionManager actionManager,
@@ -57,6 +60,11 @@ public class ComputerStrategy
 		this.finalChaseEnabled = finalChaseEnabled;
 		this.allowTies = allowTies;
 		this.stealingEnabled = stealingEnabled;
+	}
+
+	/** Clears a prior turn's unfinished scoring plan, including interrupted turns. */
+	public void startTurn() {
+		bankingPlayer = null;
 	}
 
 	/**
@@ -74,7 +82,9 @@ public class ComputerStrategy
 		GameOption best = options.get(0);
 		for (int index = 1; index < options.size(); index++) {
 			GameOption candidate = options.get(index);
-			if (difficulty == ComputerDifficulty.EASY
+			if (bankingPlayer == player
+					? candidate.pointsAwarded() > best.pointsAwarded()
+					: difficulty == ComputerDifficulty.EASY
 					? isBetterSimpleOption(candidate, best)
 					: optionUtility(player, candidate, policy) > optionUtility(player, best, policy)) {
 				best = candidate;
@@ -94,15 +104,35 @@ public class ComputerStrategy
 		if (difficulty(player) != ComputerDifficulty.HARD) {
 			return true;
 		}
+		if (bankingPlayer == player) {
+			return true;
+		}
 
 		ComputerPolicy policy = policyFor(player);
 		GameOption best = chooseGameOption(player, remainingOptions);
 		double rollUtility = policy.rollBias() + policy.remainingDiceWeight() * normalizedDiceInPlay(player);
-		return optionUtility(player, best, policy) >= rollUtility;
+		if (optionUtility(player, best, policy) >= rollUtility) {
+			return true;
+		}
+
+		// Keep the existing roll-selection plan until it actually chooses Bank.
+		// Then take the remaining legal points without changing that commitment,
+		// even if collecting the final die replenishes all six dice.
+		if (!stealingEnabled && !wouldRollAgain(player, actionManager.canBankPoints(player))) {
+			bankingPlayer = player;
+			return true;
+		}
+		return false;
 	}
 
 	/** Returns true when the computer should risk another roll rather than bank. */
 	public boolean shouldRollAgain(Player player, boolean canBankPoints) {
+		boolean committedToBank = bankingPlayer == player;
+		bankingPlayer = null;
+		return committedToBank && canBankPoints ? false : wouldRollAgain(player, canBankPoints);
+	}
+
+	private boolean wouldRollAgain(Player player, boolean canBankPoints) {
 		if (!canBankPoints) {
 			return true;
 		}
@@ -134,20 +164,20 @@ public class ComputerStrategy
 		};
 	}
 
-	int policyBankThreshold(Player player, int roundScore, int remainingDice) {
+	double policyBankThreshold(Player player, int roundScore, int remainingDice) {
 		ComputerPolicy policy = policyFor(player);
-		int threshold = policy.bankThreshold(remainingDice);
+		double threshold = policy.bankThreshold(remainingDice);
 		int lead = player.score().getPermanentScore() - maxOpponentScore(player);
 		if (lead > 0) {
-			threshold -= (int) (lead * policy.leadFactor());
+			threshold -= lead * policy.leadFactor();
 		} else {
-			threshold += (int) (-lead * policy.trailFactor());
+			threshold += -lead * policy.trailFactor();
 		}
 
 		int projectedTotal = player.score().getPermanentScore() + roundScore;
 		int distanceToWin = actionManager.getScoreLimit() - projectedTotal;
 		int closingWindow = Math.max(0, 1500 - Math.max(distanceToWin, 0));
-		threshold -= (int) (closingWindow * policy.closingFactor());
+		threshold -= closingWindow * policy.closingFactor();
 		return Math.min(actionManager.getScoreLimit(), Math.max(200, threshold));
 	}
 

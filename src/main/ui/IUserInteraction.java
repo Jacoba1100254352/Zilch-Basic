@@ -33,6 +33,10 @@ public interface IUserInteraction
 
 	GameOption chooseGameOption(Player currentPlayer, List<GameOption> gameOptions);
 
+	/** Notifies decision implementations that a fresh player's turn is starting. */
+	default void startTurn(Player currentPlayer) {
+	}
+
 	/**
 	 * Asks whether the player wants to apply another scoring option from the
 	 * current physical roll. Existing interaction implementations retain the

@@ -17,6 +17,54 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class VisualGameSessionTest
 {
 	@Test
+	void hardVisualBankCommitmentSurvivesAHotDiceCollection() {
+		SequencedDiceManager diceManager = new SequencedDiceManager()
+				.queueRoll(Map.of(2, 2, 3, 2, 4, 1, 6, 1))
+				.queueRoll(Map.of(1, 6));
+		VisualGameSession session = sessionWithOnlySingles(diceManager);
+		session.setComputerOpponentEnabled(true);
+		session.setComputerDifficulty(ComputerDifficulty.HARD);
+		session.startGame();
+		session.roll();
+		session.acknowledgeBust();
+		session.getCurrentPlayer().score().setRoundScore(2700);
+
+		for (int action = 0; action < 14 && session.isComputerTurn(); action++) {
+			session.update(1);
+		}
+
+		assertFalse(session.isComputerTurn());
+		assertEquals(3300, session.getPlayers().get(1).score().getPermanentScore());
+		assertEquals(6, session.getPlayers().get(1).dice().getNumDiceInPlay());
+		assertEquals(2, diceManager.rollCalls, "Collecting hot dice must not switch a bank plan back to rolling.");
+	}
+
+	@Test
+	void hardVisualComputerCollectsItsWholeBankingRoll() {
+		SequencedDiceManager diceManager = new SequencedDiceManager()
+				.queueRoll(Map.of(2, 2, 3, 2, 4, 1, 6, 1))
+				.queueRoll(Map.of(1, 2, 5, 1, 2, 1, 3, 1, 4, 1));
+		VisualGameSession session = new VisualGameSession(diceManager);
+		session.setRuleEnabled(RuleType.FIRST_ROLL_BUST, false);
+		session.setComputerOpponentEnabled(true);
+		session.setComputerDifficulty(ComputerDifficulty.HARD);
+		session.startGame();
+		session.roll();
+		session.acknowledgeBust();
+		assertTrue(session.isComputerTurn());
+		session.getCurrentPlayer().score().setRoundScore(2700);
+
+		for (int action = 0; action < 10 && session.isComputerTurn(); action++) {
+			session.update(1);
+		}
+
+		assertFalse(session.isComputerTurn());
+		assertEquals(2950, session.getPlayers().get(1).score().getPermanentScore());
+		assertEquals(0, session.getPlayers().get(0).score().getPermanentScore());
+		assertEquals(2, diceManager.rollCalls, "No additional roll is needed to collect already-scoring dice.");
+	}
+
+	@Test
 	void enablingAComputerOpponentKeepsPlayerTwoAtTheTable() {
 		VisualGameSession session = new VisualGameSession();
 		session.setPlayerCount(1);

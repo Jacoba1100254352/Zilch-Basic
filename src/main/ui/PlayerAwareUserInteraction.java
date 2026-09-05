@@ -67,6 +67,12 @@ public class PlayerAwareUserInteraction implements IUserInteraction
 	}
 
 	@Override
+	public void startTurn(Player currentPlayer) {
+		computerStrategy.startTurn();
+		humanInteraction.startTurn(currentPlayer);
+	}
+
+	@Override
 	public GameOption chooseGameOption(Player currentPlayer, List<GameOption> gameOptions) {
 		if (!currentPlayer.isComputer()) {
 			return humanInteraction.chooseGameOption(currentPlayer, gameOptions);

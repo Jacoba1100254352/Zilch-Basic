@@ -69,18 +69,26 @@ configuration has no valid difficulty.
 
 The Medium base banking cutoffs for one through six dice remaining are 350,
 500, 700, 850, 1,000, and 1,150 points. Hard uses 200, 1,021, 1,128,
-1,506, 2,130, and 2,130 in standard play. With Stealing enabled, Hard switches
+1,506, 2,130, and 5,000 in standard play. With Stealing enabled, Hard switches
 to 313, 313, 1,106, 1,360, 1,360, and 1,376 and also evaluates whether a
 carried score is worth accepting. Its practical Stealing acceptance cutoffs
 are about 550, 450, 350, 250, and 150 carried points for one through five dice.
 
-These Hard policies are the best tested in the companion two-player simulator,
-not mathematically proven optimal. The holdouts used a 5,000-point target,
-1,000-point opening requirement, and the default scoring profile. The standard
-policy scored 58.5621% match points against the baseline over 500,000 games,
-and the Stealing policy scored 52.0527% in its matching holdout. Separate Three
-Pairs-off runs support the same recommendation for that toggle. They do not
-establish the policy for disabling Straights, Multiples, or Singles.
+Standard Hard also collects every remaining legal scoring option once its
+normal plan decides to bank. Collecting hot dice does not cancel that bank
+decision. When it intends to roll instead, it can still preserve scoring dice.
+The Stealing policy and its scoring-selection behavior are unchanged.
+
+The refined standard policy earned 51.5992% match points against the previous
+Hard over 500,000 fresh games (250,000 mirrored seat-swapped pairs). A separate
+500,000-game comparison against collection-only Hard isolated the higher
+six-dice cutoff at 50.1997%. These tests used the companion simulator's actual
+Hard endgame behavior, a 5,000-point target, 1,000-point opening requirement,
+and default scoring without Stealing. They establish a tested improvement,
+not mathematically optimal play or the best policy for every custom rule set.
+The unchanged Stealing policy previously earned 52.0527% against its baseline.
+Reproducible configurations, seeds, and results are retained in the
+[browser game's research record](https://github.com/anderson-webops/zilch.jacobdanderson.net/tree/main/docs/research/hot-dice-2026-09).
 
 ## Setup and Variants
 

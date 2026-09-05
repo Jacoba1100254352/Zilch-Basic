@@ -108,12 +108,108 @@ class ComputerStrategyTest
 	}
 
 	@Test
-	void policyAdjustmentsUseTheSimulatorsIntegerThresholdArithmetic() {
-		Player computer = computer("Computer", ComputerDifficulty.HARD, 0, 1050, 1);
-		ComputerStrategy strategy = strategy(computer, human("Alice", 2900), 5000, false, true, false);
+	void policyAdjustmentsKeepTheSimulatorsFloatingPointPrecision() {
+		Player computer = computer("Computer", ComputerDifficulty.HARD, 0, 1450, 3);
+		ComputerStrategy strategy = strategy(computer, human("Alice", 1100), 5000, true, true, false);
 
+		assertTrue(strategy.shouldRollAgain(computer, true));
+		assertEquals(1450.5134, strategy.policyBankThreshold(computer, 1450, 3), 0.000001);
+		computer.score().setRoundScore(1500);
 		assertFalse(strategy.shouldRollAgain(computer, true));
-		assertEquals(1050, strategy.policyBankThreshold(computer, 1050, 1));
+	}
+
+	@Test
+	void hardRollsSixHotDiceAt2800WhenNeitherPlayerHasBanked() {
+		Player computer = computer("Computer", ComputerDifficulty.HARD, 0, 2800, 6);
+		ComputerStrategy strategy = strategy(computer, human("Alice", 0), 5000, true, true, false);
+
+		assertTrue(strategy.shouldRollAgain(computer, true));
+	}
+
+	@Test
+	void aBankCommitmentSurvivesCollectingHotDiceButIsConsumedAfterBanking() {
+		Player computer = computer("Computer", ComputerDifficulty.HARD, 0, 2800, 5);
+		ComputerStrategy strategy = strategy(computer, human("Alice", 0), 5000, true, true, false);
+		GameOption one = option(RuleType.SINGLE, 1, 100, Map.of(1, 1));
+
+		assertTrue(strategy.shouldScoreMore(computer, List.of(one)));
+		computer.score().setRoundScore(2900);
+		computer.dice().setNumDiceInPlay(6);
+		assertFalse(strategy.shouldScoreMore(computer, List.of()));
+		assertFalse(strategy.shouldRollAgain(computer, true));
+		assertTrue(strategy.shouldRollAgain(computer, true), "The completed decision must clear its commitment.");
+	}
+
+	@Test
+	void committedBankCollectionChoosesPointsInsteadOfRollingUtility() {
+		Player computer = computer("Computer", ComputerDifficulty.HARD, 0, 2800, 5);
+		ComputerStrategy strategy = strategy(computer, human("Alice", 0), 5000, true, true, false);
+		GameOption one = option(RuleType.SINGLE, 1, 100, Map.of(1, 1));
+		assertTrue(strategy.shouldScoreMore(computer, List.of(one)));
+
+		GameOption higherScore = option(RuleType.SINGLE, 1, 500, Map.of(1, 1));
+		GameOption hotDice = option(RuleType.SET, null, 300, Map.of(1, 5));
+		assertEquals(higherScore, strategy.chooseGameOption(computer, List.of(hotDice, higherScore)));
+	}
+
+	@Test
+	void bankingCollectionDoesNotChangeBelowOpeningOrStealingSelections() {
+		GameOption weakFive = option(RuleType.SINGLE, 5, 50, Map.of(5, 1));
+		Player unopened = computer("Computer", ComputerDifficulty.HARD, 0, 100, 5);
+		ActionManager unopenedActions = new ActionManager(
+				new StubPlayerManager(List.of(unopened, human("Alice", 0))), new SequencedDiceManager(), 5000, 1000);
+		ComputerStrategy standard = new ComputerStrategy(unopenedActions, true, true, false);
+		assertFalse(standard.shouldScoreMore(unopened, List.of(weakFive)));
+		assertTrue(standard.shouldRollAgain(unopened, false));
+
+		Player stealingComputer = computer("Computer", ComputerDifficulty.HARD, 0, 2800, 5);
+		ComputerStrategy stealing = strategy(stealingComputer, human("Alice", 0), 5000, true, true, true);
+		assertFalse(stealing.shouldScoreMore(stealingComputer, List.of(weakFive)));
+		assertFalse(stealing.shouldRollAgain(stealingComputer, true));
+		stealingComputer.dice().setNumDiceInPlay(6);
+		assertFalse(stealing.shouldRollAgain(stealingComputer, true));
+	}
+
+	@Test
+	void immediateWinAndFinalChaseBankPlansStillCollectAvailablePoints() {
+		GameOption one = option(RuleType.SINGLE, 1, 100, Map.of(1, 1));
+		Player immediateWinner = computer("Computer", ComputerDifficulty.HARD, 4900, 100, 5);
+		ComputerStrategy immediate = strategy(immediateWinner, human("Alice", 4700), 5000, false, true, false);
+		assertTrue(immediate.shouldScoreMore(immediateWinner, List.of(one)));
+		immediateWinner.score().setRoundScore(200);
+		assertFalse(immediate.shouldRollAgain(immediateWinner, true));
+
+		Player chaser = computer("Computer", ComputerDifficulty.HARD, 4800, 200, 5);
+		Player leader = human("Alice", 5000);
+		ActionManager actions = actionManager(chaser, leader, 5000);
+		actions.setGameEndingPlayer(leader);
+		ComputerStrategy finalChase = new ComputerStrategy(actions, true, true, false);
+		assertTrue(finalChase.shouldScoreMore(chaser, List.of(one)));
+		chaser.score().setRoundScore(300);
+		assertFalse(finalChase.shouldRollAgain(chaser, true));
+	}
+
+	@Test
+	void bankCommitmentsCannotLeakAcrossTurnsPlayersOrGames() {
+		GameOption one = option(RuleType.SINGLE, 1, 100, Map.of(1, 1));
+		Player computer = computer("Computer", ComputerDifficulty.HARD, 0, 2800, 5);
+		Player otherComputer = computer("Other", ComputerDifficulty.HARD, 0, 2800, 6);
+		ComputerStrategy strategy = strategy(computer, otherComputer, 5000, true, true, false);
+		assertTrue(strategy.shouldScoreMore(computer, List.of(one)));
+		assertTrue(strategy.shouldRollAgain(otherComputer, true));
+
+		assertTrue(strategy.shouldScoreMore(computer, List.of(one)));
+		strategy.startTurn();
+		computer.dice().setNumDiceInPlay(6);
+		assertTrue(strategy.shouldRollAgain(computer, true));
+
+		computer.dice().setNumDiceInPlay(5);
+		assertTrue(strategy.shouldScoreMore(computer, List.of(one)));
+		computer.dice().setNumDiceInPlay(6);
+		ComputerStrategy differentGame = strategy(computer, otherComputer, 5000, true, true, false);
+		assertTrue(differentGame.shouldRollAgain(computer, true));
+		assertTrue(strategy.shouldRollAgain(computer, false), "An unbankable turn must not obey an old bank plan.");
+		assertTrue(strategy.shouldRollAgain(computer, true));
 	}
 
 	@Test
@@ -150,7 +246,7 @@ class ComputerStrategyTest
 				ComputerStrategy.EASY_POLICY.bankThresholdByDice());
 		assertEquals(Map.of(1, 350, 2, 500, 3, 700, 4, 850, 5, 1000, 6, 1150),
 				ComputerStrategy.MEDIUM_POLICY.bankThresholdByDice());
-		assertEquals(Map.of(1, 200, 2, 1021, 3, 1128, 4, 1506, 5, 2130, 6, 2130),
+		assertEquals(Map.of(1, 200, 2, 1021, 3, 1128, 4, 1506, 5, 2130, 6, 5000),
 				ComputerStrategy.HARD_STANDARD_POLICY.bankThresholdByDice());
 		assertEquals(Map.of(1, 313, 2, 313, 3, 1106, 4, 1360, 5, 1360, 6, 1376),
 				ComputerStrategy.HARD_STEALING_POLICY.bankThresholdByDice());
